@@ -1,14 +1,19 @@
 use crate::types::{Kind::*, Token};
 use colored::Colorize;
 
-pub fn output_tokens_colored(text: &str, tokens: Vec<Token>) {
+pub fn output_tokens_colored(text: &str, tokens: &Vec<Token>) {
+    let mut last_start;
+    let mut last_end = 0;
+
     for token in tokens {
-        // match tokens by kind type
+        last_start = token.start;
+        print!("{}", text[last_end..last_start].to_string());
+        last_end = token.end;
         let s = format!("{}", text[token.start..token.end].to_string());
         match token.kind {
             Identifier => print!("{}", s.yellow()),
 
-            Plus | Minus | Star | Slash | Power | Equation | Equal => print!("{}", s.green()),
+            Plus | Minus | Star | Slash | Power | Equate | Equal => print!("{}", s.green()),
 
             Number => print!("{}", s.blue()),
 
@@ -17,7 +22,10 @@ pub fn output_tokens_colored(text: &str, tokens: Vec<Token>) {
             If | Else | While | For | Loop | Let | Return | Break | Continue | Function | True
             | False => print!("{}", s.magenta()),
 
-            _ => print!("{}", s.red()),
+            String => print!("{}", s.truecolor(206, 145, 120)),
+
+            _ => print!("{}", s),
         }
     }
+    println!();
 }

@@ -34,27 +34,58 @@ impl<'a> Lexer<'a> {
         tokens
     }
 
+    pub fn skip_whitespace(&mut self) {
+        while let Some(c) = self.peek() {
+            match c {
+                ' ' | '\t' | '\n' | '\r' => {
+                    self.next();
+                }
+                _ => break,
+            }
+        }
+    }
+
     pub fn next_kind(&mut self) -> Kind {
-        while let Some(c) = self.chars.next() {
+        while let Some(c) = self.next() {
             match c {
                 '+' => return Kind::Plus,
                 '-' => return Kind::Minus,
                 '*' => return Kind::Star,
                 '/' => return Kind::Slash,
                 '^' => return Kind::Power,
+
                 '(' => return Kind::LParen,
                 ')' => return Kind::RParen,
                 '{' => return Kind::LBrace,
                 '}' => return Kind::RBrace,
+                '[' => return Kind::LBracket,
+                ']' => return Kind::RBracket,
+
+                ';' => return Kind::Semicolon,
+                ',' => return Kind::Comma,
+                ':' => return Kind::Colon,
+                '.' => {
+                    if self.peek() == Some('.') {
+                        self.next();
+                        return Kind::Range;
+                    } else if ("0"..="9")
+                        .contains(&self.peek().unwrap_or_default().to_string().as_str())
+                    {
+                        return self.read_number();
+                    }
+                    return Kind::Dot;
+                }
+
                 '=' => match self.peek() {
                     Some('=') => {
                         self.next();
                         return Kind::Equal;
                     }
-                    _ => return Kind::Equation,
+                    _ => return Kind::Equate,
                 },
                 '0'..='9' => return self.read_number(),
                 'a'..='z' | 'A'..='Z' | '_' => return self.read_identifier(),
+                '"' | '\'' => return self.read_string(),
                 ' ' | '\t' | '\n' | '\r' => {}
                 _ => return Kind::Unexpected,
             };
@@ -75,6 +106,25 @@ impl<'a> Lexer<'a> {
         Kind::Number
     }
 
+    fn read_string(&mut self) -> Kind {
+        while let Some(c) = self.peek() {
+            match c {
+                '"' | '\'' => {
+                    self.next();
+                    return Kind::String;
+                }
+                '\\' => {
+                    self.next();
+                    self.next();
+                }
+                _ => {
+                    self.next();
+                }
+            };
+        }
+        Kind::Unexpected
+    }
+
     fn read_identifier(&mut self) -> Kind {
         while let Some(c) = self.peek() {
             match c {
@@ -89,13 +139,14 @@ impl<'a> Lexer<'a> {
     }
 
     fn next_token(&mut self) -> Token {
+        self.skip_whitespace();
         let start = self.offset();
         let mut kind = self.next_kind();
         let end = self.offset();
 
         let s = self.source[start..end].trim();
 
-        let mut value = TokenValue::String(s.to_string());
+        let mut value = TokenValue::None;
 
         match kind {
             Kind::Number => {
@@ -110,6 +161,9 @@ impl<'a> Lexer<'a> {
                         value = TokenValue::Identifier(s.to_string());
                     }
                 }
+            }
+            Kind::String => {
+                value = TokenValue::String(s[1..s.len() - 1].to_string());
             }
             Kind::Unexpected => {
                 self.report_error(format!("Unexpected character: `{}`", s), start, end)
@@ -161,9 +215,7 @@ impl<'a> Lexer<'a> {
 
     fn report_error(&self, error: String, start: usize, end: usize) {
         let line = self.source[..start].lines().count();
-        let line_end = self.source[start..end]
-            .rfind('\n')
-            .map_or(end, |i| i + start);
+        let line_end = line - 1 + self.source[start..end].lines().count();
 
         let column = start - self.source[..start].rfind('\n').unwrap_or(0);
         let column_end = end - self.source[start..end].rfind('\n').unwrap_or(0);

@@ -19,13 +19,19 @@ pub enum Kind {
     Eof, // end of file
     Unexpected,
 
+    Semicolon,
+    Comma,
+    Colon,
+    Dot,
+
     // Operators
     Plus,
     Minus,
     Star,
     Slash,
     Power,
-    Equation,
+    Equate,
+    Range,
 
     Equal,
     NotEqual,
@@ -39,6 +45,8 @@ pub enum Kind {
     RParen,
     LBrace,
     RBrace,
+    LBracket,
+    RBracket,
 
     // Identifiers
     Identifier,
