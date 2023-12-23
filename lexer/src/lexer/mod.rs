@@ -161,9 +161,17 @@ impl<'a> Lexer<'a> {
 
     fn report_error(&self, error: String, start: usize, end: usize) {
         let line = self.source[..start].lines().count();
-        let column = start - self.source[..start].rfind('\n').unwrap_or(0);
+        let line_end = self.source[start..end]
+            .rfind('\n')
+            .map_or(end, |i| i + start);
 
-        println!("{} at {}:{}", error, line, column);
+        let column = start - self.source[..start].rfind('\n').unwrap_or(0);
+        let column_end = end - self.source[start..end].rfind('\n').unwrap_or(0);
+
+        println!(
+            "{} from {}:{} to {}:{}",
+            error, line, column, line_end, column_end
+        );
 
         std::process::exit(1);
     }
