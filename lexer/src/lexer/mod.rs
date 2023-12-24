@@ -178,7 +178,7 @@ impl<'a> Lexer<'a> {
             match c {
                 c if c == init_char => {
                     self.next();
-                    return TokenKind::String;
+                    return TokenKind::Str;
                 }
                 '\\' => {
                     self.next();
@@ -261,7 +261,7 @@ impl<'a> Lexer<'a> {
                 }
             }
 
-            TokenKind::String => {
+            TokenKind::Str => {
                 value = TokenValue::String(s[1..s.len() - 1].to_string());
             }
 

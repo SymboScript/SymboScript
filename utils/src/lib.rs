@@ -32,7 +32,7 @@ pub fn output_tokens_colored(text: &str, tokens: &Vec<Token>, show_tokens: Optio
             If | Else | While | For | Loop | Let | Return | Break | Continue | Function | True
             | False | In => print!("{}", s.magenta()),
 
-            String => print!("{}", s.truecolor(206, 145, 120)),
+            Str => print!("{}", s.truecolor(206, 145, 120)),
 
             Comment => print!("{}", s.green()),
 
