@@ -2,7 +2,23 @@
 name = "parser"
 version = "0.1.0"
 edition = "2021"
+authors = ["artegoser"]
+license = "MIT"
+description = "SymboScript parser"
+repository = "https://github.com/artegoser/SymboScript"
+homepage = "https://github.com/artegoser/SymboScript/tree/main/parser"
+documentation = "https://github.com/artegoser/SymboScript/blob/master/doc/main.md"
+readme = "./README.md"
+keywords = ["programming-language", "parser", "symbolic", "symboscript"]
+categories = ["compilers"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+symboscript-lexer = { path = "../lexer", version = "0.1.0" }
+symboscript-types = { path = "../types", version = "0.1.0" }
+symboscript-utils = { path = "../utils", version = "0.1.0" }
+
+clap = { version = "4.4.11", features = ["derive"] }
+serde = { version = "1.0.193", features = ["derive"] }
+serde_json = "1.0.108"

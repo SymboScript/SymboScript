@@ -19,6 +19,7 @@ pub enum TokenKind {
     Eof, // end of file
     Comment,
     Unexpected,
+    Start,
 
     Semicolon,
     Comma,
