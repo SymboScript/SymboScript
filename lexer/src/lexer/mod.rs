@@ -22,7 +22,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    pub fn next(&mut self) -> Option<char> {
+    fn next(&mut self) -> Option<char> {
         self.chars.next()
     }
 
@@ -40,7 +40,7 @@ impl<'a> Lexer<'a> {
         tokens
     }
 
-    pub fn skip_trivia(&mut self) {
+    fn skip_trivia(&mut self) {
         while let Some(c) = self.peek() {
             match c {
                 ' ' | '\t' | '\n' | '\r' => {
@@ -51,20 +51,56 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    pub fn next_kind(&mut self) -> TokenKind {
+    fn next_kind(&mut self) -> TokenKind {
         while let Some(c) = self.next() {
             match c {
-                '+' => return self.read_one_more('=', TokenKind::PlusAssign, TokenKind::Plus),
-                '-' => return self.read_one_more('=', TokenKind::MinusAssign, TokenKind::Minus),
+                '#' => return self.read_comment(),
+
+                ';' => return TokenKind::Semicolon,
+                ',' => return TokenKind::Comma,
+                ':' => return self.read_one_more('=', TokenKind::FormulaAssign, TokenKind::Colon),
+                '.' => return self.read_dot(),
+
+                '+' => {
+                    return self.read_one_more_variants(
+                        TokenKind::Plus,
+                        &['=', '+'],
+                        &[TokenKind::PlusAssign, TokenKind::PlusPlus],
+                    )
+                }
+                '-' => {
+                    return self.read_one_more_variants(
+                        TokenKind::Minus,
+                        &['=', '-'],
+                        &[TokenKind::MinusAssign, TokenKind::MinusMinus],
+                    )
+                }
                 '*' => return self.read_one_more('=', TokenKind::MultiplyAssign, TokenKind::Star),
                 '/' => return self.read_one_more('=', TokenKind::DivideAssign, TokenKind::Slash),
                 '^' => return self.read_one_more('=', TokenKind::PowerAssign, TokenKind::Power),
                 '%' => return self.read_one_more('=', TokenKind::ModuloAssign, TokenKind::Modulo),
 
-                '<' => return self.read_one_more('=', TokenKind::LessEqual, TokenKind::Less),
-                '>' => return self.read_one_more('=', TokenKind::GreaterEqual, TokenKind::Greater),
+                '&' => return self.read_one_more('&', TokenKind::BitAnd, TokenKind::And),
+                '|' => return self.read_one_more('|', TokenKind::BitOr, TokenKind::Or),
+                '~' => return TokenKind::BitNot,
+                '?' => return TokenKind::Question,
 
+                '=' => return self.read_one_more('=', TokenKind::Equal, TokenKind::Assign),
                 '!' => return self.read_one_more('=', TokenKind::NotEqual, TokenKind::Not),
+                '<' => {
+                    return self.read_one_more_variants(
+                        TokenKind::Less,
+                        &['=', '<'],
+                        &[TokenKind::LessEqual, TokenKind::BitLeftShift],
+                    )
+                }
+                '>' => {
+                    return self.read_one_more_variants(
+                        TokenKind::Less,
+                        &['=', '>'],
+                        &[TokenKind::GreaterEqual, TokenKind::BitRightShift],
+                    )
+                }
 
                 '(' => return TokenKind::LParen,
                 ')' => return TokenKind::RParen,
@@ -73,17 +109,11 @@ impl<'a> Lexer<'a> {
                 '[' => return TokenKind::LBracket,
                 ']' => return TokenKind::RBracket,
 
-                ';' => return TokenKind::Semicolon,
-                ',' => return TokenKind::Comma,
-                ':' => return self.read_one_more('=', TokenKind::FormulaAssign, TokenKind::Colon),
-
-                '.' => return self.read_dot(),
-
-                '=' => return self.read_one_more('=', TokenKind::Equal, TokenKind::Assign),
-                '0'..='9' => return self.read_number(),
                 'a'..='z' | 'A'..='Z' | '_' => return self.read_identifier(),
+
+                '0'..='9' => return self.read_number(),
                 '"' | '\'' | '`' => return self.read_string(c),
-                '#' => return self.read_comment(),
+
                 _ => return TokenKind::Unexpected,
             };
         }
@@ -190,7 +220,23 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn next_token(&mut self) -> Token {
+    fn read_one_more_variants(
+        &mut self,
+        kind_unexpected: TokenKind,
+        char_expected: &[char],
+        kind_expected: &[TokenKind],
+    ) -> TokenKind {
+        match self.peek() {
+            Some(c) if char_expected.contains(&c) => {
+                self.next();
+                return kind_expected[char_expected.iter().position(|&x| x == c).unwrap()];
+            }
+
+            _ => return kind_unexpected,
+        }
+    }
+
+    pub fn next_token(&mut self) -> Token {
         self.skip_trivia();
         let start = self.offset();
         let mut kind = self.next_kind();
@@ -259,6 +305,21 @@ impl<'a> Lexer<'a> {
             "true" => TokenKind::True,
             "false" => TokenKind::False,
 
+            // ---Keyword2Operator---
+            "band" => TokenKind::BitAnd,
+            "bxor" => TokenKind::BitXor,
+            "bor" => TokenKind::BitOr,
+            "bnot" => TokenKind::BitNot,
+            "bshl" => TokenKind::BitLeftShift,
+            "bshr" => TokenKind::BitRightShift,
+
+            "xor" => TokenKind::Xor,
+            "and" => TokenKind::And,
+            "or" => TokenKind::Or,
+            "not" => TokenKind::Not,
+            //---Keyword2Operator---
+
+            //
             _ => TokenKind::Identifier,
         }
     }

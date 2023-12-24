@@ -11,3 +11,7 @@ formula.replace(x, t);
 for i in 0..10 {
     print(i);
 }
+
+if true and k == 0 || k >= 1 {
+    print(k >> 1);
+}

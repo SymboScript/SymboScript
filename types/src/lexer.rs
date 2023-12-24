@@ -34,9 +34,23 @@ pub enum TokenKind {
     Range,
     Modulo,
 
-    // Logic operators
+    // Bitwise operators (Keyword2Operator)
+    BitAnd,
+    BitOr,
+    BitNot,
+    BitXor,
+    BitLeftShift,
+    BitRightShift,
+
+    // Unary operators
+    PlusPlus,
+    MinusMinus,
+    Question,
+
+    // Logic operators (Keyword2Operator)
     And,
     Or,
+    Xor,
     Not,
 
     /// Assignments operators (+=, -=, *=, /=...)
@@ -71,6 +85,10 @@ pub enum TokenKind {
     // Literals
     Number,
     String,
+
+    // -- Keywords --
+
+    // Keyword literals
     True,
     False,
 

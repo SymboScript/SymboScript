@@ -13,7 +13,10 @@ pub fn output_tokens_colored(text: &str, tokens: &Vec<Token>) {
         match token.kind {
             Identifier => print!("{}", s.yellow()),
 
-            Plus | Minus | Star | Slash | Power | Assign | Equal | Range => print!("{}", s.green()),
+            Plus | Minus | Star | Slash | Power | Assign | Equal | Range | FormulaAssign | And
+            | Or | Xor | Not | BitAnd | BitOr | BitNot | BitXor | BitLeftShift | BitRightShift => {
+                print!("{}", s.green())
+            }
 
             Number => print!("{}", s.blue()),
 
