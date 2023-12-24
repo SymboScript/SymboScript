@@ -1,6 +1,11 @@
 use crate::types::{Kind, Token, TokenValue};
 use std::str::Chars;
+
+use colored::Colorize;
 pub struct Lexer<'a> {
+    /// Path of the source file
+    path: &'a str,
+
     /// Source Text
     source: &'a str,
 
@@ -9,8 +14,9 @@ pub struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(source: &'a str) -> Self {
+    pub fn new(path: &'a str, source: &'a str) -> Self {
         Self {
+            path,
             source,
             chars: source.chars(),
         }
@@ -165,9 +171,7 @@ impl<'a> Lexer<'a> {
             Kind::String => {
                 value = TokenValue::String(s[1..s.len() - 1].to_string());
             }
-            Kind::Unexpected => {
-                self.report_error(format!("Unexpected character: `{}`", s), start, end)
-            }
+            Kind::Unexpected => self.report_error("Unexpected token".to_string(), start, end),
             _ => {}
         }
 
@@ -218,11 +222,26 @@ impl<'a> Lexer<'a> {
         let line_end = line - 1 + self.source[start..end].lines().count();
 
         let column = start - self.source[..start].rfind('\n').unwrap_or(0);
-        let column_end = end - self.source[start..end].rfind('\n').unwrap_or(0);
+        let column_end = end - self.source[..start].rfind('\n').unwrap_or(0);
+
+        let near_text = self.source.lines().nth(line - 1).unwrap_or(&"").trim_end();
+
+        let line_n = format!("{line} |");
+
+        let error_pointer = (" ".repeat(column + line_n.len()) + "^".repeat(end - start).as_str())
+            .red()
+            .bold();
+        let error_pointer_text = (&error).red().bold();
 
         println!(
-            "{} from {}:{} to {}:{}",
-            error, line, column, line_end, column_end
+            "{}\n{} {near_text}\n{error_pointer} {error_pointer_text}",
+            format!(
+                "--> {}:{}:{}-{}:{}",
+                self.path, line, column, line_end, column_end
+            )
+            .blue()
+            .bold(),
+            line_n.to_string().blue().bold(),
         );
 
         std::process::exit(1);

@@ -1,0 +1,8 @@
+let formula = 20x^2 + 23y^2 == .212;
+
+fn func() {
+    print(formula);
+}
+
+let k = 0;
+let str = "h'i";

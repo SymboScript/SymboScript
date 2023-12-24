@@ -1,28 +1,17 @@
+use std::fs::OpenOptions;
+
 mod lexer;
 mod types;
 mod utils;
 fn main() {
-    let text = r#"
-    let formula = 20x^2 + 23y^2 == .212;
+    let text = OpenOptions::new()
+        .read(true)
+        .open("./examples/test.syms")
+        .unwrap();
 
-    fn func() {
-        print(formula);
-    }
+    let text = &std::io::read_to_string(text).unwrap();
 
-    let k = 0;
-    let str = "h\'i";
-    loop {
-        func();
-
-        k += 1;
-
-        if k == 10 {
-            break;
-        }
-    }
-    "#;
-
-    let mut lexer = lexer::Lexer::new(text);
+    let mut lexer = lexer::Lexer::new("./examples/test.syms", text);
 
     let tokens = lexer.tokenize();
 
