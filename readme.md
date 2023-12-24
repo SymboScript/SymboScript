@@ -4,7 +4,7 @@ SymboScript is a a language without limits.
 
 ## Idea of SymboScript
 
-Now you can use symbolic math in a programming language directly. Well, he's also handsome (he will be)
+Take the JavaScript, Rust and WolframLanguage and make it a beautiful language without any limitations.
 
 ## Roadmap
 
