@@ -22,10 +22,6 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn next(&mut self) -> Option<char> {
-        self.chars.next()
-    }
-
     pub fn tokenize(&mut self) -> Vec<Token> {
         let mut tokens = Vec::new();
 
@@ -40,14 +36,50 @@ impl<'a> Lexer<'a> {
         tokens
     }
 
-    fn skip_trivia(&mut self) {
-        while let Some(c) = self.peek() {
-            match c {
-                ' ' | '\t' | '\n' | '\r' => {
-                    self.next();
-                }
-                _ => break,
+    pub fn next_token(&mut self) -> Token {
+        self.skip_trivia();
+        let start = self.offset();
+        let mut kind = self.next_kind();
+        let end = self.offset();
+
+        let s = self.source[start..end].trim();
+
+        let mut value = TokenValue::None;
+
+        match kind {
+            TokenKind::Number => {
+                value = TokenValue::Number(s.trim().parse::<f64>().unwrap_or_default());
             }
+            TokenKind::Identifier => {
+                kind = self.match_keyword(&s);
+
+                match kind {
+                    TokenKind::If | TokenKind::While | TokenKind::For => {}
+                    _ => {
+                        value = TokenValue::String(s.to_string());
+                    }
+                }
+            }
+
+            TokenKind::Str => {
+                value = TokenValue::String(s[1..s.len() - 1].to_string());
+            }
+
+            TokenKind::Comment => {
+                value = TokenValue::String(s[1..].to_string());
+            }
+
+            TokenKind::Unexpected => {
+                report_error(self.path, self.source, "Unexpected token", start, end)
+            }
+            _ => {}
+        }
+
+        Token {
+            kind,
+            start,
+            end,
+            value,
         }
     }
 
@@ -118,6 +150,58 @@ impl<'a> Lexer<'a> {
             };
         }
         TokenKind::Eof
+    }
+
+    fn match_keyword(&self, ident: &str) -> TokenKind {
+        // all keywords are 1 <= length <= 10
+        if ident.len() == 1 || ident.len() > 10 {
+            return TokenKind::Identifier;
+        }
+
+        match ident {
+            "if" => TokenKind::If,
+            "else" => TokenKind::Else,
+            "while" => TokenKind::While,
+            "loop" => TokenKind::Loop,
+            "for" => TokenKind::For,
+            "let" => TokenKind::Let,
+            "fn" => TokenKind::Function,
+            "return" => TokenKind::Return,
+            "break" => TokenKind::Break,
+            "continue" => TokenKind::Continue,
+            "in" => TokenKind::In,
+
+            "true" => TokenKind::True,
+            "false" => TokenKind::False,
+
+            // ---Keyword2Operator---
+            "band" => TokenKind::BitAnd,
+            "bxor" => TokenKind::BitXor,
+            "bor" => TokenKind::BitOr,
+            "bnot" => TokenKind::BitNot,
+            "bshl" => TokenKind::BitLeftShift,
+            "bshr" => TokenKind::BitRightShift,
+
+            "xor" => TokenKind::Xor,
+            "and" => TokenKind::And,
+            "or" => TokenKind::Or,
+            "not" => TokenKind::Not,
+            //---Keyword2Operator---
+
+            //
+            _ => TokenKind::Identifier,
+        }
+    }
+
+    fn skip_trivia(&mut self) {
+        while let Some(c) = self.peek() {
+            match c {
+                ' ' | '\t' | '\n' | '\r' => {
+                    self.next();
+                }
+                _ => break,
+            }
+        }
     }
 
     fn read_dot(&mut self) -> TokenKind {
@@ -236,94 +320,6 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    pub fn next_token(&mut self) -> Token {
-        self.skip_trivia();
-        let start = self.offset();
-        let mut kind = self.next_kind();
-        let end = self.offset();
-
-        let s = self.source[start..end].trim();
-
-        let mut value = TokenValue::None;
-
-        match kind {
-            TokenKind::Number => {
-                value = TokenValue::Number(s.trim().parse::<f64>().unwrap_or_default());
-            }
-            TokenKind::Identifier => {
-                kind = self.match_keyword(&s);
-
-                match kind {
-                    TokenKind::If | TokenKind::While | TokenKind::For => {}
-                    _ => {
-                        value = TokenValue::String(s.to_string());
-                    }
-                }
-            }
-
-            TokenKind::Str => {
-                value = TokenValue::String(s[1..s.len() - 1].to_string());
-            }
-
-            TokenKind::Comment => {
-                value = TokenValue::String(s[1..].to_string());
-            }
-
-            TokenKind::Unexpected => {
-                report_error(self.path, self.source, "Unexpected token", start, end)
-            }
-            _ => {}
-        }
-
-        Token {
-            kind,
-            start,
-            end,
-            value,
-        }
-    }
-
-    fn match_keyword(&self, ident: &str) -> TokenKind {
-        // all keywords are 1 <= length <= 10
-        if ident.len() == 1 || ident.len() > 10 {
-            return TokenKind::Identifier;
-        }
-
-        match ident {
-            "if" => TokenKind::If,
-            "else" => TokenKind::Else,
-            "while" => TokenKind::While,
-            "loop" => TokenKind::Loop,
-            "for" => TokenKind::For,
-            "let" => TokenKind::Let,
-            "fn" => TokenKind::Function,
-            "return" => TokenKind::Return,
-            "break" => TokenKind::Break,
-            "continue" => TokenKind::Continue,
-            "in" => TokenKind::In,
-
-            "true" => TokenKind::True,
-            "false" => TokenKind::False,
-
-            // ---Keyword2Operator---
-            "band" => TokenKind::BitAnd,
-            "bxor" => TokenKind::BitXor,
-            "bor" => TokenKind::BitOr,
-            "bnot" => TokenKind::BitNot,
-            "bshl" => TokenKind::BitLeftShift,
-            "bshr" => TokenKind::BitRightShift,
-
-            "xor" => TokenKind::Xor,
-            "and" => TokenKind::And,
-            "or" => TokenKind::Or,
-            "not" => TokenKind::Not,
-            //---Keyword2Operator---
-
-            //
-            _ => TokenKind::Identifier,
-        }
-    }
-
     /// Get the length offset from the source text, in UTF-8 bytes
     fn offset(&self) -> usize {
         self.source.len() - self.chars.as_str().len()
@@ -337,5 +333,9 @@ impl<'a> Lexer<'a> {
         let new_chars = self.chars.as_str();
         new_chars.chars().next();
         new_chars.chars().next()
+    }
+
+    fn next(&mut self) -> Option<char> {
+        self.chars.next()
     }
 }

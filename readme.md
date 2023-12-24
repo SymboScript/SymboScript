@@ -4,7 +4,7 @@ SymboScript is a a language without limits.
 
 ## Idea of SymboScript
 
-Take the JavaScript, Rust and WolframLanguage and make it a beautiful language without any limitations.
+Take JavaScript, Rust, and WolframLanguage and make a great language out of them without any restrictions.
 
 ## Roadmap
 

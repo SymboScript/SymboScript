@@ -72,12 +72,12 @@ pub enum TokenKind {
     GreaterEqual,
 
     // Brackets
-    LParen,
-    RParen,
-    LBrace,
-    RBrace,
-    LBracket,
-    RBracket,
+    LParen,   // (
+    RParen,   // )
+    LBrace,   // {
+    RBrace,   // }
+    LBracket, // [
+    RBracket, // ]
 
     // Identifiers
     Identifier,
