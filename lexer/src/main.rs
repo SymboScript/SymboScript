@@ -1,8 +1,10 @@
 use std::fs::OpenOptions;
 
 mod lexer;
-mod types;
-mod utils;
+
+pub use symboscript_types::lexer as types;
+pub use symboscript_utils as utils;
+
 fn main() {
     let text = OpenOptions::new()
         .read(true)

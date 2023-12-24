@@ -1,7 +1,7 @@
-use crate::types::{Kind, Token, TokenValue};
+use crate::types::{Token, TokenKind, TokenValue};
+use crate::utils::report_error;
 use std::str::Chars;
 
-use colored::Colorize;
 pub struct Lexer<'a> {
     /// Path of the source file
     path: &'a str,
@@ -31,7 +31,7 @@ impl<'a> Lexer<'a> {
 
         loop {
             let token = self.next_token();
-            if token.kind == Kind::Eof {
+            if token.kind == TokenKind::Eof {
                 break;
             }
             tokens.push(token);
@@ -40,7 +40,7 @@ impl<'a> Lexer<'a> {
         tokens
     }
 
-    pub fn skip_whitespace(&mut self) {
+    pub fn skip_trivia(&mut self) {
         while let Some(c) = self.peek() {
             match c {
                 ' ' | '\t' | '\n' | '\r' => {
@@ -51,73 +51,104 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    pub fn next_kind(&mut self) -> Kind {
+    pub fn next_kind(&mut self) -> TokenKind {
         while let Some(c) = self.next() {
             match c {
-                '+' => return Kind::Plus,
-                '-' => return Kind::Minus,
-                '*' => return Kind::Star,
-                '/' => return Kind::Slash,
-                '^' => return Kind::Power,
+                '+' => return self.read_one_more('=', TokenKind::PlusAssign, TokenKind::Plus),
+                '-' => return self.read_one_more('=', TokenKind::MinusAssign, TokenKind::Minus),
+                '*' => return self.read_one_more('=', TokenKind::MultiplyAssign, TokenKind::Star),
+                '/' => return self.read_one_more('=', TokenKind::DivideAssign, TokenKind::Slash),
+                '^' => return self.read_one_more('=', TokenKind::PowerAssign, TokenKind::Power),
+                '%' => return self.read_one_more('=', TokenKind::ModuloAssign, TokenKind::Modulo),
 
-                '(' => return Kind::LParen,
-                ')' => return Kind::RParen,
-                '{' => return Kind::LBrace,
-                '}' => return Kind::RBrace,
-                '[' => return Kind::LBracket,
-                ']' => return Kind::RBracket,
+                '<' => return self.read_one_more('=', TokenKind::LessEqual, TokenKind::Less),
+                '>' => return self.read_one_more('=', TokenKind::GreaterEqual, TokenKind::Greater),
 
-                ';' => return Kind::Semicolon,
-                ',' => return Kind::Comma,
-                ':' => return Kind::Colon,
-                '.' => {
-                    if self.peek() == Some('.') {
-                        self.next();
-                        return Kind::Range;
-                    } else if ("0"..="9")
-                        .contains(&self.peek().unwrap_or_default().to_string().as_str())
-                    {
-                        return self.read_number();
-                    }
-                    return Kind::Dot;
-                }
+                '!' => return self.read_one_more('=', TokenKind::NotEqual, TokenKind::Not),
 
-                '=' => match self.peek() {
-                    Some('=') => {
-                        self.next();
-                        return Kind::Equal;
-                    }
-                    _ => return Kind::Equate,
-                },
+                '(' => return TokenKind::LParen,
+                ')' => return TokenKind::RParen,
+                '{' => return TokenKind::LBrace,
+                '}' => return TokenKind::RBrace,
+                '[' => return TokenKind::LBracket,
+                ']' => return TokenKind::RBracket,
+
+                ';' => return TokenKind::Semicolon,
+                ',' => return TokenKind::Comma,
+                ':' => return self.read_one_more('=', TokenKind::FormulaAssign, TokenKind::Colon),
+
+                '.' => return self.read_dot(),
+
+                '=' => return self.read_one_more('=', TokenKind::Equal, TokenKind::Assign),
                 '0'..='9' => return self.read_number(),
                 'a'..='z' | 'A'..='Z' | '_' => return self.read_identifier(),
-                '"' | '\'' => return self.read_string(),
-                ' ' | '\t' | '\n' | '\r' => {}
-                _ => return Kind::Unexpected,
+                '"' | '\'' | '`' => return self.read_string(c),
+                '#' => return self.read_comment(),
+                _ => return TokenKind::Unexpected,
             };
         }
-        Kind::Eof
+        TokenKind::Eof
     }
 
-    fn read_number(&mut self) -> Kind {
+    fn read_dot(&mut self) -> TokenKind {
+        if self.peek() == Some('.') {
+            self.next();
+            return TokenKind::Range;
+        } else if ("0"..="9").contains(&self.peek().unwrap_or_default().to_string().as_str()) {
+            return self.read_number();
+        }
+        return TokenKind::Dot;
+    }
+
+    fn read_number(&mut self) -> TokenKind {
         while let Some(c) = self.peek() {
             match c {
                 '0'..='9' => {
                     self.next();
                 }
+                '.' | 'e' | 'E' => {
+                    if let Some(c) = self.peek_two() {
+                        match c {
+                            '0'..='9' => {
+                                self.next();
+                                self.next();
+                            }
+                            _ => {
+                                break;
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
                 _ => break,
             };
         }
 
-        Kind::Number
+        TokenKind::Number
     }
 
-    fn read_string(&mut self) -> Kind {
+    fn read_comment(&mut self) -> TokenKind {
         while let Some(c) = self.peek() {
             match c {
-                '"' | '\'' => {
+                '\n' => {
                     self.next();
-                    return Kind::String;
+                    break;
+                }
+                _ => {
+                    self.next();
+                }
+            };
+        }
+        TokenKind::Comment
+    }
+
+    fn read_string(&mut self, init_char: char) -> TokenKind {
+        while let Some(c) = self.peek() {
+            match c {
+                c if c == init_char => {
+                    self.next();
+                    return TokenKind::String;
                 }
                 '\\' => {
                     self.next();
@@ -128,10 +159,10 @@ impl<'a> Lexer<'a> {
                 }
             };
         }
-        Kind::Unexpected
+        TokenKind::Unexpected
     }
 
-    fn read_identifier(&mut self) -> Kind {
+    fn read_identifier(&mut self) -> TokenKind {
         while let Some(c) = self.peek() {
             match c {
                 'a'..='z' | 'A'..='Z' | '_' | '0'..='9' => {
@@ -141,11 +172,26 @@ impl<'a> Lexer<'a> {
             };
         }
 
-        Kind::Identifier
+        TokenKind::Identifier
+    }
+
+    fn read_one_more(
+        &mut self,
+        ch: char,
+        kind_expected: TokenKind,
+        kind_unexpected: TokenKind,
+    ) -> TokenKind {
+        match self.peek() {
+            Some(c) if c == ch => {
+                self.next();
+                return kind_expected;
+            }
+            _ => return kind_unexpected,
+        }
     }
 
     fn next_token(&mut self) -> Token {
-        self.skip_whitespace();
+        self.skip_trivia();
         let start = self.offset();
         let mut kind = self.next_kind();
         let end = self.offset();
@@ -155,23 +201,31 @@ impl<'a> Lexer<'a> {
         let mut value = TokenValue::None;
 
         match kind {
-            Kind::Number => {
+            TokenKind::Number => {
                 value = TokenValue::Number(s.trim().parse::<f64>().unwrap_or_default());
             }
-            Kind::Identifier => {
+            TokenKind::Identifier => {
                 kind = self.match_keyword(&s);
 
                 match kind {
-                    Kind::If | Kind::While | Kind::For => {}
+                    TokenKind::If | TokenKind::While | TokenKind::For => {}
                     _ => {
-                        value = TokenValue::Identifier(s.to_string());
+                        value = TokenValue::String(s.to_string());
                     }
                 }
             }
-            Kind::String => {
+
+            TokenKind::String => {
                 value = TokenValue::String(s[1..s.len() - 1].to_string());
             }
-            Kind::Unexpected => self.report_error("Unexpected token".to_string(), start, end),
+
+            TokenKind::Comment => {
+                value = TokenValue::String(s[1..].to_string());
+            }
+
+            TokenKind::Unexpected => {
+                report_error(self.path, self.source, "Unexpected token", start, end)
+            }
             _ => {}
         }
 
@@ -183,28 +237,29 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn match_keyword(&self, ident: &str) -> Kind {
+    fn match_keyword(&self, ident: &str) -> TokenKind {
         // all keywords are 1 <= length <= 10
         if ident.len() == 1 || ident.len() > 10 {
-            return Kind::Identifier;
+            return TokenKind::Identifier;
         }
 
         match ident {
-            "if" => Kind::If,
-            "else" => Kind::Else,
-            "while" => Kind::While,
-            "loop" => Kind::Loop,
-            "for" => Kind::For,
-            "let" => Kind::Let,
-            "fn" => Kind::Function,
-            "return" => Kind::Return,
-            "break" => Kind::Break,
-            "continue" => Kind::Continue,
+            "if" => TokenKind::If,
+            "else" => TokenKind::Else,
+            "while" => TokenKind::While,
+            "loop" => TokenKind::Loop,
+            "for" => TokenKind::For,
+            "let" => TokenKind::Let,
+            "fn" => TokenKind::Function,
+            "return" => TokenKind::Return,
+            "break" => TokenKind::Break,
+            "continue" => TokenKind::Continue,
+            "in" => TokenKind::In,
 
-            "true" => Kind::True,
-            "false" => Kind::False,
+            "true" => TokenKind::True,
+            "false" => TokenKind::False,
 
-            _ => Kind::Identifier,
+            _ => TokenKind::Identifier,
         }
     }
 
@@ -217,33 +272,9 @@ impl<'a> Lexer<'a> {
         self.chars.as_str().chars().next()
     }
 
-    fn report_error(&self, error: String, start: usize, end: usize) {
-        let line = self.source[..start].lines().count();
-        let line_end = line - 1 + self.source[start..end].lines().count();
-
-        let column = start - self.source[..start].rfind('\n').unwrap_or(0);
-        let column_end = end - self.source[..start].rfind('\n').unwrap_or(0);
-
-        let near_text = self.source.lines().nth(line - 1).unwrap_or(&"").trim_end();
-
-        let line_n = format!("{line} |");
-
-        let error_pointer = (" ".repeat(column + line_n.len()) + "^".repeat(end - start).as_str())
-            .red()
-            .bold();
-        let error_pointer_text = (&error).red().bold();
-
-        println!(
-            "{}\n{} {near_text}\n{error_pointer} {error_pointer_text}",
-            format!(
-                "--> {}:{}:{}-{}:{}",
-                self.path, line, column, line_end, column_end
-            )
-            .blue()
-            .bold(),
-            line_n.to_string().blue().bold(),
-        );
-
-        std::process::exit(1);
+    fn peek_two(&self) -> Option<char> {
+        let new_chars = self.chars.as_str();
+        new_chars.chars().next();
+        new_chars.chars().next()
     }
 }

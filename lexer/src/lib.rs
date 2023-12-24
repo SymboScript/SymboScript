@@ -1,11 +1,13 @@
 mod lexer;
-mod types;
 
 pub use lexer::Lexer;
 
+pub use symboscript_types::lexer as types;
+pub use symboscript_utils as utils;
+
 #[cfg(test)]
 mod tests {
-    use crate::types::{Kind, Token, TokenValue::*};
+    use crate::types::{Token, TokenKind, TokenValue::*};
     use crate::Lexer;
     #[test]
     fn plus() {

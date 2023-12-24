@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Token {
     /// Token Type
-    pub kind: Kind,
+    pub kind: TokenKind,
 
     /// Start offset in source
     pub start: usize,
@@ -15,8 +15,9 @@ pub struct Token {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
-pub enum Kind {
+pub enum TokenKind {
     Eof, // end of file
+    Comment,
     Unexpected,
 
     Semicolon,
@@ -30,14 +31,30 @@ pub enum Kind {
     Star,
     Slash,
     Power,
-    Equate,
     Range,
+    Modulo,
 
+    // Logic operators
+    And,
+    Or,
+    Not,
+
+    /// Assignments operators (+=, -=, *=, /=...)
+    Assign,
+    FormulaAssign,
+    PlusAssign,
+    MinusAssign,
+    MultiplyAssign,
+    DivideAssign,
+    PowerAssign,
+    ModuloAssign,
+
+    // Comparison operators
     Equal,
     NotEqual,
-    LessThan,
+    Less,
     LessEqual,
-    GreaterThan,
+    Greater,
     GreaterEqual,
 
     // Brackets
@@ -54,6 +71,8 @@ pub enum Kind {
     // Literals
     Number,
     String,
+    True,
+    False,
 
     // Keywords
     If,
@@ -66,8 +85,7 @@ pub enum Kind {
     Break,
     Continue,
     Function,
-    True,
-    False,
+    In,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -75,5 +93,4 @@ pub enum TokenValue {
     None,
     Number(f64),
     String(String),
-    Identifier(String),
 }
