@@ -2,6 +2,15 @@
 name = "symboscript-types"
 version = "0.1.0"
 edition = "2021"
+authors = ["artegoser"]
+license = "MIT"
+description = "A symbolic programming language SymboScript types"
+repository = "https://github.com/artegoser/SymboScript"
+homepage = "https://github.com/artegoser/SymboScript/tree/main/types"
+documentation = "https://github.com/artegoser/SymboScript/blob/master/doc/main.md"
+readme = "./README.md"
+keywords = ["programming-language", "types", "symboscript"]
+categories = ["compilers"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

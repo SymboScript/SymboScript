@@ -1,7 +1,8 @@
 use colored::Colorize;
 use symboscript_types::lexer::{Token, TokenKind::*};
 
-pub fn output_tokens_colored(text: &str, tokens: &Vec<Token>) {
+pub fn output_tokens_colored(text: &str, tokens: &Vec<Token>, show_tokens: Option<bool>) {
+    let show_tokens = show_tokens.unwrap_or(false);
     let mut last_start;
     let mut last_end = 0;
 
@@ -9,7 +10,13 @@ pub fn output_tokens_colored(text: &str, tokens: &Vec<Token>) {
         last_start = token.start;
         print!("{}", text[last_end..last_start].to_string());
         last_end = token.end;
-        let s = format!("{}", text[token.start..token.end].to_string());
+
+        let s = if show_tokens {
+            format!("<{}>", text[token.start..token.end].to_string())
+        } else {
+            format!("{}", text[token.start..token.end].to_string())
+        };
+
         match token.kind {
             Identifier => print!("{}", s.yellow()),
 

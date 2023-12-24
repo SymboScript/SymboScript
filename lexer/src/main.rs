@@ -1,23 +1,37 @@
+use clap::Parser;
 use std::fs::OpenOptions;
 
 mod lexer;
 
-pub use symboscript_types::lexer as types;
-pub use symboscript_utils as utils;
+use symboscript_types::lexer as types;
+use symboscript_utils as utils;
+
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+struct Args {
+    /// Path to the file
+    path: String,
+
+    /// Enable debug mode (prints all tokens)
+    #[clap(short, long)]
+    debug: bool,
+
+    /// Show tokens <token>
+    #[clap(short, long)]
+    show_tokens: bool,
+}
 
 fn main() {
-    let text = OpenOptions::new()
-        .read(true)
-        .open("./examples/test.syms")
-        .unwrap();
+    let args = Args::parse();
 
+    let text = OpenOptions::new().read(true).open(&args.path).unwrap();
     let text = &std::io::read_to_string(text).unwrap();
-
-    let mut lexer = lexer::Lexer::new("./examples/test.syms", text);
-
+    let mut lexer = lexer::Lexer::new(&args.path, text);
     let tokens = lexer.tokenize();
 
-    utils::output_tokens_colored(text, &tokens);
+    if args.debug {
+        println!("{:#?}", tokens);
+    }
 
-    // println!("{:#?}", tokens);
+    utils::output_tokens_colored(text, &tokens, Some(args.show_tokens));
 }

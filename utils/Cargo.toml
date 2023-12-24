@@ -2,9 +2,18 @@
 name = "symboscript-utils"
 version = "0.1.0"
 edition = "2021"
+authors = ["artegoser"]
+license = "MIT"
+description = "SymboScript utils"
+repository = "https://github.com/artegoser/SymboScript"
+homepage = "https://github.com/artegoser/SymboScript/tree/main/utils"
+documentation = "https://github.com/artegoser/SymboScript/blob/master/doc/main.md"
+readme = "./README.md"
+keywords = ["programming-language", "utils", "symboscript"]
+categories = ["compilers"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 colored = "2.1.0"
-symboscript-types = { path = "../types" }
+symboscript-types = { path = "../types", version = "0.1.0" }
