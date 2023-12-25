@@ -123,6 +123,14 @@ impl<'a> Parser<'a> {
                 self.eat(token.kind);
                 return Expression::NumberLiteral(token);
             }
+            TokenKind::True | TokenKind::False => {
+                self.eat(token.kind);
+                return Expression::BooleanLiteral(token);
+            }
+            TokenKind::Str => {
+                self.eat(token.kind);
+                return Expression::StrLiteral(token);
+            }
             TokenKind::LParen => {
                 self.eat(token.kind);
                 let node = self.expr();

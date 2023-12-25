@@ -65,6 +65,8 @@ pub enum Expression {
     BinaryExpression(Box<BinaryExpression>),
     UnaryExpression(Box<UnaryExpression>),
     NumberLiteral(Token),
+    StrLiteral(Token),
+    BooleanLiteral(Token),
     Identifier(Token),
 }
 
@@ -72,7 +74,10 @@ impl fmt::Display for Expression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Expression::BinaryExpression(expr) => write!(f, "({})", expr),
-            Expression::NumberLiteral(token) | Expression::Identifier(token) => {
+            Expression::NumberLiteral(token)
+            | Expression::Identifier(token)
+            | Expression::StrLiteral(token)
+            | Expression::BooleanLiteral(token) => {
                 write!(f, "{}", token)
             }
             Expression::UnaryExpression(expr) => write!(f, "({})", expr),
