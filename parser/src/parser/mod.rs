@@ -1,6 +1,6 @@
 use symboscript_lexer::Lexer;
 use symboscript_types::{
-    lexer::{self, Token, TokenKind, TokenValue},
+    lexer::{Token, TokenKind, TokenValue},
     parser::{Ast, BinaryExpression, Expression, Node, Program, Statement},
 };
 use symboscript_utils::report_error;
@@ -39,17 +39,17 @@ impl<'a> Parser<'a> {
     pub fn parse(&mut self) -> Ast {
         self.eat(TokenKind::Start);
         return Ast {
-            program: Program {
+            program: Statement::Program(Program {
                 node: Node {
                     start: 0,
                     end: self.source.len(),
                 },
                 body: vec![Statement::ExpressionStatement(self.expr())],
-            },
+            }),
         };
     }
 
-    pub fn expr(&mut self) -> Expression {
+    fn expr(&mut self) -> Expression {
         let start = self.cur_token.start;
         let mut node = self.term();
 
@@ -72,14 +72,26 @@ impl<'a> Parser<'a> {
             }));
         }
 
+        // self.eat(TokenKind::Semicolon);
+
         node
     }
 
-    pub fn term(&mut self) -> Expression {
+    /// term : (factor (Star | Slash) factor)* | (factor factor)*
+    fn term(&mut self) -> Expression {
         let start = self.cur_token.start;
         let mut expr = self.factor();
 
-        while [TokenKind::Star, TokenKind::Slash].contains(&self.cur_token.kind) {
+        while [TokenKind::Identifier, TokenKind::LParen].contains(&self.cur_token.kind) {
+            expr = Expression::BinaryExpression(Box::new(BinaryExpression {
+                node: Node::new(start, self.cur_token.end),
+                left: expr,
+                operator: TokenKind::Multiply,
+                right: self.factor(),
+            }));
+        }
+
+        while [TokenKind::Multiply, TokenKind::Divide].contains(&self.cur_token.kind) {
             let operator = self.cur_token.kind;
             self.eat(operator);
 
@@ -94,27 +106,25 @@ impl<'a> Parser<'a> {
         expr
     }
 
-    pub fn factor(&mut self) -> Expression {
+    /// factor : Number | LParen expr Rparen | Identifier
+    fn factor(&mut self) -> Expression {
         let token = self.cur_token.clone();
+
         if token.kind == TokenKind::Number {
-            self.eat(TokenKind::Number);
+            self.eat(token.kind);
             return Expression::NumberLiteral(token);
         } else if token.kind == TokenKind::LParen {
-            self.eat(TokenKind::LParen);
+            self.eat(token.kind);
             let node = self.expr();
             self.eat(TokenKind::RParen);
             return node;
+        } else if token.kind == TokenKind::Identifier {
+            self.eat(token.kind);
+            return Expression::Identifier(token);
         }
 
-        report_error(
-            self.path,
-            self.source,
-            "Expected number literal",
-            token.start,
-            token.end,
-        );
-
-        std::process::exit(1);
+        self.report_expected(TokenKind::Number, token.kind);
+        unreachable!("Report ends proccess")
     }
 
     fn eat(&mut self, kind: TokenKind) -> bool {
@@ -123,18 +133,18 @@ impl<'a> Parser<'a> {
             return true;
         }
 
+        self.report_expected(kind, self.cur_kind());
+        unreachable!("Report ends proccess");
+    }
+
+    fn report_expected(&self, expected: TokenKind, got: TokenKind) {
         report_error(
             self.path,
             self.source,
-            &format!(
-                "Expected token {:?} but got {:?}",
-                kind, self.cur_token.kind
-            ),
-            self.cur_token.start + 1,
-            self.cur_token.end + 1,
+            &format!("Expected {expected} but got {got}"),
+            self.cur_token.start,
+            self.cur_token.end,
         );
-
-        false
     }
 
     /// Move to the next token
@@ -144,19 +154,6 @@ impl<'a> Parser<'a> {
         self.cur_token = token;
     }
 
-    fn start_node(&self) -> Node {
-        let token = self.cur_token();
-        Node::new(token.start, 0)
-    }
-
-    fn finish_node(&self, node: Node) -> Node {
-        Node::new(node.start, self.prev_token_end)
-    }
-
-    fn cur_token(&self) -> &Token {
-        &self.cur_token
-    }
-
     fn cur_kind(&self) -> TokenKind {
         self.cur_token.kind
     }
@@ -164,17 +161,5 @@ impl<'a> Parser<'a> {
     /// Checks if the current index has token `TokenKind`
     fn at(&self, kind: TokenKind) -> bool {
         self.cur_kind() == kind
-    }
-
-    /// Advance if we are at `TokenKind`
-    fn bump(&mut self, kind: TokenKind) {
-        if self.at(kind) {
-            self.advance();
-        }
-    }
-
-    /// Advance any token
-    fn bump_any(&mut self) {
-        self.advance();
     }
 }

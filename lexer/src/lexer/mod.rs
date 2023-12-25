@@ -56,17 +56,17 @@ impl<'a> Lexer<'a> {
                 match kind {
                     TokenKind::If | TokenKind::While | TokenKind::For => {}
                     _ => {
-                        value = TokenValue::String(s.to_string());
+                        value = TokenValue::Str(s.to_string());
                     }
                 }
             }
 
             TokenKind::Str => {
-                value = TokenValue::String(s[1..s.len() - 1].to_string());
+                value = TokenValue::Str(s[1..s.len() - 1].to_string());
             }
 
             TokenKind::Comment => {
-                value = TokenValue::String(s[1..].to_string());
+                value = TokenValue::Str(s[1..].to_string());
             }
 
             TokenKind::Unexpected => {
@@ -107,8 +107,10 @@ impl<'a> Lexer<'a> {
                         &[TokenKind::MinusAssign, TokenKind::MinusMinus],
                     )
                 }
-                '*' => return self.read_one_more('=', TokenKind::MultiplyAssign, TokenKind::Star),
-                '/' => return self.read_one_more('=', TokenKind::DivideAssign, TokenKind::Slash),
+                '*' => {
+                    return self.read_one_more('=', TokenKind::MultiplyAssign, TokenKind::Multiply)
+                }
+                '/' => return self.read_one_more('=', TokenKind::DivideAssign, TokenKind::Divide),
                 '^' => return self.read_one_more('=', TokenKind::PowerAssign, TokenKind::Power),
                 '%' => return self.read_one_more('=', TokenKind::ModuloAssign, TokenKind::Modulo),
 

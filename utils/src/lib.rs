@@ -1,3 +1,5 @@
+use std::cmp::max;
+
 use colored::Colorize;
 use symboscript_types::lexer::{Token, TokenKind::*};
 
@@ -20,8 +22,9 @@ pub fn output_tokens_colored(text: &str, tokens: &Vec<Token>, show_tokens: Optio
         match token.kind {
             Identifier => print!("{}", s.yellow()),
 
-            Plus | Minus | Star | Slash | Power | Assign | Equal | Range | FormulaAssign | And
-            | Or | Xor | Not | BitAnd | BitOr | BitNot | BitXor | BitLeftShift | BitRightShift => {
+            Plus | Minus | Multiply | Divide | Power | Assign | Equal | Range | FormulaAssign
+            | And | Or | Xor | Not | BitAnd | BitOr | BitNot | BitXor | BitLeftShift
+            | BitRightShift => {
                 print!("{}", s.green())
             }
 
@@ -46,7 +49,7 @@ pub fn output_tokens_colored(text: &str, tokens: &Vec<Token>, show_tokens: Optio
 }
 
 pub fn report_error(path: &str, source: &str, error: &str, start: usize, end: usize) {
-    let line = source[..start + 1].lines().count();
+    let line = source[..start].lines().count();
     let line_end = line - 1 + source[start..end].lines().count();
 
     let column = start - source[..start].rfind('\n').unwrap_or(0);
@@ -56,9 +59,10 @@ pub fn report_error(path: &str, source: &str, error: &str, start: usize, end: us
 
     let line_n = format!("{line} |");
 
-    let error_pointer = (" ".repeat(column + line_n.len()) + "^".repeat(end - start).as_str())
-        .red()
-        .bold();
+    let error_pointer = (" ".repeat(column + line_n.len() + 1)
+        + "^".repeat(max(end - start, 1)).as_str())
+    .red()
+    .bold();
     let error_pointer_text = (&error).red().bold();
 
     println!(

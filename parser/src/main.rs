@@ -31,5 +31,5 @@ fn main() {
 
     let ast = parser.parse();
 
-    println!("{}", serde_json::to_string_pretty(&ast).unwrap());
+    println!("{}", ast);
 }

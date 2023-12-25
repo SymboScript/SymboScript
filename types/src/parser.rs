@@ -1,9 +1,17 @@
+use std::fmt;
+
 use crate::lexer::{Token, TokenKind};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Ast {
-    pub program: Program,
+    pub program: Statement,
+}
+
+impl fmt::Display for Ast {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.program)
+    }
 }
 
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -27,15 +35,46 @@ pub struct Program {
     pub body: Vec<Statement>,
 }
 
+impl fmt::Display for Program {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for statement in &self.body {
+            write!(f, " {}\n", statement)?;
+        }
+
+        Ok(())
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Statement {
     ExpressionStatement(Expression),
+    Program(Program),
+}
+
+impl fmt::Display for Statement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Statement::ExpressionStatement(expr) => write!(f, "{}", expr),
+            Statement::Program(program) => write!(f, "{}", program),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Expression {
     BinaryExpression(Box<BinaryExpression>),
     NumberLiteral(Token),
+    Identifier(Token),
+}
+
+impl fmt::Display for Expression {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Expression::BinaryExpression(expr) => write!(f, "({})", expr),
+            Expression::NumberLiteral(token) => write!(f, "{}", token),
+            Expression::Identifier(token) => write!(f, "{}", token),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -44,4 +83,10 @@ pub struct BinaryExpression {
     pub left: Expression,
     pub operator: TokenKind,
     pub right: Expression,
+}
+
+impl fmt::Display for BinaryExpression {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}{}", self.left, self.operator, self.right)
+    }
 }
