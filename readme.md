@@ -8,8 +8,8 @@ Take JavaScript, Rust, and WolframLanguage and make a great language out of them
 
 ## Roadmap
 
-- [ ] [Documentation](./doc/readme.md) (not started)
+- [ ] [Documentation](https://symboscript.github.io/Book/) (started (not really))
 - [ ] [Lexer](./lexer/readme.md) (started)
-- [ ] Parser
+- [ ] [Parser](./parser/readme.md) (started)
 - [ ] Interpreter
 - [ ] Analyzer
