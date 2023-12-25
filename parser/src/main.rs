@@ -1,4 +1,5 @@
 use clap::Parser;
+use serde_json::json;
 use std::fs::OpenOptions;
 
 mod parser;
@@ -11,13 +12,9 @@ struct Args {
     /// Path to the file
     path: String,
 
-    /// Enable debug mode (prints all tokens)
+    /// Enable debug mode (prints the AST)
     #[clap(short, long)]
     debug: bool,
-
-    /// Show tokens <token>
-    #[clap(short, long)]
-    show_tokens: bool,
 }
 
 fn main() {
@@ -32,4 +29,8 @@ fn main() {
     let ast = parser.parse();
 
     println!("{}", ast);
+
+    if args.debug {
+        println!("{}", serde_yaml::to_string(&json!(ast)).unwrap())
+    };
 }

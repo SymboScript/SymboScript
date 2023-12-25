@@ -63,6 +63,7 @@ impl fmt::Display for Statement {
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Expression {
     BinaryExpression(Box<BinaryExpression>),
+    UnaryExpression(Box<UnaryExpression>),
     NumberLiteral(Token),
     Identifier(Token),
 }
@@ -71,8 +72,10 @@ impl fmt::Display for Expression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Expression::BinaryExpression(expr) => write!(f, "({})", expr),
-            Expression::NumberLiteral(token) => write!(f, "{}", token),
-            Expression::Identifier(token) => write!(f, "{}", token),
+            Expression::NumberLiteral(token) | Expression::Identifier(token) => {
+                write!(f, "{}", token)
+            }
+            Expression::UnaryExpression(expr) => write!(f, "({})", expr),
         }
     }
 }
@@ -88,5 +91,18 @@ pub struct BinaryExpression {
 impl fmt::Display for BinaryExpression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}{}", self.left, self.operator, self.right)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UnaryExpression {
+    pub node: Node,
+    pub operator: TokenKind,
+    pub right: Expression,
+}
+
+impl fmt::Display for UnaryExpression {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}", self.operator, self.right)
     }
 }

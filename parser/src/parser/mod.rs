@@ -1,7 +1,7 @@
 use symboscript_lexer::Lexer;
 use symboscript_types::{
     lexer::{Token, TokenKind, TokenValue},
-    parser::{Ast, BinaryExpression, Expression, Node, Program, Statement},
+    parser::*,
 };
 use symboscript_utils::report_error;
 
@@ -77,7 +77,7 @@ impl<'a> Parser<'a> {
         node
     }
 
-    /// term : (factor (Star | Slash) factor)* | (factor factor)*
+    /// term : (factor (Star | Slash | Modulo | Power | Range) factor)* | (factor factor)*
     fn term(&mut self) -> Expression {
         let start = self.cur_token.start;
         let mut expr = self.factor();
@@ -91,7 +91,15 @@ impl<'a> Parser<'a> {
             }));
         }
 
-        while [TokenKind::Multiply, TokenKind::Divide].contains(&self.cur_token.kind) {
+        while [
+            TokenKind::Multiply,
+            TokenKind::Divide,
+            TokenKind::Modulo,
+            TokenKind::Power,
+            TokenKind::Range,
+        ]
+        .contains(&self.cur_token.kind)
+        {
             let operator = self.cur_token.kind;
             self.eat(operator);
 
@@ -106,21 +114,34 @@ impl<'a> Parser<'a> {
         expr
     }
 
-    /// factor : Number | LParen expr Rparen | Identifier
+    /// factor : Number | LParen expr Rparen | Identifier | !factor | ++factor | --factor
     fn factor(&mut self) -> Expression {
         let token = self.cur_token.clone();
 
-        if token.kind == TokenKind::Number {
-            self.eat(token.kind);
-            return Expression::NumberLiteral(token);
-        } else if token.kind == TokenKind::LParen {
-            self.eat(token.kind);
-            let node = self.expr();
-            self.eat(TokenKind::RParen);
-            return node;
-        } else if token.kind == TokenKind::Identifier {
-            self.eat(token.kind);
-            return Expression::Identifier(token);
+        match token.kind {
+            TokenKind::Number => {
+                self.eat(token.kind);
+                return Expression::NumberLiteral(token);
+            }
+            TokenKind::LParen => {
+                self.eat(token.kind);
+                let node = self.expr();
+                self.eat(TokenKind::RParen);
+                return node;
+            }
+            TokenKind::Identifier => {
+                self.eat(token.kind);
+                return Expression::Identifier(token);
+            }
+            TokenKind::Not | TokenKind::PlusPlus | TokenKind::MinusMinus => {
+                self.eat(token.kind);
+                return Expression::UnaryExpression(Box::new(UnaryExpression {
+                    node: Node::new(token.start, self.cur_token.end),
+                    operator: token.kind,
+                    right: self.factor(),
+                }));
+            }
+            _ => {}
         }
 
         self.report_expected(TokenKind::Number, token.kind);

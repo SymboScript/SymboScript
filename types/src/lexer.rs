@@ -58,12 +58,16 @@ pub enum TokenKind {
     // Unary operators
     PlusPlus,
     MinusMinus,
+
+    // Ternary operators
     Question,
 
     // Logic operators (Keyword2Operator)
     And,
     Or,
     Xor,
+
+    // Unary logic operators
     Not,
 
     /// Assignments operators (+=, -=, *=, /=...)
@@ -151,10 +155,10 @@ impl fmt::Display for TokenKind {
             TokenKind::MinusMinus => write!(f, "--"),
             TokenKind::Question => write!(f, "?"),
 
-            TokenKind::And => write!(f, "&& or and"),
-            TokenKind::Or => write!(f, "|| or or"),
+            TokenKind::And => write!(f, "&&"),
+            TokenKind::Or => write!(f, "||"),
             TokenKind::Xor => write!(f, "xor"),
-            TokenKind::Not => write!(f, "! or not"),
+            TokenKind::Not => write!(f, "!"),
 
             TokenKind::Assign => write!(f, "="),
             TokenKind::FormulaAssign => write!(f, ":="),
