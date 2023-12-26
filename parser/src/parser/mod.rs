@@ -109,7 +109,7 @@ impl<'a> Parser<'a> {
         expr
     }
 
-    /// factor : Number | LParen expr Rparen | Identifier | !factor | ++factor | --factor
+    /// factor : Number | LParen expr Rparen | Identifier | (! | ++ | -- | ~)factor
     fn factor(&mut self) -> Expression {
         let token = self.cur_token.clone();
 
@@ -128,7 +128,7 @@ impl<'a> Parser<'a> {
                 self.eat(token.kind);
                 return Expression::Identifier(token);
             }
-            TokenKind::Not | TokenKind::PlusPlus | TokenKind::MinusMinus => {
+            TokenKind::Not | TokenKind::PlusPlus | TokenKind::MinusMinus | TokenKind::BitNot => {
                 self.eat(token.kind);
                 return Expression::UnaryExpression(Box::new(UnaryExpression {
                     node: Node::new(token.start, self.cur_token.end),
