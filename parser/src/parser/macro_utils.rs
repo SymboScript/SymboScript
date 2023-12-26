@@ -42,9 +42,10 @@ macro_rules! parser_left_associative {
     }};
 }
 
+// not really a right associative operator, works only for two subOp
 #[macro_export]
-macro_rules! parser_right_associative {
-    ($self:ident, $Kinds: expr, $SubOp: ident) => {{
+macro_rules! parser_righty_associative {
+    ($self:ident, $SubOp: ident, $Kinds: expr) => {{
         let start = $self.cur_token.start;
         let mut node = $self.$SubOp();
 
@@ -53,8 +54,8 @@ macro_rules! parser_right_associative {
 
             $self.eat(current_token.kind);
 
-            let right = $self.$SubOp();
-            node = $self.binary_expression(start, node, right, current_token.kind);
+            let left = $self.$SubOp();
+            node = $self.binary_expression(start, left, node, current_token.kind);
         }
 
         node

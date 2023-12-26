@@ -1,4 +1,3 @@
-use clap::parser;
 use symboscript_lexer::Lexer;
 use symboscript_types::{
     lexer::{Token, TokenKind, TokenValue},
@@ -48,44 +47,54 @@ impl<'a> Parser<'a> {
                     start: 0,
                     end: self.source.len(),
                 },
-                body: vec![Statement::ExpressionStatement(self.expr())],
+                body: vec![self.expression_statement()],
             }),
         };
     }
 
-    /// add_sub
+    fn expression_statement(&mut self) -> Statement {
+        let expression = self.expr();
+        self.eat(TokenKind::Semicolon);
+
+        Statement::ExpressionStatement(expression)
+    }
+
     fn expr(&mut self) -> Expression {
         self.comma()
     }
 
-    /// assign , assign
     fn comma(&mut self) -> Expression {
-        parser_left_associative!(self, [TokenKind::Comma], assign)
+        let mut nodes = vec![];
+
+        nodes.push(self.assign());
+        while self.cur_kind() == TokenKind::Comma {
+            self.eat(TokenKind::Comma);
+            nodes.push(self.assign());
+        }
+
+        if nodes.len() == 1 {
+            return nodes.pop().unwrap();
+        }
+
+        Expression::SequenceExpression(nodes)
     }
 
     ///ternary (assigns) ternary
     fn assign(&mut self) -> Expression {
-        match self.cur_kind() {
-            TokenKind::Identifier => {
-                let left = self.cur_token.clone();
-
-                self.eat(TokenKind::Identifier);
-
-                let operator = self.cur_token.kind;
-                self.eat(self.cur_token.kind);
-
-                let right = self.expr();
-
-                return self.binary_expression(
-                    left.start,
-                    Expression::Identifier(left),
-                    right,
-                    operator,
-                );
-            }
-
-            _ => return self.ternary(),
-        }
+        parser_righty_associative!(
+            self,
+            ternary,
+            [
+                TokenKind::Assign,
+                TokenKind::FormulaAssign,
+                TokenKind::PlusAssign,
+                TokenKind::MinusAssign,
+                TokenKind::MultiplyAssign,
+                TokenKind::DivideAssign,
+                TokenKind::PowerAssign,
+                TokenKind::ModuloAssign
+            ]
+        )
     }
 
     /// logical_or ? logical_or : logical_or
@@ -222,10 +231,7 @@ impl<'a> Parser<'a> {
                 self.eat_with_start(TokenKind::RParen, token.start);
                 return node;
             }
-            TokenKind::Identifier => {
-                self.eat(token.kind);
-                return Expression::Identifier(token);
-            }
+            TokenKind::Identifier => return self.call(),
             TokenKind::Not
             | TokenKind::PlusPlus
             | TokenKind::MinusMinus
@@ -243,6 +249,37 @@ impl<'a> Parser<'a> {
 
         self.report_expected(token.start, TokenKind::Unexpected, token.kind);
         unreachable!("Report ends proccess")
+    }
+
+    fn call(&mut self) -> Expression {
+        let token = self.cur_token.clone();
+
+        self.eat(self.cur_kind());
+
+        match self.cur_kind() {
+            TokenKind::LBracket => {
+                self.eat(TokenKind::LBracket);
+                let mut node = self.expr();
+                self.eat_with_start(TokenKind::RBracket, token.start);
+
+                match node {
+                    Expression::SequenceExpression(nodes) => {
+                        node = Expression::SequenceExpression(nodes);
+                    }
+                    _ => node = Expression::SequenceExpression(vec![node]),
+                }
+
+                return Expression::CallExpression(Box::new(CallExpression {
+                    node: Node::new(token.start, self.cur_token.end),
+                    callee: Expression::Identifier(token),
+                    arguments: node,
+                }));
+            }
+
+            _ => {
+                return Expression::Identifier(token);
+            }
+        }
     }
 
     fn binary_expression(

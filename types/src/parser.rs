@@ -1,4 +1,4 @@
-use std::fmt;
+use std::fmt::{self, write};
 
 use crate::lexer::{Token, TokenKind};
 use serde::{Deserialize, Serialize};
@@ -65,6 +65,10 @@ pub enum Expression {
     BinaryExpression(Box<BinaryExpression>),
     UnaryExpression(Box<UnaryExpression>),
     ConditionalExpression(Box<ConditionalExpression>),
+    AssignmentExpression(Box<AssignmentExpression>),
+    CallExpression(Box<CallExpression>),
+    MemberExpression(Box<MemberExpression>),
+    SequenceExpression(Vec<Expression>),
     Literal(Token),
     Identifier(Token),
 }
@@ -78,6 +82,15 @@ impl fmt::Display for Expression {
             }
             Expression::UnaryExpression(expr) => write!(f, "({})", expr),
             Expression::ConditionalExpression(expr) => write!(f, "({})", expr),
+            Expression::CallExpression(expr) => write!(f, "({})", expr),
+            Expression::MemberExpression(expr) => write!(f, "({})", expr),
+            Expression::AssignmentExpression(expr) => write!(f, "({})", expr),
+            Expression::SequenceExpression(exprs) => {
+                for expr in exprs {
+                    write!(f, "{},", expr)?;
+                }
+                write!(f, "")
+            }
         }
     }
 }
@@ -124,5 +137,45 @@ impl fmt::Display for ConditionalExpression {
             "{} ? {} : {}",
             self.test, self.consequent, self.alternate
         )
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CallExpression {
+    pub node: Node,
+    pub callee: Expression,
+    pub arguments: Expression,
+}
+
+impl fmt::Display for CallExpression {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}[{}]", self.callee, self.arguments)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MemberExpression {
+    pub node: Node,
+    pub object: Expression,
+    pub property: Expression,
+}
+
+impl fmt::Display for MemberExpression {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}[[{}]]", self.object, self.property)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AssignmentExpression {
+    pub node: Node,
+    pub assignment: TokenKind,
+    pub left: Expression,
+    pub right: Expression,
+}
+
+impl fmt::Display for AssignmentExpression {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} = {}", self.left, self.right)
     }
 }
