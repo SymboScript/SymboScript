@@ -270,11 +270,7 @@ impl<'a> Parser<'a> {
                     _ => node = self.sequence_expression(token.start, vec![node]),
                 }
 
-                return Expression::CallExpression(Box::new(CallExpression {
-                    node: Node::new(token.start, self.cur_token.end),
-                    callee: Expression::Identifier(token),
-                    arguments: node,
-                }));
+                return self.call_expression(token.start, Expression::Identifier(token), node);
             }
 
             TokenKind::Dot => {
