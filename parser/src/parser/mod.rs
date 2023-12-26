@@ -5,6 +5,9 @@ use symboscript_types::{
 };
 use symboscript_utils::report_error;
 
+#[macro_use]
+mod macro_utils;
+
 pub struct Parser<'a> {
     /// Path of the source file
     path: &'a str,
@@ -51,7 +54,57 @@ impl<'a> Parser<'a> {
 
     /// add_sub
     fn expr(&mut self) -> Expression {
-        self.add_sub()
+        self.shift()
+    }
+
+    // shift (< | <= | > | >= | == | !=) shift
+    fn cmp(&mut self) -> Expression {
+        let start = self.cur_token.start;
+        let mut node = self.shift();
+
+        while [
+            TokenKind::Less,
+            TokenKind::LessEqual,
+            TokenKind::Greater,
+            TokenKind::GreaterEqual,
+            TokenKind::Equal,
+            TokenKind::NotEqual,
+        ]
+        .contains(&self.cur_token.kind)
+        {
+            let current_token = self.cur_token.clone();
+
+            self.eat(current_token.kind);
+
+            let right = self.shift();
+
+            node = self.binary_expression(start, node, right, current_token.kind);
+        }
+
+        node
+    }
+
+    // add_sub (>> | <<) add_sub
+    fn shift(&mut self) -> Expression {
+        // let start = self.cur_token.start;
+        // let mut node = self.add_sub();
+
+        // while [TokenKind::BitRightShift, TokenKind::BitLeftShift].contains(&self.cur_token.kind) {
+        //     let current_token = self.cur_token.clone();
+
+        //     self.eat(current_token.kind);
+
+        //     let right = self.add_sub();
+        //     node = self.binary_expression(start, node, right, current_token.kind);
+        // }
+
+        // node
+
+        parser!(
+            self,
+            [TokenKind::BitRightShift, TokenKind::BitLeftShift],
+            add_sub
+        )
     }
 
     /// term (Plus | Minus) term
