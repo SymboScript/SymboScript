@@ -49,66 +49,61 @@ impl<'a> Parser<'a> {
         };
     }
 
+    /// add_sub
     fn expr(&mut self) -> Expression {
+        self.add_sub()
+    }
+
+    /// term (Plus | Minus) term
+    fn add_sub(&mut self) -> Expression {
         let start = self.cur_token.start;
         let mut node = self.term();
 
         while [TokenKind::Plus, TokenKind::Minus].contains(&self.cur_token.kind) {
-            let token = self.cur_token.clone();
+            let current_token = self.cur_token.clone();
 
-            match token.kind {
-                TokenKind::Plus | TokenKind::Minus => {
-                    self.eat(token.kind);
-                }
+            self.eat(current_token.kind);
 
-                _ => {}
-            };
-
-            node = Expression::BinaryExpression(Box::new(BinaryExpression {
-                node: Node::new(start, self.cur_token.end),
-                left: node,
-                operator: token.kind,
-                right: self.term(),
-            }));
+            let right = self.term();
+            node = self.binary_expression(start, node, right, current_token.kind);
         }
-
-        // self.eat(TokenKind::Semicolon);
 
         node
     }
 
-    /// term : (factor (Star | Slash | Modulo | Power | Range) factor)* | (factor factor)*
+    /// (factor (Star | Slash | Modulo) factor)* | (factor factor)*
     fn term(&mut self) -> Expression {
         let start = self.cur_token.start;
-        let mut expr = self.factor();
+        let mut expr = self.power();
 
         while [TokenKind::Identifier, TokenKind::LParen].contains(&self.cur_token.kind) {
-            expr = Expression::BinaryExpression(Box::new(BinaryExpression {
-                node: Node::new(start, self.cur_token.end),
-                left: expr,
-                operator: TokenKind::Multiply,
-                right: self.factor(),
-            }));
+            let right = self.power();
+            expr = self.binary_expression(start, expr, right, TokenKind::Multiply);
         }
 
-        while [
-            TokenKind::Multiply,
-            TokenKind::Divide,
-            TokenKind::Modulo,
-            TokenKind::Power,
-            TokenKind::Range,
-        ]
-        .contains(&self.cur_token.kind)
+        while [TokenKind::Multiply, TokenKind::Divide, TokenKind::Modulo]
+            .contains(&self.cur_token.kind)
         {
             let operator = self.cur_token.kind;
             self.eat(operator);
 
-            expr = Expression::BinaryExpression(Box::new(BinaryExpression {
-                node: Node::new(start, self.cur_token.end),
-                left: expr,
-                operator,
-                right: self.factor(),
-            }));
+            let right = self.power();
+            expr = self.binary_expression(start, expr, right, operator);
+        }
+
+        expr
+    }
+
+    /// power: factor (Power) factor
+    fn power(&mut self) -> Expression {
+        let start = self.cur_token.start;
+        let mut expr = self.factor();
+
+        while self.cur_token.kind == TokenKind::Power {
+            self.eat(TokenKind::Power);
+
+            let right_expr = self.factor();
+            expr = self.binary_expression(start, expr, right_expr, TokenKind::Power)
         }
 
         expr
@@ -119,22 +114,14 @@ impl<'a> Parser<'a> {
         let token = self.cur_token.clone();
 
         match token.kind {
-            TokenKind::Number => {
+            TokenKind::Number | TokenKind::Str | TokenKind::True | TokenKind::False => {
                 self.eat(token.kind);
-                return Expression::NumberLiteral(token);
-            }
-            TokenKind::True | TokenKind::False => {
-                self.eat(token.kind);
-                return Expression::BooleanLiteral(token);
-            }
-            TokenKind::Str => {
-                self.eat(token.kind);
-                return Expression::StrLiteral(token);
+                return Expression::Literal(token);
             }
             TokenKind::LParen => {
                 self.eat(token.kind);
                 let node = self.expr();
-                self.eat(TokenKind::RParen);
+                self.eat_with_start(TokenKind::RParen, token.start);
                 return node;
             }
             TokenKind::Identifier => {
@@ -152,26 +139,45 @@ impl<'a> Parser<'a> {
             _ => {}
         }
 
-        self.report_expected(TokenKind::Number, token.kind);
+        self.report_expected(token.start, TokenKind::Number, token.kind);
         unreachable!("Report ends proccess")
     }
 
+    fn binary_expression(
+        &mut self,
+        start: usize,
+        left: Expression,
+        right: Expression,
+        operator: TokenKind,
+    ) -> Expression {
+        Expression::BinaryExpression(Box::new(BinaryExpression {
+            node: Node::new(start, self.cur_token.end),
+            left,
+            operator,
+            right,
+        }))
+    }
+
     fn eat(&mut self, kind: TokenKind) -> bool {
+        self.eat_with_start(kind, self.cur_token.start)
+    }
+
+    fn eat_with_start(&mut self, kind: TokenKind, start: usize) -> bool {
         if self.at(kind) {
             self.advance();
             return true;
         }
 
-        self.report_expected(kind, self.cur_kind());
+        self.report_expected(start, kind, self.cur_kind());
         unreachable!("Report ends proccess");
     }
 
-    fn report_expected(&self, expected: TokenKind, got: TokenKind) {
+    fn report_expected(&self, start: usize, expected: TokenKind, got: TokenKind) {
         report_error(
             self.path,
             self.source,
             &format!("Expected {expected} but got {got}"),
-            self.cur_token.start,
+            start,
             self.cur_token.end,
         );
     }

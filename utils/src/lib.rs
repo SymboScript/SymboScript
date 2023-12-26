@@ -52,14 +52,14 @@ pub fn report_error(path: &str, source: &str, error: &str, start: usize, end: us
     let line = source[..start].lines().count();
     let line_end = line - 1 + source[start..end].lines().count();
 
-    let column = start - source[..start].rfind('\n').unwrap_or(0);
+    let column = start + 1 - source[..start].rfind('\n').unwrap_or(0);
     let column_end = end - source[..start].rfind('\n').unwrap_or(0);
 
     let near_text = source.lines().nth(line - 1).unwrap_or(&"").trim_end();
 
     let line_n = format!("{line} |");
 
-    let error_pointer = (" ".repeat(column + line_n.len() + 1)
+    let error_pointer = (" ".repeat(column + line_n.len())
         + "^".repeat(max(end - start, 1)).as_str())
     .red()
     .bold();
