@@ -163,7 +163,11 @@ pub struct MemberExpression {
 
 impl fmt::Display for MemberExpression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}[[{}]]", self.object, self.property)
+        if self.computed {
+            write!(f, "{}.{}", self.object, self.property)
+        } else {
+            write!(f, "{}.[{}]", self.object, self.property)
+        }
     }
 }
 
