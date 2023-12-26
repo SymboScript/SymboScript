@@ -55,7 +55,12 @@ impl<'a> Parser<'a> {
 
     /// add_sub
     fn expr(&mut self) -> Expression {
-        self.assign()
+        self.comma()
+    }
+
+    /// assign , assign
+    fn comma(&mut self) -> Expression {
+        parser_left_associative!(self, [TokenKind::Comma], assign)
     }
 
     ///ternary (assigns) ternary
