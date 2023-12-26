@@ -64,6 +64,7 @@ impl<'a> Parser<'a> {
     }
 
     fn comma(&mut self) -> Expression {
+        let start = self.cur_token.start;
         let mut nodes = vec![];
 
         nodes.push(self.assign());
@@ -76,7 +77,7 @@ impl<'a> Parser<'a> {
             return nodes.pop().unwrap();
         }
 
-        Expression::SequenceExpression(nodes)
+        self.sequence_expression(start, nodes)
     }
 
     ///ternary (assigns) ternary
@@ -263,10 +264,10 @@ impl<'a> Parser<'a> {
                 self.eat_with_start(TokenKind::RBracket, token.start);
 
                 match node {
-                    Expression::SequenceExpression(nodes) => {
-                        node = Expression::SequenceExpression(nodes);
+                    Expression::SequenceExpression(SeqExp) => {
+                        node = self.sequence_expression(token.start, SeqExp.expressions);
                     }
-                    _ => node = Expression::SequenceExpression(vec![node]),
+                    _ => node = self.sequence_expression(token.start, vec![node]),
                 }
 
                 return Expression::CallExpression(Box::new(CallExpression {
@@ -276,10 +277,82 @@ impl<'a> Parser<'a> {
                 }));
             }
 
+            TokenKind::Dot => {
+                self.eat(TokenKind::Dot);
+
+                match self.cur_kind() {
+                    TokenKind::Identifier
+                    | TokenKind::Number
+                    | TokenKind::Str
+                    | TokenKind::True
+                    | TokenKind::False => {
+                        let property = self.cur_token.clone();
+                        self.eat(property.kind);
+                        return self.member_expression(
+                            token.start,
+                            Expression::Identifier(token),
+                            Expression::Identifier(property),
+                            true,
+                        );
+                    }
+                    TokenKind::LBracket => {
+                        self.eat(TokenKind::LBracket);
+                        let node = self.expr();
+                        self.eat_with_start(TokenKind::RBracket, token.start);
+
+                        return self.member_expression(
+                            token.start,
+                            Expression::Identifier(token),
+                            node,
+                            false,
+                        );
+                    }
+                    got => {
+                        self.report_expected(token.start, TokenKind::Unexpected, got);
+                        unreachable!("Report ends proccess")
+                    }
+                }
+            }
+
             _ => {
                 return Expression::Identifier(token);
             }
         }
+    }
+
+    fn call_expression(
+        &mut self,
+        start: usize,
+        callee: Expression,
+        arguments: Expression,
+    ) -> Expression {
+        Expression::CallExpression(Box::new(CallExpression {
+            node: Node::new(start, self.cur_token.end),
+            callee,
+            arguments,
+        }))
+    }
+
+    fn member_expression(
+        &mut self,
+        start: usize,
+        object: Expression,
+        property: Expression,
+        computed: bool,
+    ) -> Expression {
+        Expression::MemberExpression(Box::new(MemberExpression {
+            node: Node::new(start, self.cur_token.end),
+            object,
+            property,
+            computed,
+        }))
+    }
+
+    fn sequence_expression(&mut self, start: usize, expressions: Vec<Expression>) -> Expression {
+        Expression::SequenceExpression(Box::new(SequenceExpression {
+            node: Node::new(start, self.cur_token.end),
+            expressions,
+        }))
     }
 
     fn binary_expression(

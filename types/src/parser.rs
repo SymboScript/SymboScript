@@ -1,4 +1,4 @@
-use std::fmt::{self, write};
+use std::fmt::{self};
 
 use crate::lexer::{Token, TokenKind};
 use serde::{Deserialize, Serialize};
@@ -68,7 +68,7 @@ pub enum Expression {
     AssignmentExpression(Box<AssignmentExpression>),
     CallExpression(Box<CallExpression>),
     MemberExpression(Box<MemberExpression>),
-    SequenceExpression(Vec<Expression>),
+    SequenceExpression(Box<SequenceExpression>),
     Literal(Token),
     Identifier(Token),
 }
@@ -85,8 +85,8 @@ impl fmt::Display for Expression {
             Expression::CallExpression(expr) => write!(f, "({})", expr),
             Expression::MemberExpression(expr) => write!(f, "({})", expr),
             Expression::AssignmentExpression(expr) => write!(f, "({})", expr),
-            Expression::SequenceExpression(exprs) => {
-                for expr in exprs {
+            Expression::SequenceExpression(expr) => {
+                for expr in &expr.expressions {
                     write!(f, "{},", expr)?;
                 }
                 write!(f, "")
@@ -158,6 +158,7 @@ pub struct MemberExpression {
     pub node: Node,
     pub object: Expression,
     pub property: Expression,
+    pub computed: bool,
 }
 
 impl fmt::Display for MemberExpression {
@@ -177,5 +178,20 @@ pub struct AssignmentExpression {
 impl fmt::Display for AssignmentExpression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} = {}", self.left, self.right)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SequenceExpression {
+    pub node: Node,
+    pub expressions: Vec<Expression>,
+}
+
+impl fmt::Display for SequenceExpression {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for expr in &self.expressions {
+            write!(f, "{},", expr)?;
+        }
+        write!(f, "")
     }
 }
