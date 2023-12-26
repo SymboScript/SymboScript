@@ -64,6 +64,7 @@ impl fmt::Display for Statement {
 pub enum Expression {
     BinaryExpression(Box<BinaryExpression>),
     UnaryExpression(Box<UnaryExpression>),
+    ConditionalExpression(Box<ConditionalExpression>),
     Literal(Token),
     Identifier(Token),
 }
@@ -76,6 +77,7 @@ impl fmt::Display for Expression {
                 write!(f, "{}", token)
             }
             Expression::UnaryExpression(expr) => write!(f, "({})", expr),
+            Expression::ConditionalExpression(expr) => write!(f, "({})", expr),
         }
     }
 }
@@ -104,5 +106,23 @@ pub struct UnaryExpression {
 impl fmt::Display for UnaryExpression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}", self.operator, self.right)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ConditionalExpression {
+    pub node: Node,
+    pub test: Expression,
+    pub consequent: Expression,
+    pub alternate: Expression,
+}
+
+impl fmt::Display for ConditionalExpression {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} ? {} : {}",
+            self.test, self.consequent, self.alternate
+        )
     }
 }

@@ -55,12 +55,71 @@ impl<'a> Parser<'a> {
 
     /// add_sub
     fn expr(&mut self) -> Expression {
-        self.cmp()
+        self.assign()
     }
 
-    // shift (< | <= | > | >= | == | !=) shift
+    ///ternary (assigns) ternary
+    fn assign(&mut self) -> Expression {
+        match self.cur_kind() {
+            TokenKind::Identifier => {
+                let left = self.cur_token.clone();
+
+                self.eat(TokenKind::Identifier);
+
+                let operator = self.cur_token.kind;
+                self.eat(self.cur_token.kind);
+
+                let right = self.expr();
+
+                return self.binary_expression(
+                    left.start,
+                    Expression::Identifier(left),
+                    right,
+                    operator,
+                );
+            }
+
+            _ => return self.ternary(),
+        }
+    }
+
+    /// logical_or ? logical_or : logical_or
+    fn ternary(&mut self) -> Expression {
+        let start = self.cur_token.start;
+        let mut node = self.range();
+
+        while self.cur_kind() == TokenKind::Question {
+            self.eat(TokenKind::Question);
+
+            let consequent = self.range();
+            self.eat(TokenKind::Colon);
+
+            let alternate = self.range();
+
+            node = self.conditional_expression(start, node, consequent, alternate);
+        }
+
+        node
+    }
+
+    /// logical_or .. logical_or
+    fn range(&mut self) -> Expression {
+        parser_left_associative!(self, [TokenKind::Range], logical_or)
+    }
+
+    /// logical_and || logical_and
+    fn logical_or(&mut self) -> Expression {
+        parser_left_associative!(self, [TokenKind::Or], logical_and)
+    }
+
+    /// cmp && cmp
+    fn logical_and(&mut self) -> Expression {
+        parser_left_associative!(self, [TokenKind::And], cmp)
+    }
+
+    /// bit_or (< | <= | > | >= | == | !=) bit_or
     fn cmp(&mut self) -> Expression {
-        parser!(
+        parser_left_associative!(
             self,
             [
                 TokenKind::Less,
@@ -70,13 +129,28 @@ impl<'a> Parser<'a> {
                 TokenKind::Equal,
                 TokenKind::NotEqual,
             ],
-            shift
+            bit_or
         )
     }
 
-    // add_sub (>> | <<) add_sub
+    ///bit_xor | bit_xor
+    fn bit_or(&mut self) -> Expression {
+        parser_left_associative!(self, [TokenKind::BitOr], bit_xor)
+    }
+
+    /// bit_and bxor bit_and
+    fn bit_xor(&mut self) -> Expression {
+        parser_left_associative!(self, [TokenKind::BitXor], bit_and)
+    }
+
+    /// shift & shift
+    fn bit_and(&mut self) -> Expression {
+        parser_left_associative!(self, [TokenKind::BitAnd], shift)
+    }
+
+    /// add_sub (>> | <<) add_sub
     fn shift(&mut self) -> Expression {
-        parser!(
+        parser_left_associative!(
             self,
             [TokenKind::BitRightShift, TokenKind::BitLeftShift],
             add_sub
@@ -85,7 +159,7 @@ impl<'a> Parser<'a> {
 
     /// term (Plus | Minus) term
     fn add_sub(&mut self) -> Expression {
-        parser!(self, [TokenKind::Plus, TokenKind::Minus], term)
+        parser_left_associative!(self, [TokenKind::Plus, TokenKind::Minus], term)
     }
 
     /// (power (Star | Slash | Modulo) power)* | (power power)*
@@ -125,7 +199,7 @@ impl<'a> Parser<'a> {
 
     /// factor (Power) factor
     fn power(&mut self) -> Expression {
-        parser!(self, [TokenKind::Power], factor)
+        parser_left_associative!(self, [TokenKind::Power], factor)
     }
 
     /// Number | LParen expr Rparen | Identifier | (! | ++ | -- | ~)factor
@@ -162,7 +236,7 @@ impl<'a> Parser<'a> {
             _ => {}
         }
 
-        self.report_expected(token.start, TokenKind::Number, token.kind);
+        self.report_expected(token.start, TokenKind::Unexpected, token.kind);
         unreachable!("Report ends proccess")
     }
 
@@ -181,8 +255,23 @@ impl<'a> Parser<'a> {
         }))
     }
 
-    fn eat(&mut self, kind: TokenKind) -> bool {
-        self.eat_with_start(kind, self.cur_token.start)
+    fn conditional_expression(
+        &mut self,
+        start: usize,
+        test: Expression,
+        consequent: Expression,
+        alternate: Expression,
+    ) -> Expression {
+        Expression::ConditionalExpression(Box::new(ConditionalExpression {
+            node: Node::new(start, self.cur_token.end),
+            test,
+            consequent,
+            alternate,
+        }))
+    }
+
+    fn eat(&mut self, kind: TokenKind) {
+        self.eat_with_start(kind, self.cur_token.start);
     }
 
     fn eat_with_start(&mut self, kind: TokenKind, start: usize) -> bool {
