@@ -114,8 +114,8 @@ impl<'a> Lexer<'a> {
                 '^' => return self.read_one_more('=', TokenKind::PowerAssign, TokenKind::Power),
                 '%' => return self.read_one_more('=', TokenKind::ModuloAssign, TokenKind::Modulo),
 
-                '&' => return self.read_one_more('&', TokenKind::BitAnd, TokenKind::And),
-                '|' => return self.read_one_more('|', TokenKind::BitOr, TokenKind::Or),
+                '&' => return self.read_one_more('&', TokenKind::And, TokenKind::BitAnd),
+                '|' => return self.read_one_more('|', TokenKind::Or, TokenKind::BitOr),
                 '~' => return TokenKind::BitNot,
                 '?' => return TokenKind::Question,
 
