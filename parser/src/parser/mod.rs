@@ -83,7 +83,7 @@ impl<'a> Parser<'a> {
 
     ///ternary (Assign | FormulaAssign | PlusAssign | MinusAssign | MultiplyAssign | DivideAssign | PowerAssign | ModuloAssign) ternary
     fn assign(&mut self) -> Expression {
-        parser_right_associative!(
+        binary_right_associative!(
             self,
             ternary,
             [
@@ -120,22 +120,22 @@ impl<'a> Parser<'a> {
 
     /// logical_or .. logical_or
     fn range(&mut self) -> Expression {
-        parser_left_associative!(self, [TokenKind::Range], logical_or)
+        binary_left_associative!(self, [TokenKind::Range], logical_or)
     }
 
     /// logical_and || logical_and
     fn logical_or(&mut self) -> Expression {
-        parser_left_associative!(self, [TokenKind::Or], logical_and)
+        binary_left_associative!(self, [TokenKind::Or], logical_and)
     }
 
     /// cmp && cmp
     fn logical_and(&mut self) -> Expression {
-        parser_left_associative!(self, [TokenKind::And], cmp)
+        binary_left_associative!(self, [TokenKind::And], cmp)
     }
 
     /// bit_or (< | <= | > | >= | == | !=) bit_or
     fn cmp(&mut self) -> Expression {
-        parser_left_associative!(
+        binary_left_associative!(
             self,
             [
                 TokenKind::Less,
@@ -151,22 +151,22 @@ impl<'a> Parser<'a> {
 
     ///bit_xor | bit_xor
     fn bit_or(&mut self) -> Expression {
-        parser_left_associative!(self, [TokenKind::BitOr], bit_xor)
+        binary_left_associative!(self, [TokenKind::BitOr], bit_xor)
     }
 
     /// bit_and bxor bit_and
     fn bit_xor(&mut self) -> Expression {
-        parser_left_associative!(self, [TokenKind::BitXor], bit_and)
+        binary_left_associative!(self, [TokenKind::BitXor], bit_and)
     }
 
     /// shift & shift
     fn bit_and(&mut self) -> Expression {
-        parser_left_associative!(self, [TokenKind::BitAnd], shift)
+        binary_left_associative!(self, [TokenKind::BitAnd], shift)
     }
 
     /// add_sub (>> | <<) add_sub
     fn shift(&mut self) -> Expression {
-        parser_left_associative!(
+        binary_left_associative!(
             self,
             [TokenKind::BitRightShift, TokenKind::BitLeftShift],
             add_sub
@@ -175,7 +175,7 @@ impl<'a> Parser<'a> {
 
     /// term (Plus | Minus) term
     fn add_sub(&mut self) -> Expression {
-        parser_left_associative!(self, [TokenKind::Plus, TokenKind::Minus], term)
+        binary_left_associative!(self, [TokenKind::Plus, TokenKind::Minus], term)
     }
 
     /// (power (Star | Slash | Modulo) power)* | (power power)*
@@ -215,7 +215,7 @@ impl<'a> Parser<'a> {
 
     /// factor (Power) factor
     fn power(&mut self) -> Expression {
-        parser_left_associative!(self, [TokenKind::Power], factor)
+        binary_left_associative!(self, [TokenKind::Power], factor)
     }
 
     /// Number | LParen expr Rparen | Identifier | (! | ++ | -- | ~)factor
@@ -254,7 +254,7 @@ impl<'a> Parser<'a> {
     }
 
     fn dot(&mut self) -> Expression {
-        parser_left_associative_member!(self, [TokenKind::Dot], call)
+        member_left_associative!(self, [TokenKind::Dot], call)
     }
 
     fn call(&mut self) -> (Expression, bool) {

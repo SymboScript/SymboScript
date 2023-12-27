@@ -1,5 +1,5 @@
 #[macro_export]
-macro_rules! parser_left_associative {
+macro_rules! binary_left_associative {
     ($self:ident, $Kinds: expr, $SubOp: ident) => {{
         let start = $self.cur_token.start;
         let mut node = $self.$SubOp();
@@ -43,7 +43,7 @@ macro_rules! parser_left_associative {
 }
 
 #[macro_export]
-macro_rules! parser_left_associative_member {
+macro_rules! member_left_associative {
     ($self:ident, $Kinds: expr, $SubOp: ident) => {{
         let start = $self.cur_token.start;
         let (mut node, _) = $self.$SubOp();
@@ -62,7 +62,7 @@ macro_rules! parser_left_associative_member {
 }
 
 #[macro_export]
-macro_rules! parser_right_associative {
+macro_rules! binary_right_associative {
     ($self:ident,  $SubOp: ident, $Kinds: expr) => {{
         let start = $self.cur_token.start;
         let mut node = $self.$SubOp();
