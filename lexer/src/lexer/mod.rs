@@ -1,6 +1,6 @@
-use crate::types::{Token, TokenKind, TokenValue};
-use crate::utils::report_error;
 use std::str::Chars;
+use symboscript_types::lexer::{Token, TokenKind, TokenValue};
+use symboscript_utils::report_error;
 
 pub struct Lexer<'a> {
     /// Path of the source file
@@ -130,7 +130,7 @@ impl<'a> Lexer<'a> {
                 }
                 '>' => {
                     return self.read_one_more_variants(
-                        TokenKind::Less,
+                        TokenKind::Greater,
                         &['=', '>'],
                         &[TokenKind::GreaterEqual, TokenKind::BitRightShift],
                     )
