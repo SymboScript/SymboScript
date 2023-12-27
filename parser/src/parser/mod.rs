@@ -63,6 +63,7 @@ impl<'a> Parser<'a> {
         self.comma()
     }
 
+    /// assign , assign
     fn comma(&mut self) -> Expression {
         let start = self.cur_token.start;
         let mut nodes = vec![];
@@ -80,9 +81,9 @@ impl<'a> Parser<'a> {
         self.sequence_expression(start, nodes)
     }
 
-    ///ternary (assigns) ternary
+    ///ternary (Assign | FormulaAssign | PlusAssign | MinusAssign | MultiplyAssign | DivideAssign | PowerAssign | ModuloAssign) ternary
     fn assign(&mut self) -> Expression {
-        parser_righty_associative!(
+        parser_right_associative!(
             self,
             ternary,
             [
@@ -232,7 +233,7 @@ impl<'a> Parser<'a> {
                 self.eat_with_start(TokenKind::RParen, token.start);
                 return node;
             }
-            TokenKind::Identifier => return self.call(),
+            TokenKind::Identifier => return self.dot(),
             TokenKind::Not
             | TokenKind::PlusPlus
             | TokenKind::MinusMinus
@@ -252,66 +253,50 @@ impl<'a> Parser<'a> {
         unreachable!("Report ends proccess")
     }
 
+    fn dot(&mut self) -> Expression {
+        parser_left_associative_member!(self, [TokenKind::Dot], call, false)
+    }
+
+    fn dot_with_computed(&mut self) -> Expression {
+        parser_left_associative_member!(self, [TokenKind::Dot], call, true)
+    }
+
     fn call(&mut self) -> Expression {
         let token = self.cur_token.clone();
-
-        self.eat(self.cur_kind());
-
         match self.cur_kind() {
-            TokenKind::LBracket => {
-                self.eat(TokenKind::LBracket);
-                let mut node = self.expr();
-                self.eat_with_start(TokenKind::RBracket, token.start);
-
-                match node {
-                    Expression::SequenceExpression(SeqExp) => {
-                        node = self.sequence_expression(token.start, SeqExp.expressions);
-                    }
-                    _ => node = self.sequence_expression(token.start, vec![node]),
-                }
-
-                return self.call_expression(token.start, Expression::Identifier(token), node);
-            }
-
-            TokenKind::Dot => {
-                self.eat(TokenKind::Dot);
-
+            TokenKind::Identifier
+            | TokenKind::Number
+            | TokenKind::Str
+            | TokenKind::True
+            | TokenKind::False => {
+                self.advance();
                 match self.cur_kind() {
-                    TokenKind::Identifier
-                    | TokenKind::Number
-                    | TokenKind::Str
-                    | TokenKind::True
-                    | TokenKind::False => {
-                        let property = self.cur_token.clone();
-                        self.eat(property.kind);
-                        return self.member_expression(
-                            token.start,
-                            Expression::Identifier(token),
-                            Expression::Identifier(property),
-                            true,
-                        );
-                    }
                     TokenKind::LBracket => {
-                        self.eat(TokenKind::LBracket);
-                        let node = self.expr();
+                        self.advance();
+                        let mut node = self.expr();
                         self.eat_with_start(TokenKind::RBracket, token.start);
 
-                        return self.member_expression(
+                        match node {
+                            Expression::SequenceExpression(seq_exp) => {
+                                node = self.sequence_expression(token.start, seq_exp.expressions);
+                            }
+                            _ => node = self.sequence_expression(token.start, vec![node]),
+                        }
+
+                        return self.call_expression(
                             token.start,
                             Expression::Identifier(token),
                             node,
-                            false,
                         );
                     }
-                    got => {
-                        self.report_expected(token.start, TokenKind::Unexpected, got);
-                        unreachable!("Report ends proccess")
-                    }
+                    _ => {}
                 }
+                return Expression::Identifier(token);
             }
 
-            _ => {
-                return Expression::Identifier(token);
+            got => {
+                self.report_expected(token.start, TokenKind::Unexpected, got);
+                unreachable!("Report ends proccess")
             }
         }
     }

@@ -3,7 +3,7 @@ use std::fmt::{self};
 use crate::lexer::{Token, TokenKind};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Ast {
     pub program: Statement,
 }
@@ -29,7 +29,7 @@ impl Node {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Program {
     pub node: Node,
     pub body: Vec<Statement>,
@@ -45,7 +45,7 @@ impl fmt::Display for Program {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Statement {
     ExpressionStatement(Expression),
     Program(Program),
@@ -60,7 +60,7 @@ impl fmt::Display for Statement {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Expression {
     BinaryExpression(Box<BinaryExpression>),
     UnaryExpression(Box<UnaryExpression>),
@@ -95,7 +95,7 @@ impl fmt::Display for Expression {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BinaryExpression {
     pub node: Node,
     pub left: Expression,
@@ -109,7 +109,7 @@ impl fmt::Display for BinaryExpression {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UnaryExpression {
     pub node: Node,
     pub operator: TokenKind,
@@ -122,7 +122,7 @@ impl fmt::Display for UnaryExpression {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ConditionalExpression {
     pub node: Node,
     pub test: Expression,
@@ -140,7 +140,7 @@ impl fmt::Display for ConditionalExpression {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CallExpression {
     pub node: Node,
     pub callee: Expression,
@@ -153,7 +153,7 @@ impl fmt::Display for CallExpression {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MemberExpression {
     pub node: Node,
     pub object: Expression,
@@ -171,7 +171,7 @@ impl fmt::Display for MemberExpression {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AssignmentExpression {
     pub node: Node,
     pub assignment: TokenKind,
@@ -185,7 +185,7 @@ impl fmt::Display for AssignmentExpression {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SequenceExpression {
     pub node: Node,
     pub expressions: Vec<Expression>,
