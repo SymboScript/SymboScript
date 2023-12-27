@@ -3,7 +3,6 @@ use std::fs::OpenOptions;
 
 mod lexer;
 
-use symboscript_types::lexer as types;
 use symboscript_utils as utils;
 
 #[derive(Parser, Debug)]
