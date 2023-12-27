@@ -158,12 +158,12 @@ pub struct MemberExpression {
     pub node: Node,
     pub object: Expression,
     pub property: Expression,
-    pub computed: bool,
+    pub is_expr: bool,
 }
 
 impl fmt::Display for MemberExpression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.computed {
+        if self.is_expr {
             write!(f, "{}.{}", self.object, self.property)
         } else {
             write!(f, "{}.[{}]", self.object, self.property)

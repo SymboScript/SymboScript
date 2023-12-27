@@ -53,8 +53,8 @@ macro_rules! member_left_associative {
 
             $self.eat(current_token.kind);
 
-            let (right, computed) = $self.$SubOp();
-            node = $self.member_expression(start, node, right, computed);
+            let (right, is_expr) = $self.$SubOp();
+            node = $self.member_expression(start, node, right, is_expr);
         }
 
         node

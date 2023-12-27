@@ -70,7 +70,7 @@ impl<'a> Parser<'a> {
 
         nodes.push(self.assign());
         while self.cur_kind() == TokenKind::Comma {
-            self.eat(TokenKind::Comma);
+            self.advance();
             nodes.push(self.assign());
         }
 
@@ -105,8 +105,7 @@ impl<'a> Parser<'a> {
         let mut node = self.range();
 
         while self.cur_kind() == TokenKind::Question {
-            self.eat(TokenKind::Question);
-
+            self.advance();
             let consequent = self.range();
             self.eat(TokenKind::Colon);
 
@@ -192,7 +191,7 @@ impl<'a> Parser<'a> {
             .contains(&self.cur_token.kind)
         {
             let operator = self.cur_token.kind;
-            self.eat(operator);
+            self.advance();
 
             let right = self.power();
             expr = self.binary_expression(start, expr, right, operator);
@@ -224,11 +223,11 @@ impl<'a> Parser<'a> {
 
         match token.kind {
             TokenKind::Number | TokenKind::Str | TokenKind::True | TokenKind::False => {
-                self.eat(token.kind);
+                self.advance();
                 return Expression::Literal(token);
             }
             TokenKind::LParen => {
-                self.eat(token.kind);
+                self.advance();
                 let node = self.expr();
                 self.eat_with_start(TokenKind::RParen, token.start);
                 return node;
@@ -239,12 +238,10 @@ impl<'a> Parser<'a> {
             | TokenKind::MinusMinus
             | TokenKind::BitNot
             | TokenKind::Minus => {
-                self.eat(token.kind);
-                return Expression::UnaryExpression(Box::new(UnaryExpression {
-                    node: Node::new(token.start, self.cur_token.end),
-                    operator: token.kind,
-                    right: self.factor(),
-                }));
+                self.advance();
+
+                let right = self.factor();
+                return self.unary_expression(token.start, token.kind, right);
             }
             _ => {}
         }
@@ -284,9 +281,10 @@ impl<'a> Parser<'a> {
                             true,
                         );
                     }
-                    _ => {}
+                    _ => {
+                        return (Expression::Identifier(token), true);
+                    }
                 }
-                return (Expression::Identifier(token), true);
             }
 
             TokenKind::LBracket => {
@@ -321,13 +319,13 @@ impl<'a> Parser<'a> {
         start: usize,
         object: Expression,
         property: Expression,
-        computed: bool,
+        is_expr: bool,
     ) -> Expression {
         Expression::MemberExpression(Box::new(MemberExpression {
             node: Node::new(start, self.cur_token.end),
             object,
             property,
-            computed,
+            is_expr,
         }))
     }
 
@@ -335,6 +333,21 @@ impl<'a> Parser<'a> {
         Expression::SequenceExpression(Box::new(SequenceExpression {
             node: Node::new(start, self.cur_token.end),
             expressions,
+        }))
+    }
+
+    fn conditional_expression(
+        &mut self,
+        start: usize,
+        test: Expression,
+        consequent: Expression,
+        alternate: Expression,
+    ) -> Expression {
+        Expression::ConditionalExpression(Box::new(ConditionalExpression {
+            node: Node::new(start, self.cur_token.end),
+            test,
+            consequent,
+            alternate,
         }))
     }
 
@@ -353,18 +366,16 @@ impl<'a> Parser<'a> {
         }))
     }
 
-    fn conditional_expression(
+    fn unary_expression(
         &mut self,
         start: usize,
-        test: Expression,
-        consequent: Expression,
-        alternate: Expression,
+        operator: TokenKind,
+        right: Expression,
     ) -> Expression {
-        Expression::ConditionalExpression(Box::new(ConditionalExpression {
+        Expression::UnaryExpression(Box::new(UnaryExpression {
             node: Node::new(start, self.cur_token.end),
-            test,
-            consequent,
-            alternate,
+            operator,
+            right,
         }))
     }
 
