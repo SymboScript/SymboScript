@@ -117,10 +117,15 @@ pub enum TokenKind {
     Loop,
     Let,
     Return,
+    Yield,
     Break,
     Continue,
     Function,
     In,
+
+    // Async/Await
+    Async,
+    Await,
 }
 
 impl fmt::Display for TokenKind {
@@ -198,10 +203,14 @@ impl fmt::Display for TokenKind {
             TokenKind::Loop => write!(f, "loop"),
             TokenKind::Let => write!(f, "let"),
             TokenKind::Return => write!(f, "return"),
+            TokenKind::Yield => write!(f, "yield"),
             TokenKind::Break => write!(f, "break"),
             TokenKind::Continue => write!(f, "continue"),
             TokenKind::Function => write!(f, "function"),
             TokenKind::In => write!(f, "in"),
+
+            TokenKind::Await => write!(f, "await"),
+            TokenKind::Async => write!(f, "async"),
         }
     }
 }

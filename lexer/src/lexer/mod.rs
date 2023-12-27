@@ -169,9 +169,13 @@ impl<'a> Lexer<'a> {
             "let" => TokenKind::Let,
             "fn" => TokenKind::Function,
             "return" => TokenKind::Return,
+            "yield" => TokenKind::Yield,
             "break" => TokenKind::Break,
             "continue" => TokenKind::Continue,
             "in" => TokenKind::In,
+
+            "async" => TokenKind::Async,
+            "await" => TokenKind::Await,
 
             "true" => TokenKind::True,
             "false" => TokenKind::False,
