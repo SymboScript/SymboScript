@@ -109,7 +109,7 @@ impl<'a> Parser<'a> {
             let consequent = self.range();
             self.eat(TokenKind::Colon);
 
-            let alternate = self.range();
+            let alternate = self.expr();
 
             node = self.conditional_expression(start, node, consequent, alternate);
         }
