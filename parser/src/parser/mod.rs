@@ -68,10 +68,10 @@ impl<'a> Parser<'a> {
         let start = self.cur_token.start;
         let mut nodes = vec![];
 
-        nodes.push(self.word_expression());
+        nodes.push(self.yield_expr());
         while self.cur_kind() == TokenKind::Comma {
             self.advance();
-            nodes.push(self.word_expression());
+            nodes.push(self.yield_expr());
         }
 
         if nodes.len() == 1 {
@@ -82,17 +82,20 @@ impl<'a> Parser<'a> {
     }
 
     /// await word_expression | yield word_expression | assign
-    fn word_expression(&mut self) -> Expression {
+    fn yield_expr(&mut self) -> Expression {
         let start = self.cur_token.start;
         match self.cur_kind() {
-            TokenKind::Await => {
-                self.advance();
-                let argument = self.expr();
-                return self.await_expression(start, argument);
-            }
-
             TokenKind::Yield => {
                 self.advance();
+
+                match self.cur_kind() {
+                    TokenKind::Yield => {
+                        let new_yield = self.yield_expr();
+                        return self.yield_expression(start, new_yield);
+                    }
+                    _ => {}
+                }
+
                 let argument = self.expr();
                 return self.yield_expression(start, argument);
             }
@@ -254,6 +257,7 @@ impl<'a> Parser<'a> {
                 self.eat_with_start(TokenKind::RParen, token.start);
                 return node;
             }
+            TokenKind::Await => return self.await_expr(),
             TokenKind::Identifier => return self.dot(),
             TokenKind::Not
             | TokenKind::PlusPlus
@@ -270,6 +274,29 @@ impl<'a> Parser<'a> {
 
         self.report_expected(token.start, TokenKind::Unexpected, token.kind);
         unreachable!("Report ends proccess")
+    }
+
+    fn await_expr(&mut self) -> Expression {
+        let start = self.cur_token.start;
+        match self.cur_kind() {
+            TokenKind::Await => {
+                self.advance();
+
+                match self.cur_kind() {
+                    TokenKind::Await => {
+                        let new_await = self.await_expr();
+                        return self.await_expression(start, new_await);
+                    }
+                    _ => {}
+                }
+
+                let argument = self.dot();
+                return self.await_expression(start, argument);
+            }
+            _ => {
+                return self.dot();
+            }
+        }
     }
 
     fn dot(&mut self) -> Expression {
