@@ -69,6 +69,8 @@ pub enum Expression {
     CallExpression(Box<CallExpression>),
     MemberExpression(Box<MemberExpression>),
     SequenceExpression(Box<SequenceExpression>),
+    AwaitExpression(Box<AwaitExpression>),
+    YieldExpression(Box<YieldExpression>),
     Literal(Token),
     Identifier(Token),
 }
@@ -84,6 +86,8 @@ impl fmt::Display for Expression {
             Expression::ConditionalExpression(expr) => write!(f, "({})", expr),
             Expression::CallExpression(expr) => write!(f, "({})", expr),
             Expression::MemberExpression(expr) => write!(f, "({})", expr),
+            Expression::AwaitExpression(expr) => write!(f, "({})", expr),
+            Expression::YieldExpression(expr) => write!(f, "({})", expr),
             Expression::AssignmentExpression(expr) => write!(f, "({})", expr),
             Expression::SequenceExpression(expr) => {
                 for expr in &expr.expressions {
@@ -197,5 +201,29 @@ impl fmt::Display for SequenceExpression {
             write!(f, "{},", expr)?;
         }
         write!(f, "")
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AwaitExpression {
+    pub node: Node,
+    pub argument: Expression,
+}
+
+impl fmt::Display for AwaitExpression {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "await {}", self.argument)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct YieldExpression {
+    pub node: Node,
+    pub argument: Expression,
+}
+
+impl fmt::Display for YieldExpression {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "yield {}", self.argument)
     }
 }

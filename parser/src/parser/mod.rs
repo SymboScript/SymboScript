@@ -68,10 +68,10 @@ impl<'a> Parser<'a> {
         let start = self.cur_token.start;
         let mut nodes = vec![];
 
-        nodes.push(self.assign());
+        nodes.push(self.word_expression());
         while self.cur_kind() == TokenKind::Comma {
             self.advance();
-            nodes.push(self.assign());
+            nodes.push(self.word_expression());
         }
 
         if nodes.len() == 1 {
@@ -79,6 +79,27 @@ impl<'a> Parser<'a> {
         }
 
         self.sequence_expression(start, nodes)
+    }
+
+    fn word_expression(&mut self) -> Expression {
+        let start = self.cur_token.start;
+        match self.cur_kind() {
+            TokenKind::Await => {
+                self.advance();
+                let argument = self.expr();
+                return self.await_expression(start, argument);
+            }
+
+            TokenKind::Yield => {
+                self.advance();
+                let argument = self.expr();
+                return self.yield_expression(start, argument);
+            }
+
+            _ => {
+                return self.assign();
+            }
+        }
     }
 
     ///ternary (Assign | FormulaAssign | PlusAssign | MinusAssign | MultiplyAssign | DivideAssign | PowerAssign | ModuloAssign) ternary
@@ -299,6 +320,20 @@ impl<'a> Parser<'a> {
                 unreachable!("Report ends proccess")
             }
         }
+    }
+
+    fn yield_expression(&mut self, start: usize, argument: Expression) -> Expression {
+        Expression::YieldExpression(Box::new(YieldExpression {
+            node: Node::new(start, self.cur_token.end),
+            argument,
+        }))
+    }
+
+    fn await_expression(&mut self, start: usize, argument: Expression) -> Expression {
+        Expression::AwaitExpression(Box::new(AwaitExpression {
+            node: Node::new(start, self.cur_token.end),
+            argument,
+        }))
     }
 
     fn call_expression(
