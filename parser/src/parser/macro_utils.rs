@@ -44,17 +44,17 @@ macro_rules! parser_left_associative {
 
 #[macro_export]
 macro_rules! parser_left_associative_member {
-    ($self:ident, $Kinds: expr, $SubOp: ident, $computed: expr) => {{
+    ($self:ident, $Kinds: expr, $SubOp: ident) => {{
         let start = $self.cur_token.start;
-        let mut node = $self.$SubOp();
+        let (mut node, _) = $self.$SubOp();
 
         while $Kinds.contains(&$self.cur_token.kind) {
             let current_token = $self.cur_token.clone();
 
             $self.eat(current_token.kind);
 
-            let right = $self.$SubOp();
-            node = $self.member_expression(start, node, right, $computed);
+            let (right, computed) = $self.$SubOp();
+            node = $self.member_expression(start, node, right, computed);
         }
 
         node

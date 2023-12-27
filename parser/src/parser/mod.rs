@@ -254,14 +254,10 @@ impl<'a> Parser<'a> {
     }
 
     fn dot(&mut self) -> Expression {
-        parser_left_associative_member!(self, [TokenKind::Dot], call, false)
+        parser_left_associative_member!(self, [TokenKind::Dot], call)
     }
 
-    fn dot_with_computed(&mut self) -> Expression {
-        parser_left_associative_member!(self, [TokenKind::Dot], call, true)
-    }
-
-    fn call(&mut self) -> Expression {
+    fn call(&mut self) -> (Expression, bool) {
         let token = self.cur_token.clone();
         match self.cur_kind() {
             TokenKind::Identifier
@@ -283,15 +279,21 @@ impl<'a> Parser<'a> {
                             _ => node = self.sequence_expression(token.start, vec![node]),
                         }
 
-                        return self.call_expression(
-                            token.start,
-                            Expression::Identifier(token),
-                            node,
+                        return (
+                            self.call_expression(token.start, Expression::Identifier(token), node),
+                            true,
                         );
                     }
                     _ => {}
                 }
-                return Expression::Identifier(token);
+                return (Expression::Identifier(token), true);
+            }
+
+            TokenKind::LBracket => {
+                self.advance();
+                let node = self.expr();
+                self.eat_with_start(TokenKind::RBracket, token.start);
+                return (node, false);
             }
 
             got => {
