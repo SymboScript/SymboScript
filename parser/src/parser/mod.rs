@@ -63,7 +63,7 @@ impl<'a> Parser<'a> {
         self.comma()
     }
 
-    /// assign , assign
+    /// word_expression , word_expression | word_expression
     fn comma(&mut self) -> Expression {
         let start = self.cur_token.start;
         let mut nodes = vec![];
@@ -81,6 +81,7 @@ impl<'a> Parser<'a> {
         self.sequence_expression(start, nodes)
     }
 
+    /// await word_expression | yield word_expression | assign
     fn word_expression(&mut self) -> Expression {
         let start = self.cur_token.start;
         match self.cur_kind() {
@@ -120,7 +121,7 @@ impl<'a> Parser<'a> {
         )
     }
 
-    /// logical_or ? logical_or : logical_or
+    /// range ? range : range | range
     fn ternary(&mut self) -> Expression {
         let start = self.cur_token.start;
         let mut node = self.range();
@@ -138,7 +139,7 @@ impl<'a> Parser<'a> {
         node
     }
 
-    /// logical_or .. logical_or
+    /// logical_or .. logical_or | logical_or
     fn range(&mut self) -> Expression {
         binary_left_associative!(self, [TokenKind::Range], logical_or)
     }
