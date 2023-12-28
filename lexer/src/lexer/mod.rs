@@ -42,6 +42,10 @@ impl<'a> Lexer<'a> {
         let mut kind = self.next_kind();
         let end = self.offset();
 
+        if kind == TokenKind::Skip {
+            return self.next_token();
+        }
+
         let s = self.source[start..end].trim();
 
         let mut value = TokenValue::None;
@@ -65,8 +69,8 @@ impl<'a> Lexer<'a> {
                 value = TokenValue::Str(s[1..s.len() - 1].to_string());
             }
 
-            TokenKind::Comment => {
-                value = TokenValue::Str(s[1..].to_string());
+            TokenKind::DocComment => {
+                value = TokenValue::Str(s.to_string());
             }
 
             TokenKind::Unexpected => {
@@ -254,7 +258,7 @@ impl<'a> Lexer<'a> {
                 self.next();
                 if c == '/' {
                     if self.eat('#') {
-                        return TokenKind::Comment;
+                        return TokenKind::DocComment;
                     }
                 }
             }
@@ -271,7 +275,7 @@ impl<'a> Lexer<'a> {
                 }
             };
         }
-        TokenKind::Comment
+        TokenKind::Skip
     }
 
     fn read_string(&mut self, init_char: char) -> TokenKind {

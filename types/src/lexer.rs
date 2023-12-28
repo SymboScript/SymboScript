@@ -29,8 +29,9 @@ impl fmt::Display for Token {
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
 pub enum TokenKind {
     Eof, // end of file
-    Comment,
+    DocComment,
     Unexpected,
+    Skip,
     Start,
 
     Semicolon,
@@ -132,8 +133,9 @@ impl fmt::Display for TokenKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             TokenKind::Eof => write!(f, "EOF"),
-            TokenKind::Comment => write!(f, "Comment"),
+            TokenKind::DocComment => write!(f, "DocComment"),
             TokenKind::Unexpected => write!(f, "Unexpected"),
+            TokenKind::Skip => write!(f, "Skip"),
             TokenKind::Start => write!(f, "Start"),
 
             TokenKind::Semicolon => write!(f, ";"),

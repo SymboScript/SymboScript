@@ -7,7 +7,7 @@ Doc comment
 let formula := 20x^2 + 23y^2 == .212;
 
 fn func() {
-    print(formula);
+    print[formula];
 }
 
 let k = 0;
@@ -15,9 +15,9 @@ let k = 0;
 formula.replace[x, t];
 
 for i in 0..10 {
-    print(i);
+    print[i];
 }
 
 if true and k == 0 || k >= 1 {
-    print(k >> 1);
+    print[k >> 1];
 }

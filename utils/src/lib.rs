@@ -37,7 +37,7 @@ pub fn output_tokens_colored(text: &str, tokens: &Vec<Token>, show_tokens: Optio
 
             Str => print!("{}", s.truecolor(206, 145, 120)),
 
-            Comment => print!("{}", s.green()),
+            DocComment => print!("{}", s.green()),
 
             _ => print!("{}", s),
         }
