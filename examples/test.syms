@@ -1,3 +1,9 @@
+#/
+Doc comment
+/#
+
+# Line comment
+
 let formula := 20x^2 + 23y^2 == .212;
 
 fn func() {
@@ -6,7 +12,7 @@ fn func() {
 
 let k = 0;
 
-formula.replace(x, t);
+formula.replace[x, t];
 
 for i in 0..10 {
     print(i);

@@ -206,7 +206,7 @@ impl fmt::Display for TokenKind {
             TokenKind::Yield => write!(f, "yield"),
             TokenKind::Break => write!(f, "break"),
             TokenKind::Continue => write!(f, "continue"),
-            TokenKind::Function => write!(f, "function"),
+            TokenKind::Function => write!(f, "fn"),
             TokenKind::In => write!(f, "in"),
 
             TokenKind::Await => write!(f, "await"),

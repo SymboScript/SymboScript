@@ -249,6 +249,17 @@ impl<'a> Lexer<'a> {
     }
 
     fn read_comment(&mut self) -> TokenKind {
+        if self.eat('/') {
+            while let Some(c) = self.peek() {
+                self.next();
+                if c == '/' {
+                    if self.eat('#') {
+                        return TokenKind::Comment;
+                    }
+                }
+            }
+        }
+
         while let Some(c) = self.peek() {
             match c {
                 '\n' => {
@@ -339,6 +350,15 @@ impl<'a> Lexer<'a> {
         let new_chars = self.chars.as_str();
         new_chars.chars().next();
         new_chars.chars().next()
+    }
+
+    fn eat(&mut self, ch: char) -> bool {
+        if self.peek() == Some(ch) {
+            self.next();
+            true
+        } else {
+            false
+        }
     }
 
     fn next(&mut self) -> Option<char> {
