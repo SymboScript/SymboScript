@@ -90,10 +90,17 @@ impl fmt::Display for Expression {
             Expression::YieldExpression(expr) => write!(f, "({})", expr),
             Expression::AssignmentExpression(expr) => write!(f, "({})", expr),
             Expression::SequenceExpression(expr) => {
+                let len = expr.expressions.len();
+                let mut k = 0;
+                write!(f, "[")?;
                 for expr in &expr.expressions {
-                    write!(f, "{},", expr)?;
+                    k += 1;
+                    write!(f, "{}", expr)?;
+                    if k < len {
+                        write!(f, ", ")?;
+                    }
                 }
-                write!(f, "")
+                write!(f, "]")
             }
         }
     }

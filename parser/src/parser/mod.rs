@@ -60,11 +60,11 @@ impl<'a> Parser<'a> {
     }
 
     fn expr(&mut self) -> Expression {
-        self.comma()
+        self.comma(false)
     }
 
     /// word_expression , word_expression | word_expression
-    fn comma(&mut self) -> Expression {
+    fn comma(&mut self, only_sequence: bool) -> Expression {
         let start = self.cur_token.start;
         let mut nodes = vec![];
 
@@ -74,8 +74,10 @@ impl<'a> Parser<'a> {
             nodes.push(self.yield_expr());
         }
 
-        if nodes.len() == 1 {
-            return nodes.pop().unwrap();
+        if !only_sequence {
+            if nodes.len() == 1 {
+                return nodes[0].clone();
+            }
         }
 
         self.sequence_expression(start, nodes)
@@ -257,8 +259,34 @@ impl<'a> Parser<'a> {
                 self.eat_with_start(TokenKind::RParen, token.start);
                 return node;
             }
+
+            TokenKind::LBracket => {
+                self.advance();
+
+                match self.cur_kind() {
+                    TokenKind::RBracket => {
+                        self.advance();
+                        return self.sequence_expression(token.start, vec![]);
+                    }
+                    _ => {}
+                }
+
+                let mut node = self.comma(true);
+                self.eat_with_start(TokenKind::RBracket, token.start);
+
+                match node {
+                    Expression::SequenceExpression(seq_exp) => {
+                        node = self.sequence_expression(token.start, seq_exp.expressions);
+                    }
+                    _ => node = self.sequence_expression(token.start, vec![node]),
+                }
+
+                return node;
+            }
+
             TokenKind::Await => return self.await_expr(),
             TokenKind::Identifier => return self.dot(),
+
             TokenKind::Not
             | TokenKind::PlusPlus
             | TokenKind::MinusMinus
@@ -305,24 +333,44 @@ impl<'a> Parser<'a> {
 
     fn call(&mut self) -> (Expression, bool) {
         let token = self.cur_token.clone();
+
         match self.cur_kind() {
-            TokenKind::Identifier
-            | TokenKind::Number
-            | TokenKind::Str
-            | TokenKind::True
-            | TokenKind::False => {
+            TokenKind::Identifier => {
                 self.advance();
+
                 match self.cur_kind() {
                     TokenKind::LBracket => {
+                        let sequence_start = self.cur_token.start;
+
                         self.advance();
+
+                        match self.cur_kind() {
+                            TokenKind::RBracket => {
+                                self.advance();
+
+                                let node = self.sequence_expression(sequence_start, vec![]);
+
+                                return (
+                                    self.call_expression(
+                                        sequence_start,
+                                        Expression::Identifier(token),
+                                        node,
+                                    ),
+                                    true,
+                                );
+                            }
+                            _ => {}
+                        }
+
                         let mut node = self.expr();
                         self.eat_with_start(TokenKind::RBracket, token.start);
 
                         match node {
                             Expression::SequenceExpression(seq_exp) => {
-                                node = self.sequence_expression(token.start, seq_exp.expressions);
+                                node =
+                                    self.sequence_expression(sequence_start, seq_exp.expressions);
                             }
-                            _ => node = self.sequence_expression(token.start, vec![node]),
+                            _ => node = self.sequence_expression(sequence_start, vec![node]),
                         }
 
                         return (
@@ -334,13 +382,6 @@ impl<'a> Parser<'a> {
                         return (Expression::Identifier(token), true);
                     }
                 }
-            }
-
-            TokenKind::LBracket => {
-                self.advance();
-                let node = self.expr();
-                self.eat_with_start(TokenKind::RBracket, token.start);
-                return (node, false);
             }
 
             got => {

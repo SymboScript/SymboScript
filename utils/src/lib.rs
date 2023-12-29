@@ -49,7 +49,7 @@ pub fn output_tokens_colored(text: &str, tokens: &Vec<Token>, show_tokens: Optio
 }
 
 pub fn report_error(path: &str, source: &str, error: &str, start: usize, end: usize) {
-    let line = source[..start].lines().count();
+    let line = max(source[..start].lines().count(), 1);
     let line_end = line - 1 + source[start..end].lines().count();
 
     let column = start + 1 - source[..start].rfind('\n').unwrap_or(0);
@@ -68,7 +68,7 @@ pub fn report_error(path: &str, source: &str, error: &str, start: usize, end: us
     println!(
         "{}\n{} {near_text}\n{error_pointer} {error_pointer_text}",
         format!(
-            "--> {}:{}:{}-{}:{}",
+            "--> {}:{}:{}-{}:{} ({start} - {end})",
             path, line, column, line_end, column_end
         )
         .blue()

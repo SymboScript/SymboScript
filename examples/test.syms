@@ -6,8 +6,8 @@ Doc comment
 
 let formula := 20x^2 + 23y^2 == .212;
 
-fn func() {
-    print[formula];
+async fn sum[a #/First value to sum/#, b #/Second value to sum/#] {
+    return a + b;
 }
 
 let k = 0;
@@ -18,6 +18,17 @@ for i in 0..10 {
     print[i];
 }
 
+for (i in 0..10) k+=i;
+
 if true and k == 0 || k >= 1 {
     print[k >> 1];
 }
+
+loop obj.[k]
+
+let obj = {
+    aboab: "awd",
+    a: 2
+}
+
+let arr = [1,2]
