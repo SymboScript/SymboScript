@@ -284,9 +284,6 @@ impl<'a> Parser<'a> {
                 return node;
             }
 
-            TokenKind::Await => return self.await_expr(),
-            TokenKind::Identifier => return self.dot(),
-
             TokenKind::Not
             | TokenKind::PlusPlus
             | TokenKind::MinusMinus
@@ -297,11 +294,8 @@ impl<'a> Parser<'a> {
                 let right = self.factor();
                 return self.unary_expression(token.start, token.kind, right);
             }
-            _ => {}
+            _ => return self.await_expr(),
         }
-
-        self.report_expected(token.start, TokenKind::Unexpected, token.kind);
-        unreachable!("Report ends proccess")
     }
 
     fn await_expr(&mut self) -> Expression {
