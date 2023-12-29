@@ -8,10 +8,10 @@ pub struct Ast {
     pub program: Statement,
 }
 
-impl fmt::Display for Ast {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.program)
-    }
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Program {
+    pub node: Node,
+    pub body: Vec<Statement>,
 }
 
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -30,34 +30,9 @@ impl Node {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Program {
-    pub node: Node,
-    pub body: Vec<Statement>,
-}
-
-impl fmt::Display for Program {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for statement in &self.body {
-            write!(f, "{}", statement)?;
-        }
-
-        Ok(())
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Statement {
     ExpressionStatement(Expression),
     Program(Program),
-}
-
-impl fmt::Display for Statement {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Statement::ExpressionStatement(expr) => write!(f, "{}", expr),
-            Statement::Program(program) => write!(f, "{}", program),
-        }
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -73,6 +48,97 @@ pub enum Expression {
     YieldExpression(Box<YieldExpression>),
     Literal(Token),
     Identifier(Token),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct BinaryExpression {
+    pub node: Node,
+    pub left: Expression,
+    pub operator: TokenKind,
+    pub right: Expression,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct UnaryExpression {
+    pub node: Node,
+    pub operator: TokenKind,
+    pub right: Expression,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ConditionalExpression {
+    pub node: Node,
+    pub test: Expression,
+    pub consequent: Expression,
+    pub alternate: Expression,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CallExpression {
+    pub node: Node,
+    pub callee: Expression,
+    pub arguments: Expression,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MemberExpression {
+    pub node: Node,
+    pub object: Expression,
+    pub property: Expression,
+    pub is_expr: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AssignmentExpression {
+    pub node: Node,
+    pub assignment: TokenKind,
+    pub left: Expression,
+    pub right: Expression,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SequenceExpression {
+    pub node: Node,
+    pub expressions: Vec<Expression>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AwaitExpression {
+    pub node: Node,
+    pub argument: Expression,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct YieldExpression {
+    pub node: Node,
+    pub argument: Expression,
+}
+
+//----------Display------------
+
+impl fmt::Display for Ast {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.program)
+    }
+}
+
+impl fmt::Display for Program {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for statement in &self.body {
+            write!(f, "{}", statement)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl fmt::Display for Statement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Statement::ExpressionStatement(expr) => write!(f, "{}", expr),
+            Statement::Program(program) => write!(f, "{}", program),
+        }
+    }
 }
 
 impl fmt::Display for Expression {
@@ -106,39 +172,16 @@ impl fmt::Display for Expression {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BinaryExpression {
-    pub node: Node,
-    pub left: Expression,
-    pub operator: TokenKind,
-    pub right: Expression,
-}
-
 impl fmt::Display for BinaryExpression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}{}", self.left, self.operator, self.right)
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct UnaryExpression {
-    pub node: Node,
-    pub operator: TokenKind,
-    pub right: Expression,
-}
-
 impl fmt::Display for UnaryExpression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}", self.operator, self.right)
     }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ConditionalExpression {
-    pub node: Node,
-    pub test: Expression,
-    pub consequent: Expression,
-    pub alternate: Expression,
 }
 
 impl fmt::Display for ConditionalExpression {
@@ -151,25 +194,10 @@ impl fmt::Display for ConditionalExpression {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct CallExpression {
-    pub node: Node,
-    pub callee: Expression,
-    pub arguments: Expression,
-}
-
 impl fmt::Display for CallExpression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}[{}]", self.callee, self.arguments)
     }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MemberExpression {
-    pub node: Node,
-    pub object: Expression,
-    pub property: Expression,
-    pub is_expr: bool,
 }
 
 impl fmt::Display for MemberExpression {
@@ -182,24 +210,10 @@ impl fmt::Display for MemberExpression {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct AssignmentExpression {
-    pub node: Node,
-    pub assignment: TokenKind,
-    pub left: Expression,
-    pub right: Expression,
-}
-
 impl fmt::Display for AssignmentExpression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} = {}", self.left, self.right)
     }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SequenceExpression {
-    pub node: Node,
-    pub expressions: Vec<Expression>,
 }
 
 impl fmt::Display for SequenceExpression {
@@ -211,22 +225,10 @@ impl fmt::Display for SequenceExpression {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct AwaitExpression {
-    pub node: Node,
-    pub argument: Expression,
-}
-
 impl fmt::Display for AwaitExpression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "await {}", self.argument)
     }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct YieldExpression {
-    pub node: Node,
-    pub argument: Expression,
 }
 
 impl fmt::Display for YieldExpression {
