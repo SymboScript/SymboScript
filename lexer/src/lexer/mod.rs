@@ -46,13 +46,13 @@ impl<'a> Lexer<'a> {
             return self.next_token();
         }
 
-        let s = self.source[start..end].trim();
+        let s = self.source[start..end].to_owned();
 
         let mut value = TokenValue::None;
 
         match kind {
             TokenKind::Number => {
-                value = TokenValue::Number(s.trim().parse::<f64>().unwrap_or_default());
+                value = TokenValue::Number(s.parse::<f64>().unwrap_or_default());
             }
             TokenKind::Identifier => {
                 kind = self.match_keyword(&s);
@@ -60,7 +60,7 @@ impl<'a> Lexer<'a> {
                 match kind {
                     TokenKind::If | TokenKind::While | TokenKind::For => {}
                     _ => {
-                        value = TokenValue::Str(s.to_string());
+                        value = TokenValue::Str(s);
                     }
                 }
             }
@@ -70,7 +70,7 @@ impl<'a> Lexer<'a> {
             }
 
             TokenKind::DocComment => {
-                value = TokenValue::Str(s.to_string());
+                value = TokenValue::Str(s);
             }
 
             TokenKind::Unexpected => {

@@ -49,30 +49,40 @@ pub fn output_tokens_colored(text: &str, tokens: &Vec<Token>, show_tokens: Optio
 }
 
 pub fn report_error(path: &str, source: &str, error: &str, start: usize, end: usize) {
-    let line = max(source[..start].lines().count(), 1);
-    let line_end = line - 1 + source[start..end].lines().count();
+    let line_start = max(source[..start].lines().count(), 1);
+    let line_end = max(source[..end].lines().count(), 1);
 
-    let column = start + 1 - source[..start].rfind('\n').unwrap_or(0);
-    let column_end = end - source[..start].rfind('\n').unwrap_or(0);
+    let column_start = start - source[..start].rfind('\n').unwrap_or(0);
+    let column_end = end - source[..end].rfind('\n').unwrap_or(0);
 
-    let near_text = source.lines().nth(line - 1).unwrap_or(&"").trim_end();
+    let near_text = source.lines().nth(line_end - 1).unwrap_or("").trim_end();
 
-    let line_n = format!("{line} |");
+    let line_n = format!("{line_end} |");
 
-    let error_pointer = (" ".repeat(column + line_n.len())
-        + "^".repeat(max(end - start, 1)).as_str())
+    let error_pointer = (" ".repeat(column_start + line_n.len() + 1)
+        + "^".repeat(column_end - column_start + 1).as_str())
     .red()
     .bold();
-    let error_pointer_text = (&error).red().bold();
+
+    let error_pointer_text = error.red().bold();
+
+    let file_src = format!(
+        "--> {}:{}:{}-{}:{} ({start} - {end})",
+        path, line_start, column_start, line_end, column_end
+    );
+
+    println!("{}", file_src.blue().bold());
+
+    for i in line_start..line_end {
+        println!(
+            "{} {}",
+            format!("{} |", i).blue().bold(),
+            source.lines().nth(i - 1).unwrap_or("")
+        );
+    }
 
     println!(
-        "{}\n{} {near_text}\n{error_pointer} {error_pointer_text}",
-        format!(
-            "--> {}:{}:{}-{}:{} ({start} - {end})",
-            path, line, column, line_end, column_end
-        )
-        .blue()
-        .bold(),
+        "{} {near_text}\n{error_pointer} {error_pointer_text}",
         line_n.to_string().blue().bold(),
     );
 
