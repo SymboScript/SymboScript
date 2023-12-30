@@ -11,7 +11,7 @@ pub mod expr_tests {
                 let mut parser = Parser::new("test", test_str, Lexer::new("test", test_str));
 
                 let ast = format!("{}", parser.parse());
-                assert_eq!(ast, $ast_str);
+                assert_eq!(ast, format!("{};\n", $ast_str));
             };
         }
     }
