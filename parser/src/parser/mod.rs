@@ -42,15 +42,40 @@ impl<'a> Parser<'a> {
     pub fn parse(&mut self) -> Ast {
         self.eat(TokenKind::Start);
         return Ast {
-            program: Statement::Program(Program {
-                node: Node {
-                    start: 0,
-                    end: self.source.len(),
-                },
-                body: vec![self.expression_statement()],
-            }),
+            program: self.program(),
         };
     }
+
+    // -------------------- program ------------------------
+
+    fn program(&mut self) -> Program {
+        Program {
+            node: Node {
+                start: 0,
+                end: self.source.len(),
+            },
+            body: self.body(),
+        }
+    }
+
+    fn body(&mut self) -> Vec<Statement> {
+        let mut body = vec![];
+        while self.cur_kind() != TokenKind::Eof {
+            body.push(self.statement());
+        }
+
+        body
+    }
+
+    // -------------------- statements ---------------------
+
+    fn statement(&mut self) -> Statement {
+        match self.cur_kind() {
+            _ => self.expression_statement(),
+        }
+    }
+
+    // -------------------- expressions --------------------
 
     fn expression_statement(&mut self) -> Statement {
         let expression = self.expr();
@@ -59,6 +84,7 @@ impl<'a> Parser<'a> {
         Statement::ExpressionStatement(expression)
     }
 
+    /// full expression
     fn expr(&mut self) -> Expression {
         self.comma(false)
     }

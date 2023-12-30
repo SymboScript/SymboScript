@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Ast {
-    pub program: Statement,
+    pub program: Program,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -32,7 +32,6 @@ impl Node {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Statement {
     ExpressionStatement(Expression),
-    Program(Program),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -125,7 +124,7 @@ impl fmt::Display for Ast {
 impl fmt::Display for Program {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for statement in &self.body {
-            write!(f, "{}", statement)?;
+            writeln!(f, "{}", statement)?;
         }
 
         Ok(())
@@ -135,8 +134,7 @@ impl fmt::Display for Program {
 impl fmt::Display for Statement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Statement::ExpressionStatement(expr) => write!(f, "{}", expr),
-            Statement::Program(program) => write!(f, "{}", program),
+            Statement::ExpressionStatement(expr) => write!(f, "{};", expr),
         }
     }
 }
