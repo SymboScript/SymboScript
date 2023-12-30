@@ -59,8 +59,8 @@ pub fn report_error(path: &str, source: &str, error: &str, start: usize, end: us
 
     let line_n = format!("{line_end} |");
 
-    let error_pointer = (" ".repeat(column_start + line_n.len() + 1)
-        + "^".repeat(column_end - column_start + 1).as_str())
+    let error_pointer = (" ".repeat(column_start + line_n.len())
+        + "^".repeat(column_end - column_start).as_str())
     .red()
     .bold();
 

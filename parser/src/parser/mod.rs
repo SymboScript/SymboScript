@@ -60,8 +60,14 @@ impl<'a> Parser<'a> {
 
     fn body(&mut self) -> Vec<Statement> {
         let mut body = vec![];
-        while self.cur_kind() != TokenKind::Eof {
-            body.push(self.statement());
+
+        loop {
+            match self.cur_kind() {
+                TokenKind::Eof | TokenKind::RBrace => break,
+                _ => {
+                    body.push(self.statement());
+                }
+            }
         }
 
         body
@@ -72,8 +78,56 @@ impl<'a> Parser<'a> {
     fn statement(&mut self) -> Statement {
         match self.cur_kind() {
             TokenKind::Let => self.variable_declaration(),
+            TokenKind::Function => self.function_declaration(),
             _ => self.expression_statement(),
         }
+    }
+
+    // --------------- function declaration -----------------
+
+    fn function_declaration(&mut self) -> Statement {
+        let start = self.cur_token.start;
+        self.advance();
+
+        let id = self.cur_token.clone();
+        self.eat(TokenKind::Identifier);
+        self.eat(TokenKind::LBracket);
+
+        let params = self.parse_params();
+
+        self.eat(TokenKind::RBracket);
+        self.eat(TokenKind::LBrace);
+
+        let body = self.body();
+
+        self.eat(TokenKind::RBrace);
+
+        Statement::FunctionDeclaration(uni_builder!(
+            self,
+            FunctionDeclarator,
+            start,
+            [id, params, body]
+        ))
+    }
+
+    fn parse_params(&mut self) -> Vec<Token> {
+        let mut params = vec![];
+
+        if self.cur_kind() == TokenKind::RBracket {
+            self.advance();
+            return params;
+        }
+
+        params.push(self.cur_token.clone());
+        self.eat(TokenKind::Identifier);
+
+        while self.cur_kind() == TokenKind::Comma {
+            self.advance();
+            params.push(self.cur_token.clone());
+            self.eat(TokenKind::Identifier);
+        }
+
+        params
     }
 
     // -------------- variable declaration -----------------
@@ -389,49 +443,66 @@ impl<'a> Parser<'a> {
     fn call(&mut self) -> (Expression, bool) {
         let token = self.cur_token.clone();
 
-        self.eat_with_start(TokenKind::Identifier, token.start);
-
         match self.cur_kind() {
-            TokenKind::LBracket => {
-                let sequence_start = self.cur_token.start;
-
+            TokenKind::Identifier => {
                 self.advance();
 
                 match self.cur_kind() {
-                    TokenKind::RBracket => {
+                    TokenKind::LBracket => {
+                        let sequence_start = self.cur_token.start;
+
                         self.advance();
 
-                        let node = self.sequence_expression(sequence_start, vec![]);
+                        match self.cur_kind() {
+                            TokenKind::RBracket => {
+                                self.advance();
+
+                                let node = self.sequence_expression(sequence_start, vec![]);
+
+                                return (
+                                    self.call_expression(
+                                        sequence_start,
+                                        Expression::Identifier(token),
+                                        node,
+                                    ),
+                                    true,
+                                );
+                            }
+                            _ => {}
+                        }
+
+                        let mut node = self.expr();
+                        self.eat_with_start(TokenKind::RBracket, token.start);
+
+                        match node {
+                            Expression::SequenceExpression(seq_exp) => {
+                                node =
+                                    self.sequence_expression(sequence_start, seq_exp.expressions);
+                            }
+                            _ => node = self.sequence_expression(sequence_start, vec![node]),
+                        }
 
                         return (
-                            self.call_expression(
-                                sequence_start,
-                                Expression::Identifier(token),
-                                node,
-                            ),
+                            self.call_expression(token.start, Expression::Identifier(token), node),
                             true,
                         );
                     }
-                    _ => {}
+                    _ => {
+                        return (Expression::Identifier(token), false);
+                    }
                 }
+            }
+            TokenKind::LBracket => {
+                self.advance();
 
-                let mut node = self.expr();
+                let node = self.expr();
                 self.eat_with_start(TokenKind::RBracket, token.start);
 
-                match node {
-                    Expression::SequenceExpression(seq_exp) => {
-                        node = self.sequence_expression(sequence_start, seq_exp.expressions);
-                    }
-                    _ => node = self.sequence_expression(sequence_start, vec![node]),
-                }
-
-                return (
-                    self.call_expression(token.start, Expression::Identifier(token), node),
-                    true,
-                );
+                return (node, true);
             }
-            _ => {
-                return (Expression::Identifier(token), true);
+            got => {
+                self.report_expected(token.start, "Identifier or [", got);
+                unreachable!("Report ends proccess");
             }
         }
     }

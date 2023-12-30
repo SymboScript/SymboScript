@@ -41,6 +41,7 @@ pub struct Property {
 pub enum Statement {
     ExpressionStatement(Expression),
     VariableDeclaration(VariableDeclarator),
+    FunctionDeclaration(FunctionDeclarator),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -50,6 +51,12 @@ pub struct VariableDeclarator {
     pub init: Expression,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct FunctionDeclarator {
+    pub node: Node,
+    pub id: Token,
+    pub params: Vec<Token>,
+    pub body: BlockStatement,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -134,6 +141,13 @@ pub struct WordExpression {
 
 //----------Display------------
 
+fn format_vec<T: fmt::Display>(vec: &Vec<T>, separator: &str) -> String {
+    vec.iter()
+        .map(|x| format!("{}", x))
+        .collect::<Vec<String>>()
+        .join(separator)
+}
+
 impl fmt::Display for Ast {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.program)
@@ -155,6 +169,7 @@ impl fmt::Display for Statement {
         match self {
             Statement::ExpressionStatement(expr) => write!(f, "{};", expr),
             Statement::VariableDeclaration(expr) => write!(f, "{};", expr),
+            Statement::FunctionDeclaration(expr) => write!(f, "{}", expr),
         }
     }
 }
@@ -162,6 +177,18 @@ impl fmt::Display for Statement {
 impl fmt::Display for VariableDeclarator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "let {} = {}", self.id, self.init)
+    }
+}
+
+impl fmt::Display for FunctionDeclarator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "fn {}({}) {{\n{}\n}}",
+            self.id,
+            format_vec(&self.params, ", "),
+            format_vec(&self.body, "\n")
+        )
     }
 }
 
@@ -234,9 +261,9 @@ impl fmt::Display for CallExpression {
 impl fmt::Display for MemberExpression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.is_expr {
-            write!(f, "{}.{}", self.object, self.property)
-        } else {
             write!(f, "{}.[{}]", self.object, self.property)
+        } else {
+            write!(f, "{}.{}", self.object, self.property)
         }
     }
 }
