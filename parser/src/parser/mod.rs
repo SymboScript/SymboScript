@@ -319,13 +319,20 @@ impl<'a> Parser<'a> {
         }));
     }
 
-    fn read_map_key_value(&mut self) -> (Expression, Expression) {
+    fn read_map_key_value(&mut self) -> Property {
         let ident_name = self.cur_token.clone();
 
         self.eat(TokenKind::Identifier);
         self.eat(TokenKind::Colon);
         let value = self.expr();
-        return (Expression::Identifier(ident_name), value);
+
+        // return (Expression::Identifier(ident_name), value);
+
+        return Property {
+            node: Node::new(ident_name.start, self.cur_token.end),
+            key: Expression::Identifier(ident_name),
+            value: value,
+        };
     }
 
     /// await delete_expr | delete_expr

@@ -30,6 +30,13 @@ impl Node {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Property {
+    pub node: Node,
+    pub key: Expression,
+    pub value: Expression,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Statement {
     ExpressionStatement(Expression),
 }
@@ -104,7 +111,7 @@ pub struct SequenceExpression {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MapExpression {
     pub node: Node,
-    pub properties: Vec<(Expression, Expression)>,
+    pub properties: Vec<Property>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -168,8 +175,8 @@ impl fmt::Display for Expression {
             }
             Expression::MapExpression(expr) => {
                 write!(f, "{{")?;
-                for (key, value) in &expr.properties {
-                    write!(f, " {}: {}; ", key, value)?;
+                for property in &expr.properties {
+                    write!(f, " {}: {}; ", property.key, property.value)?;
                 }
 
                 write!(f, "}}")
