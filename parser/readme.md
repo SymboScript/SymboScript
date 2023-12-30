@@ -16,11 +16,9 @@
 - [x] Binary expressions
 - [x] Unary expressions
 - [x] Parenthesized expressions
-- [ ] Ternary expressions
-- [ ] Tuples
+- [x] Ternary expressions
 - [ ] Lists
-- [ ] Maps
-- [ ] Sets
-- [ ] Functions
-- [ ] Call expressions
-- [ ] other?
+- [ ] Objects
+- [x] Functions
+- [x] Call expressions
+- [x] other?
