@@ -109,29 +109,9 @@ impl<'a> Parser<'a> {
         self.sequence_expression(start, nodes)
     }
 
-    /// await word_expression | yield word_expression | assign
+    /// yield assign | assign
     fn yield_expr(&mut self) -> Expression {
-        let start = self.cur_token.start;
-        match self.cur_kind() {
-            TokenKind::Yield => {
-                self.advance();
-
-                match self.cur_kind() {
-                    TokenKind::Yield => {
-                        let new_yield = self.yield_expr();
-                        return self.yield_expression(start, new_yield);
-                    }
-                    _ => {}
-                }
-
-                let argument = self.expr();
-                return self.yield_expression(start, argument);
-            }
-
-            _ => {
-                return self.assign();
-            }
-        }
+        word_right_associative!(self, TokenKind::Yield, assign, expr, yield_expression)
     }
 
     ///ternary (Assign | FormulaAssign | PlusAssign | MinusAssign | MultiplyAssign | DivideAssign | PowerAssign | ModuloAssign) ternary
@@ -251,18 +231,6 @@ impl<'a> Parser<'a> {
         }
 
         expr
-
-        // ? I don't know about the good readability of this code
-        // parser!(
-        //     self,
-        //     power,
-        //     [
-        //         [TokenKind::Identifier, TokenKind::LParen],
-        //         [TokenKind::Multiply, TokenKind::Divide, TokenKind::Modulo]
-        //     ],
-        //     [false, true],
-        //     [TokenKind::Multiply, TokenKind::Unexpected]
-        // )
     }
 
     /// factor (Power) factor
@@ -324,27 +292,9 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// await dot | dot
     fn await_expr(&mut self) -> Expression {
-        let start = self.cur_token.start;
-        match self.cur_kind() {
-            TokenKind::Await => {
-                self.advance();
-
-                match self.cur_kind() {
-                    TokenKind::Await => {
-                        let new_await = self.await_expr();
-                        return self.await_expression(start, new_await);
-                    }
-                    _ => {}
-                }
-
-                let argument = self.dot();
-                return self.await_expression(start, argument);
-            }
-            _ => {
-                return self.dot();
-            }
-        }
+        word_right_associative!(self, TokenKind::Await, dot, await_expr, await_expression)
     }
 
     fn dot(&mut self) -> Expression {

@@ -62,6 +62,25 @@ macro_rules! member_left_associative {
 }
 
 #[macro_export]
+macro_rules! word_right_associative {
+    ($self:ident, $Kind: pat, $SubOp: ident, $SelfOp: ident, $WordFn: ident) => {{
+        let start = $self.cur_token.start;
+        match $self.cur_kind() {
+            $Kind => {
+                $self.advance();
+
+                let argument = $self.$SelfOp();
+                return $self.$WordFn(start, argument);
+            }
+
+            _ => {
+                return $self.$SubOp();
+            }
+        }
+    }};
+}
+
+#[macro_export]
 macro_rules! binary_right_associative {
     ($self:ident,  $SubOp: ident, $Kinds: expr) => {{
         let start = $self.cur_token.start;
