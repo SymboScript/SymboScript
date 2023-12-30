@@ -353,11 +353,13 @@ impl<'a> Parser<'a> {
             }
 
             got => {
-                self.report_expected(token.start, TokenKind::Unexpected, got);
+                self.report_expected(token.start, TokenKind::Identifier, got);
                 unreachable!("Report ends proccess")
             }
         }
     }
+
+    // ------------------------------ Expression builders ------------------------------
 
     fn yield_expression(&mut self, start: usize, argument: Expression) -> Expression {
         Expression::YieldExpression(Box::new(YieldExpression {
@@ -451,6 +453,8 @@ impl<'a> Parser<'a> {
         }))
     }
 
+    // ------------------------------- Utility functions -------------------------------
+
     fn eat(&mut self, kind: TokenKind) {
         self.eat_with_start(kind, self.cur_token.start);
     }
@@ -465,7 +469,7 @@ impl<'a> Parser<'a> {
         unreachable!("Report ends proccess");
     }
 
-    fn report_expected(&self, start: usize, expected: TokenKind, got: TokenKind) {
+    fn report_expected<T: std::fmt::Display>(&self, start: usize, expected: T, got: TokenKind) {
         report_error(
             self.path,
             self.source,
