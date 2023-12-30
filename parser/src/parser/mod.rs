@@ -357,14 +357,17 @@ impl<'a> Parser<'a> {
         )
     }
 
+    /// new dot | dot
     fn new_expr(&mut self) -> Expression {
         word_right_associative!(self, TokenKind::New, dot, new_expr, new_expression)
     }
 
+    /// call.call | call
     fn dot(&mut self) -> Expression {
         member_left_associative!(self, [TokenKind::Dot], call)
     }
 
+    /// identifier[expr] | identifier
     fn call(&mut self) -> (Expression, bool) {
         let token = self.cur_token.clone();
 
