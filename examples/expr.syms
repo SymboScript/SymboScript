@@ -1,3 +1,5 @@
 fn foo[a,b,s] {
   a.[b] += s;
+
+  return a.[b] + b + s;
 }

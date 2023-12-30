@@ -79,8 +79,15 @@ impl<'a> Parser<'a> {
         match self.cur_kind() {
             TokenKind::Let => self.variable_declaration(),
             TokenKind::Function => self.function_declaration(),
+            TokenKind::Return => self.return_statement(),
             _ => self.expression_statement(),
         }
+    }
+
+    // -------------- return statement -----------------
+
+    fn return_statement(&mut self) -> Statement {
+        word_right_associative_statement!(self, TokenKind::Return, expr, ReturnStatement)
     }
 
     // --------------- function declaration -----------------
@@ -181,7 +188,7 @@ impl<'a> Parser<'a> {
 
     /// yield assign | assign
     fn yield_expr(&mut self) -> Expression {
-        word_right_associative!(self, TokenKind::Yield, assign, expr, yield_expression)
+        word_right_associative_expr!(self, TokenKind::Yield, assign, expr)
     }
 
     ///ternary (Assign | FormulaAssign | PlusAssign | MinusAssign | MultiplyAssign | DivideAssign | PowerAssign | ModuloAssign) ternary
@@ -409,29 +416,17 @@ impl<'a> Parser<'a> {
 
     /// await delete_expr | delete_expr
     fn await_expr(&mut self) -> Expression {
-        word_right_associative!(
-            self,
-            TokenKind::Await,
-            delete_expr,
-            await_expr,
-            await_expression
-        )
+        word_right_associative_expr!(self, TokenKind::Await, delete_expr, await_expr)
     }
 
     /// delete new_expr | new_expr
     fn delete_expr(&mut self) -> Expression {
-        word_right_associative!(
-            self,
-            TokenKind::Delete,
-            new_expr,
-            delete_expr,
-            delete_expression
-        )
+        word_right_associative_expr!(self, TokenKind::Delete, new_expr, delete_expr)
     }
 
     /// new dot | dot
     fn new_expr(&mut self) -> Expression {
-        word_right_associative!(self, TokenKind::New, dot, new_expr, new_expression)
+        word_right_associative_expr!(self, TokenKind::New, dot, new_expr)
     }
 
     /// call.call | call
@@ -509,24 +504,6 @@ impl<'a> Parser<'a> {
 
     // ------------------------------ Expression builders ------------------------------
 
-    // -------------------------- Word expression builders --------------------------
-    fn yield_expression(&mut self, start: usize, argument: Expression) -> Expression {
-        word_expr_build!(self, TokenKind::Yield, start, argument)
-    }
-
-    fn await_expression(&mut self, start: usize, argument: Expression) -> Expression {
-        word_expr_build!(self, TokenKind::Await, start, argument)
-    }
-
-    fn delete_expression(&mut self, start: usize, argument: Expression) -> Expression {
-        word_expr_build!(self, TokenKind::Delete, start, argument)
-    }
-
-    fn new_expression(&mut self, start: usize, argument: Expression) -> Expression {
-        word_expr_build!(self, TokenKind::New, start, argument)
-    }
-
-    // -------------------------- Other expression builders --------------------------
     fn call_expression(
         &mut self,
         start: usize,

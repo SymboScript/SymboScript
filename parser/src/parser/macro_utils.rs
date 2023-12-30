@@ -62,19 +62,42 @@ macro_rules! member_left_associative {
 }
 
 #[macro_export]
-macro_rules! word_right_associative {
-    ($self:ident, $Kind: path, $SubOp: ident, $SelfOp: ident, $WordFn: ident) => {{
+macro_rules! word_right_associative_expr {
+    ($self:ident, $Kind: path, $SubOp: ident, $SelfOp: ident) => {{
         let start = $self.cur_token.start;
         match $self.cur_kind() {
             $Kind => {
                 $self.advance();
 
                 let argument = $self.$SelfOp();
-                return $self.$WordFn(start, argument);
+                return word_expr_build!($self, $Kind, start, argument);
             }
 
             _ => {
                 return $self.$SubOp();
+            }
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! word_right_associative_statement {
+    ($self:ident, $Kind: path, $Op: ident, $Stmt: ident) => {{
+        let start = $self.cur_token.start;
+        match $self.cur_kind() {
+            $Kind => {
+                $self.advance();
+
+                let argument = $self.$Op();
+
+                $self.eat(TokenKind::Semicolon);
+
+                return word_stmt_build!($self, $Kind, start, argument, $Stmt);
+            }
+
+            got => {
+                $self.report_expected(start, $Kind, got);
+                unreachable!("Report ends proccess");
             }
         }
     }};
@@ -101,13 +124,23 @@ macro_rules! binary_right_associative {
 
 #[macro_export]
 macro_rules! word_expr_build {
-    ($self:ident, $operator: path, $start: ident, $argument: ident) => {{
+    ($self:ident, $operator: path, $start: ident, $argument: ident) => {
         Expression::WordExpression(Box::new(WordExpression {
             node: Node::new($start, $self.cur_token.end),
             argument: $argument,
             operator: $operator,
         }))
-    }};
+    };
+}
+
+#[macro_export]
+macro_rules! word_stmt_build {
+    ($self:ident, $operator: path, $start: ident, $argument: ident, $Statement: ident) => {
+        Statement::$Statement($Statement {
+            node: Node::new($start, $self.cur_token.end),
+            argument: $argument,
+        })
+    };
 }
 
 #[macro_export]
