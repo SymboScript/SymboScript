@@ -165,6 +165,10 @@ impl<'a> Lexer<'a> {
         }
 
         match ident {
+            "true" => TokenKind::True,
+            "false" => TokenKind::False,
+            "None" => TokenKind::None,
+
             "if" => TokenKind::If,
             "else" => TokenKind::Else,
             "while" => TokenKind::While,
@@ -177,12 +181,17 @@ impl<'a> Lexer<'a> {
             "break" => TokenKind::Break,
             "continue" => TokenKind::Continue,
             "in" => TokenKind::In,
+            "of" => TokenKind::Of,
+            "delete" => TokenKind::Delete,
+            "new" => TokenKind::New,
+            "this" => TokenKind::This,
+
+            "import" => TokenKind::Import,
+            "export" => TokenKind::Export,
+            "as" => TokenKind::As,
 
             "async" => TokenKind::Async,
             "await" => TokenKind::Await,
-
-            "true" => TokenKind::True,
-            "false" => TokenKind::False,
 
             // ---Keyword2Operator---
             "band" => TokenKind::BitAnd,

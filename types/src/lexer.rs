@@ -109,6 +109,7 @@ pub enum TokenKind {
     // Keyword literals
     True,
     False,
+    None,
 
     // Keywords
     If,
@@ -123,6 +124,15 @@ pub enum TokenKind {
     Continue,
     Function,
     In,
+    Of,
+    Delete,
+    New,
+    This,
+
+    // Import/Export
+    Import,
+    Export,
+    As,
 
     // Async/Await
     Async,
@@ -197,6 +207,7 @@ impl fmt::Display for TokenKind {
 
             TokenKind::True => write!(f, "true"),
             TokenKind::False => write!(f, "false"),
+            TokenKind::None => write!(f, "None"),
 
             TokenKind::If => write!(f, "if"),
             TokenKind::Else => write!(f, "else"),
@@ -210,6 +221,14 @@ impl fmt::Display for TokenKind {
             TokenKind::Continue => write!(f, "continue"),
             TokenKind::Function => write!(f, "fn"),
             TokenKind::In => write!(f, "in"),
+            TokenKind::Of => write!(f, "of"),
+            TokenKind::Delete => write!(f, "delete"),
+            TokenKind::New => write!(f, "new"),
+            TokenKind::This => write!(f, "this"),
+
+            TokenKind::Import => write!(f, "import"),
+            TokenKind::Export => write!(f, "export"),
+            TokenKind::As => write!(f, "as"),
 
             TokenKind::Await => write!(f, "await"),
             TokenKind::Async => write!(f, "async"),
