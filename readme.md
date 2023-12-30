@@ -1,5 +1,20 @@
 # SymboScript
 
+<div>
+      <a href="https://crates.io/crates/symboscript-types">
+            <img src="https://img.shields.io/crates/v/symboscript-types?label=types" alt="Crates.io Version types">
+      </a>
+      <a href="https://crates.io/crates/symboscript-utils">
+            <img src="https://img.shields.io/crates/v/symboscript-utils?label=utils" alt="Crates.io Version utils">
+      </a>
+      <a href="https://crates.io/crates/symboscript-lexer">
+            <img src="https://img.shields.io/crates/v/symboscript-lexer?label=lexer" alt="Crates.io Version lexer">
+      </a>
+      <a href="https://crates.io/crates/symboscript-parser">
+            <img src="https://img.shields.io/crates/v/symboscript-parser?label=parser" alt="Crates.io Version parser">
+      </a>
+</div>
+
 SymboScript is a a language without limits.
 
 ## Idea of SymboScript

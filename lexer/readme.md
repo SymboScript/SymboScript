@@ -1,5 +1,7 @@
 # SymboScript Lexer
 
+[![Crates.io Version](https://img.shields.io/crates/v/symboscript-lexer)](https://crates.io/crates/symboscript-lexer)
+
 ## Roadmap
 
 - [x] Cli

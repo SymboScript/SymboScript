@@ -1,5 +1,7 @@
 # SymboScript Parser
 
+[![Crates.io Version](https://img.shields.io/crates/v/symboscript-parser)](https://crates.io/crates/symboscript-parser)
+
 ## Roadmap
 
 - [ ] expressions
