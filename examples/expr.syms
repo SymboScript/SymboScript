@@ -1,1 +1,8 @@
-a = await delete v;
+a = {
+  b: "foo";
+  
+  c: {
+    d: "bar";
+  };
+
+};

@@ -252,29 +252,8 @@ impl<'a> Parser<'a> {
                 return node;
             }
 
-            TokenKind::LBracket => {
-                self.advance();
-
-                match self.cur_kind() {
-                    TokenKind::RBracket => {
-                        self.advance();
-                        return self.sequence_expression(token.start, vec![]);
-                    }
-                    _ => {}
-                }
-
-                let mut node = self.comma(true);
-                self.eat_with_start(TokenKind::RBracket, token.start);
-
-                match node {
-                    Expression::SequenceExpression(seq_exp) => {
-                        node = self.sequence_expression(token.start, seq_exp.expressions);
-                    }
-                    _ => node = self.sequence_expression(token.start, vec![node]),
-                }
-
-                return node;
-            }
+            TokenKind::LBracket => self.read_seq_expr(token),
+            TokenKind::LBrace => self.read_map_expr(),
 
             TokenKind::Not
             | TokenKind::PlusPlus
@@ -289,6 +268,64 @@ impl<'a> Parser<'a> {
             }
             _ => return self.await_expr(),
         }
+    }
+
+    fn read_seq_expr(&mut self, token: Token) -> Expression {
+        self.advance();
+
+        match self.cur_kind() {
+            TokenKind::RBracket => {
+                self.advance();
+                return self.sequence_expression(token.start, vec![]);
+            }
+            _ => {}
+        }
+
+        let mut node = self.comma(true);
+        self.eat_with_start(TokenKind::RBracket, token.start);
+
+        match node {
+            Expression::SequenceExpression(seq_exp) => {
+                node = self.sequence_expression(token.start, seq_exp.expressions);
+            }
+            _ => node = self.sequence_expression(token.start, vec![node]),
+        }
+
+        return node;
+    }
+
+    fn read_map_expr(&mut self) -> Expression {
+        let start = self.cur_token.start;
+        self.advance();
+        let mut properties = vec![self.read_map_key_value()];
+
+        while self.cur_kind() == TokenKind::Semicolon {
+            self.advance();
+
+            match self.cur_kind() {
+                TokenKind::RBrace => {
+                    self.advance();
+                    break;
+                }
+                _ => {
+                    properties.push(self.read_map_key_value());
+                }
+            }
+        }
+
+        return Expression::MapExpression(Box::new(MapExpression {
+            node: Node::new(start, self.cur_token.end),
+            properties,
+        }));
+    }
+
+    fn read_map_key_value(&mut self) -> (Expression, Expression) {
+        let ident_name = self.cur_token.clone();
+
+        self.eat(TokenKind::Identifier);
+        self.eat(TokenKind::Colon);
+        let value = self.expr();
+        return (Expression::Identifier(ident_name), value);
     }
 
     /// await delete_expr | delete_expr

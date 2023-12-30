@@ -44,6 +44,7 @@ pub enum Expression {
     MemberExpression(Box<MemberExpression>),
     SequenceExpression(Box<SequenceExpression>),
     WordExpression(Box<WordExpression>),
+    MapExpression(Box<MapExpression>),
     Literal(Token),
     Identifier(Token),
 }
@@ -98,6 +99,12 @@ pub struct AssignmentExpression {
 pub struct SequenceExpression {
     pub node: Node,
     pub expressions: Vec<Expression>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MapExpression {
+    pub node: Node,
+    pub properties: Vec<(Expression, Expression)>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -158,6 +165,14 @@ impl fmt::Display for Expression {
                     }
                 }
                 write!(f, "]")
+            }
+            Expression::MapExpression(expr) => {
+                write!(f, "{{")?;
+                for (key, value) in &expr.properties {
+                    write!(f, " {}: {}; ", key, value)?;
+                }
+
+                write!(f, "}}")
             }
         }
     }

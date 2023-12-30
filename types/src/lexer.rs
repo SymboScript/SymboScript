@@ -19,9 +19,8 @@ pub struct Token {
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.value {
-            TokenValue::Number(s) => write!(f, "{}", s),
             TokenValue::None => write!(f, "{}", self.kind),
-            TokenValue::Str(_) => write!(f, "{}", self.value),
+            _ => write!(f, "{}", self.value),
         }
     }
 }
@@ -239,6 +238,7 @@ pub enum TokenValue {
     None,
     Number(f64),
     Str(String),
+    Identifier(String),
 }
 
 impl fmt::Display for TokenValue {
@@ -246,7 +246,8 @@ impl fmt::Display for TokenValue {
         match self {
             TokenValue::None => write!(f, ""),
             TokenValue::Number(s) => write!(f, "{}", s),
-            TokenValue::Str(s) => write!(f, "{}", s),
+            TokenValue::Str(s) => write!(f, "\"{}\"", s),
+            TokenValue::Identifier(s) => write!(f, "{}", s),
         }
     }
 }

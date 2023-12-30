@@ -54,14 +54,12 @@ impl<'a> Lexer<'a> {
             TokenKind::Number => {
                 value = TokenValue::Number(s.parse::<f64>().unwrap_or_default());
             }
+
             TokenKind::Identifier => {
                 kind = self.match_keyword(&s);
 
-                match kind {
-                    TokenKind::If | TokenKind::While | TokenKind::For => {}
-                    _ => {
-                        value = TokenValue::Str(s);
-                    }
+                if kind == TokenKind::Identifier {
+                    value = TokenValue::Identifier(s);
                 }
             }
 
