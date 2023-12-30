@@ -16,8 +16,8 @@ categories = ["compilers"]
 
 [dependencies]
 symboscript-lexer = { path = "../lexer", version = "0.2.0" }
-symboscript-types = { path = "../types", version = "0.1.0" }
-symboscript-utils = { path = "../utils", version = "0.1.0" }
+symboscript-types = { path = "../types", version = "0.2.0" }
+symboscript-utils = { path = "../utils", version = "0.1.1" }
 
 clap = { version = "4.4.11", features = ["derive"] }
 serde = { version = "1.0.193", features = ["derive"] }
