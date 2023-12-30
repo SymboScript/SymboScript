@@ -127,7 +127,6 @@ pub enum TokenKind {
     Of,
     Delete,
     New,
-    This,
 
     // Import/Export
     Import,
@@ -224,7 +223,6 @@ impl fmt::Display for TokenKind {
             TokenKind::Of => write!(f, "of"),
             TokenKind::Delete => write!(f, "delete"),
             TokenKind::New => write!(f, "new"),
-            TokenKind::This => write!(f, "this"),
 
             TokenKind::Import => write!(f, "import"),
             TokenKind::Export => write!(f, "export"),

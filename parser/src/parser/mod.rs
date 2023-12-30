@@ -280,7 +280,8 @@ impl<'a> Parser<'a> {
             | TokenKind::PlusPlus
             | TokenKind::MinusMinus
             | TokenKind::BitNot
-            | TokenKind::Minus => {
+            | TokenKind::Minus
+            | TokenKind::Plus => {
                 self.advance();
 
                 let right = self.factor();
@@ -290,9 +291,30 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// await dot | dot
+    /// await delete_expr | delete_expr
     fn await_expr(&mut self) -> Expression {
-        word_right_associative!(self, TokenKind::Await, dot, await_expr, await_expression)
+        word_right_associative!(
+            self,
+            TokenKind::Await,
+            delete_expr,
+            await_expr,
+            await_expression
+        )
+    }
+
+    /// delete new_expr | new_expr
+    fn delete_expr(&mut self) -> Expression {
+        word_right_associative!(
+            self,
+            TokenKind::Delete,
+            new_expr,
+            delete_expr,
+            delete_expression
+        )
+    }
+
+    fn new_expr(&mut self) -> Expression {
+        word_right_associative!(self, TokenKind::New, dot, new_expr, new_expression)
     }
 
     fn dot(&mut self) -> Expression {
@@ -302,79 +324,73 @@ impl<'a> Parser<'a> {
     fn call(&mut self) -> (Expression, bool) {
         let token = self.cur_token.clone();
 
+        self.eat_with_start(TokenKind::Identifier, token.start);
+
         match self.cur_kind() {
-            TokenKind::Identifier => {
+            TokenKind::LBracket => {
+                let sequence_start = self.cur_token.start;
+
                 self.advance();
 
                 match self.cur_kind() {
-                    TokenKind::LBracket => {
-                        let sequence_start = self.cur_token.start;
-
+                    TokenKind::RBracket => {
                         self.advance();
 
-                        match self.cur_kind() {
-                            TokenKind::RBracket => {
-                                self.advance();
-
-                                let node = self.sequence_expression(sequence_start, vec![]);
-
-                                return (
-                                    self.call_expression(
-                                        sequence_start,
-                                        Expression::Identifier(token),
-                                        node,
-                                    ),
-                                    true,
-                                );
-                            }
-                            _ => {}
-                        }
-
-                        let mut node = self.expr();
-                        self.eat_with_start(TokenKind::RBracket, token.start);
-
-                        match node {
-                            Expression::SequenceExpression(seq_exp) => {
-                                node =
-                                    self.sequence_expression(sequence_start, seq_exp.expressions);
-                            }
-                            _ => node = self.sequence_expression(sequence_start, vec![node]),
-                        }
+                        let node = self.sequence_expression(sequence_start, vec![]);
 
                         return (
-                            self.call_expression(token.start, Expression::Identifier(token), node),
+                            self.call_expression(
+                                sequence_start,
+                                Expression::Identifier(token),
+                                node,
+                            ),
                             true,
                         );
                     }
-                    _ => {
-                        return (Expression::Identifier(token), true);
-                    }
+                    _ => {}
                 }
-            }
 
-            got => {
-                self.report_expected(token.start, TokenKind::Identifier, got);
-                unreachable!("Report ends proccess")
+                let mut node = self.expr();
+                self.eat_with_start(TokenKind::RBracket, token.start);
+
+                match node {
+                    Expression::SequenceExpression(seq_exp) => {
+                        node = self.sequence_expression(sequence_start, seq_exp.expressions);
+                    }
+                    _ => node = self.sequence_expression(sequence_start, vec![node]),
+                }
+
+                return (
+                    self.call_expression(token.start, Expression::Identifier(token), node),
+                    true,
+                );
+            }
+            _ => {
+                return (Expression::Identifier(token), true);
             }
         }
     }
 
     // ------------------------------ Expression builders ------------------------------
 
+    // -------------------------- Word expression builders --------------------------
     fn yield_expression(&mut self, start: usize, argument: Expression) -> Expression {
-        Expression::YieldExpression(Box::new(YieldExpression {
-            node: Node::new(start, self.cur_token.end),
-            argument,
-        }))
+        word_expr_build!(self, TokenKind::Yield, start, argument)
     }
 
     fn await_expression(&mut self, start: usize, argument: Expression) -> Expression {
-        Expression::AwaitExpression(Box::new(AwaitExpression {
-            node: Node::new(start, self.cur_token.end),
-            argument,
-        }))
+        word_expr_build!(self, TokenKind::Await, start, argument)
     }
 
+    fn delete_expression(&mut self, start: usize, argument: Expression) -> Expression {
+        word_expr_build!(self, TokenKind::Delete, start, argument)
+    }
+
+    fn new_expression(&mut self, start: usize, argument: Expression) -> Expression {
+        word_expr_build!(self, TokenKind::New, start, argument)
+    }
+
+    // -------------------------- Other expression builders --------------------------
     fn call_expression(
         &mut self,
         start: usize,

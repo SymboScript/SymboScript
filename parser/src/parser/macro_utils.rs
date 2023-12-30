@@ -63,7 +63,7 @@ macro_rules! member_left_associative {
 
 #[macro_export]
 macro_rules! word_right_associative {
-    ($self:ident, $Kind: pat, $SubOp: ident, $SelfOp: ident, $WordFn: ident) => {{
+    ($self:ident, $Kind: path, $SubOp: ident, $SelfOp: ident, $WordFn: ident) => {{
         let start = $self.cur_token.start;
         match $self.cur_kind() {
             $Kind => {
@@ -96,5 +96,16 @@ macro_rules! binary_right_associative {
         }
 
         node
+    }};
+}
+
+#[macro_export]
+macro_rules! word_expr_build {
+    ($self:ident, $operator: path, $start: ident, $argument: ident) => {{
+        Expression::WordExpression(Box::new(WordExpression {
+            node: Node::new($start, $self.cur_token.end),
+            argument: $argument,
+            operator: $operator,
+        }))
     }};
 }

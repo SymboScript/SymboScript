@@ -1,3 +1,1 @@
-a = await b;
-b = 2;
-b += 3 + a;
+a = await delete v;

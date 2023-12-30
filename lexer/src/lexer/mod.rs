@@ -184,7 +184,6 @@ impl<'a> Lexer<'a> {
             "of" => TokenKind::Of,
             "delete" => TokenKind::Delete,
             "new" => TokenKind::New,
-            "this" => TokenKind::This,
 
             "import" => TokenKind::Import,
             "export" => TokenKind::Export,
