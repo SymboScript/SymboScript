@@ -1,5 +1,5 @@
 [package]
-name = "parser"
+name = "symboscript-parser"
 version = "0.1.0"
 edition = "2021"
 authors = ["artegoser"]
@@ -15,7 +15,7 @@ categories = ["compilers"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-symboscript-lexer = { path = "../lexer", version = "0.1.0" }
+symboscript-lexer = { path = "../lexer", version = "0.2.0" }
 symboscript-types = { path = "../types", version = "0.1.0" }
 symboscript-utils = { path = "../utils", version = "0.1.0" }
 

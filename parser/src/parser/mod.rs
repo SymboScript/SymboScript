@@ -100,10 +100,8 @@ impl<'a> Parser<'a> {
             nodes.push(self.yield_expr());
         }
 
-        if !only_sequence {
-            if nodes.len() == 1 {
-                return nodes[0].clone();
-            }
+        if !only_sequence && nodes.len() == 1 {
+            return nodes[0].clone();
         }
 
         self.sequence_expression(start, nodes)
