@@ -3,6 +3,7 @@ use std::fmt::{self};
 use crate::lexer::{Token, TokenKind};
 use serde::{Deserialize, Serialize};
 
+type BlockStatement = Vec<Statement>;
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Ast {
     pub program: Program,
@@ -11,7 +12,7 @@ pub struct Ast {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Program {
     pub node: Node,
-    pub body: Vec<Statement>,
+    pub body: BlockStatement,
 }
 
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -39,6 +40,16 @@ pub struct Property {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Statement {
     ExpressionStatement(Expression),
+    VariableDeclaration(VariableDeclarator),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct VariableDeclarator {
+    pub node: Node,
+    pub id: Token,
+    pub init: Expression,
+}
+
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -143,7 +154,14 @@ impl fmt::Display for Statement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Statement::ExpressionStatement(expr) => write!(f, "{};", expr),
+            Statement::VariableDeclaration(expr) => write!(f, "{};", expr),
         }
+    }
+}
+
+impl fmt::Display for VariableDeclarator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "let {} = {}", self.id, self.init)
     }
 }
 

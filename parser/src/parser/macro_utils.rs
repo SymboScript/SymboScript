@@ -109,3 +109,15 @@ macro_rules! word_expr_build {
         }))
     }};
 }
+
+#[macro_export]
+macro_rules! uni_builder {
+    ($self:ident, $Expr: ident, $start: ident,[$($properties: ident),+]) => {
+        $Expr {
+            node: Node::new($start, $self.cur_token.end),
+            $(
+                $properties,
+            )+
+        }
+    };
+}

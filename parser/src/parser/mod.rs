@@ -71,8 +71,26 @@ impl<'a> Parser<'a> {
 
     fn statement(&mut self) -> Statement {
         match self.cur_kind() {
+            TokenKind::Let => self.variable_declaration(),
             _ => self.expression_statement(),
         }
+    }
+
+    // -------------- variable declaration -----------------
+
+    fn variable_declaration(&mut self) -> Statement {
+        let start = self.cur_token.start;
+        self.advance();
+
+        let id = self.cur_token.clone();
+        self.eat(TokenKind::Identifier);
+        self.eat(TokenKind::Assign);
+
+        let init = self.expr();
+
+        self.eat(TokenKind::Semicolon);
+
+        Statement::VariableDeclaration(uni_builder!(self, VariableDeclarator, start, [id, init]))
     }
 
     // -------------------- expressions --------------------
