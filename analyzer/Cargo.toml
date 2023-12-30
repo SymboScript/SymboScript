@@ -1,0 +1,12 @@
+[package]
+name = "symboscript-analyzer"
+version = "0.0.0"
+edition = "2021"
+authors = ["artegoser"]
+license = "MIT"
+description = "SymboScript analyzer"
+repository = "https://github.com/artegoser/SymboScript"
+homepage = "https://github.com/artegoser/SymboScript/tree/main/analyzer"
+documentation = "https://github.com/artegoser/SymboScript/blob/master/doc/main.md"
+keywords = ["programming-language", "analyzer", "symbolic", "symboscript"]
+categories = ["compilers"]

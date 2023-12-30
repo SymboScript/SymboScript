@@ -1,0 +1,12 @@
+[package]
+name = "symboscript-formatter"
+version = "0.0.0"
+edition = "2021"
+authors = ["artegoser"]
+license = "MIT"
+description = "SymboScript formatter"
+repository = "https://github.com/artegoser/SymboScript"
+homepage = "https://github.com/artegoser/SymboScript/tree/main/formatter"
+documentation = "https://github.com/artegoser/SymboScript/blob/master/doc/main.md"
+keywords = ["programming-language", "formatter", "symbolic", "symboscript"]
+categories = ["compilers"]

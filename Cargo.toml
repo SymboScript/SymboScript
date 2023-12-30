@@ -1,4 +1,13 @@
 [workspace]
 
-members = ["lexer", "parser", "utils", "types"]
+members = [
+  "utils",
+  "types",
+  "lexer",
+  "parser",
+  "optimizer",
+  "interpreter",
+  "analyzer",
+  "formatter",
+]
 resolver = "2"

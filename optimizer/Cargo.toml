@@ -1,0 +1,12 @@
+[package]
+name = "symboscript-optimizer"
+version = "0.0.0"
+edition = "2021"
+authors = ["artegoser"]
+license = "MIT"
+description = "SymboScript optimizer"
+repository = "https://github.com/artegoser/SymboScript"
+homepage = "https://github.com/artegoser/SymboScript/tree/main/optimizer"
+documentation = "https://github.com/artegoser/SymboScript/blob/master/doc/main.md"
+keywords = ["programming-language", "optimizer", "symbolic", "symboscript"]
+categories = ["compilers"]
