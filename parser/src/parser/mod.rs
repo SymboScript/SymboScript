@@ -75,15 +75,112 @@ impl<'a> Parser<'a> {
 
     fn statement(&mut self) -> Statement {
         match self.cur_kind() {
-            TokenKind::Let => self.var_decl(),
+            TokenKind::Let => self.var_decl(false),
             TokenKind::Function => self.fn_decl(),
+
             TokenKind::If => self.if_stmt(),
-            TokenKind::Return => self.return_stmt(),
-            TokenKind::Yield => self.yield_stmt(),
+
+            TokenKind::For => self.for_stmt(),
+            TokenKind::While => self.while_stmt(),
+            TokenKind::Loop => self.loop_stmt(),
+
             TokenKind::Continue => self.continue_stmt(),
             TokenKind::Break => self.break_stmt(),
+
+            TokenKind::Return => self.return_stmt(),
+            TokenKind::Yield => self.yield_stmt(),
+
             _ => self.expr_stmt(),
         }
+    }
+
+    fn block_stmt(&mut self) -> Vec<Statement> {
+        let mut body = vec![];
+
+        if self.cur_kind() == TokenKind::LBrace {
+            body = {
+                let start = self.cur_token.start;
+                self.eat(TokenKind::LBrace);
+                let consequent = self.body();
+                self.eat_with_start(TokenKind::RBrace, start);
+                consequent
+            }
+        } else {
+            body.push(self.statement());
+        }
+
+        return body;
+    }
+
+    // --------------- loop statement ------------------
+
+    fn loop_stmt(&mut self) -> Statement {
+        let start = self.cur_token.start;
+        self.eat(TokenKind::Loop);
+        let body = self.block_stmt();
+
+        Statement::LoopStatement(LoopStatement {
+            node: Node::new(start, self.cur_token.end),
+            body,
+        })
+    }
+
+    // --------------- while statement ------------------
+
+    fn while_stmt(&mut self) -> Statement {
+        let start = self.cur_token.start;
+        self.eat(TokenKind::While);
+
+        let test = {
+            let start = self.cur_token.start;
+            self.eat(TokenKind::LParen);
+            let test = self.expr();
+            self.eat_with_start(TokenKind::RParen, start);
+            test
+        };
+
+        let body = self.block_stmt();
+
+        Statement::WhileStatement(WhileStatement {
+            node: Node::new(start, self.cur_token.end),
+            test,
+            body,
+        })
+    }
+
+    // --------------- for statement ------------------
+
+    fn for_stmt(&mut self) -> Statement {
+        let start = self.cur_token.start;
+
+        self.eat(TokenKind::For);
+        self.eat(TokenKind::LParen);
+
+        let init = self.var_decl(true);
+
+        let test = {
+            let start = self.cur_token.start;
+            let test = self.expr();
+            self.eat_with_start(TokenKind::Semicolon, start);
+            test
+        };
+
+        let update = {
+            let start = self.cur_token.start;
+            let update = self.expr();
+            self.eat_with_start(TokenKind::RParen, start);
+            update
+        };
+
+        let body = self.block_stmt();
+
+        Statement::ForStatement(Box::new(ForStatement {
+            node: Node::new(start, self.cur_token.end),
+            init,
+            test,
+            update,
+            body,
+        }))
     }
 
     // --------------- if statement -------------------
@@ -101,32 +198,13 @@ impl<'a> Parser<'a> {
             test
         };
 
-        let mut consequent = vec![];
-
-        if self.cur_kind() == TokenKind::LBrace {
-            consequent = {
-                let start = self.cur_token.start;
-                self.eat(TokenKind::LBrace);
-                let consequent = self.body();
-                self.eat_with_start(TokenKind::RBrace, start);
-                consequent
-            }
-        } else {
-            consequent.push(self.statement());
-        }
+        let consequent = self.block_stmt();
 
         let mut alternate = vec![];
 
         if self.cur_kind() == TokenKind::Else {
             self.advance();
-            let start = self.cur_token.start;
-            if self.cur_kind() == TokenKind::LBrace {
-                self.advance();
-                alternate = self.body();
-                self.eat_with_start(TokenKind::RBrace, start);
-            } else {
-                alternate.push(self.statement());
-            }
+            alternate = self.block_stmt();
         }
 
         Statement::IfStatement(IfStatement {
@@ -148,15 +226,17 @@ impl<'a> Parser<'a> {
     }
 
     fn continue_stmt(&mut self) -> Statement {
+        let start = self.cur_token.start;
         self.eat(TokenKind::Continue);
 
-        Statement::ContinueStatement
+        Statement::ContinueStatement(Node::new(start, self.cur_token.end))
     }
 
     fn break_stmt(&mut self) -> Statement {
+        let start = self.cur_token.start;
         self.eat(TokenKind::Break);
 
-        Statement::BreakStatement
+        Statement::BreakStatement(Node::new(start, self.cur_token.end))
     }
 
     // --------------- function declaration -----------------
@@ -214,15 +294,25 @@ impl<'a> Parser<'a> {
 
     // -------------- variable declaration -----------------
 
-    fn var_decl(&mut self) -> Statement {
+    fn var_decl(&mut self, only_with_init: bool) -> Statement {
         let start = self.cur_token.start;
         self.advance();
 
         let id = self.cur_token.clone();
         self.eat(TokenKind::Identifier);
-        self.eat(TokenKind::Assign);
 
-        let init = self.expr();
+        let init = {
+            let start = self.cur_token.start;
+            if self.cur_kind() == TokenKind::Assign {
+                self.advance();
+                self.expr()
+            } else if !only_with_init {
+                Expression::None
+            } else {
+                self.report_expected(start, TokenKind::Assign, self.cur_kind());
+                unreachable!("Report ends proccess");
+            }
+        };
 
         self.eat(TokenKind::Semicolon);
 
@@ -664,11 +754,20 @@ impl<'a> Parser<'a> {
             return true;
         }
 
-        self.report_expected(start, kind, self.cur_kind());
+        self.report_expected(
+            start,
+            kind,
+            format!("{}({})", self.cur_kind(), self.cur_token),
+        );
         unreachable!("Report ends proccess");
     }
 
-    fn report_expected<T: std::fmt::Display>(&self, start: usize, expected: T, got: TokenKind) {
+    fn report_expected<T: std::fmt::Display, U: std::fmt::Display>(
+        &self,
+        start: usize,
+        expected: T,
+        got: U,
+    ) {
         report_error(
             self.path,
             self.source,

@@ -11,14 +11,18 @@ pub struct Lexer<'a> {
 
     /// The remaining characters
     chars: Chars<'a>,
+
+    /// Lex comments
+    comment: bool,
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(path: &'a str, source: &'a str) -> Self {
+    pub fn new(path: &'a str, source: &'a str, comment: bool) -> Self {
         Self {
             path,
             source,
             chars: source.chars(),
+            comment,
         }
     }
 
@@ -264,7 +268,11 @@ impl<'a> Lexer<'a> {
                 self.next();
                 if c == '/' {
                     if self.eat('#') {
-                        return TokenKind::DocComment;
+                        if self.comment {
+                            return TokenKind::DocComment;
+                        } else {
+                            return TokenKind::Skip;
+                        }
                     }
                 }
             }
@@ -281,7 +289,12 @@ impl<'a> Lexer<'a> {
                 }
             };
         }
-        TokenKind::Skip
+
+        if self.comment {
+            TokenKind::Comment
+        } else {
+            TokenKind::Skip
+        }
     }
 
     fn read_string(&mut self, init_char: char) -> TokenKind {

@@ -22,7 +22,7 @@ fn main() {
 
     let text = OpenOptions::new().read(true).open(&args.path).unwrap();
     let text = &std::io::read_to_string(text).unwrap();
-    let lexer = lexer::Lexer::new(&args.path, text);
+    let lexer = lexer::Lexer::new(&args.path, text, false);
 
     let mut parser = parser::Parser::new(&args.path, &text, lexer);
 

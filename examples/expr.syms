@@ -1,3 +1,0 @@
-if (aboba) print["dada"];
-else if (aboba == 2) print["net"];
-else print["aboba"];

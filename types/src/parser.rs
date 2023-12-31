@@ -41,12 +41,37 @@ pub struct Property {
 pub enum Statement {
     ExpressionStatement(Expression),
     ReturnStatement(ReturnStatement),
-    ContinueStatement,
-    BreakStatement,
+    ContinueStatement(Node),
+    BreakStatement(Node),
     YieldStatement(YieldStatement),
     VariableDeclaration(VariableDeclarator),
     FunctionDeclaration(FunctionDeclarator),
     IfStatement(IfStatement),
+    ForStatement(Box<ForStatement>),
+    WhileStatement(WhileStatement),
+    LoopStatement(LoopStatement),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LoopStatement {
+    pub node: Node,
+    pub body: BlockStatement,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct WhileStatement {
+    pub node: Node,
+    pub test: Expression,
+    pub body: BlockStatement,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ForStatement {
+    pub node: Node,
+    pub init: Statement,
+    pub test: Expression,
+    pub update: Expression,
+    pub body: BlockStatement,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -97,6 +122,7 @@ pub enum Expression {
     MapExpression(Box<MapExpression>),
     Literal(Token),
     Identifier(Token),
+    None,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -196,11 +222,44 @@ impl fmt::Display for Statement {
             Statement::VariableDeclaration(expr) => write!(f, "{};", expr),
             Statement::FunctionDeclaration(expr) => write!(f, "{}", expr),
             Statement::ReturnStatement(expr) => write!(f, "{}", expr),
-            Statement::ContinueStatement => write!(f, "continue;"),
-            Statement::BreakStatement => write!(f, "break;"),
+            Statement::ContinueStatement(_) => write!(f, "continue;"),
+            Statement::BreakStatement(_) => write!(f, "break;"),
             Statement::YieldStatement(expr) => write!(f, "{}", expr),
             Statement::IfStatement(expr) => write!(f, "{}", expr),
+            Statement::ForStatement(expr) => write!(f, "{}", expr),
+            Statement::WhileStatement(expr) => write!(f, "{}", expr),
+            Statement::LoopStatement(expr) => write!(f, "{}", expr),
         }
+    }
+}
+
+impl fmt::Display for ForStatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "for ({} {}; {}) {{\n{}\n}}",
+            self.init,
+            self.test,
+            self.update,
+            format_vec(&self.body, "\n")
+        )
+    }
+}
+
+impl fmt::Display for WhileStatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "while ({}) {{\n{}\n}}",
+            self.test,
+            format_vec(&self.body, "\n")
+        )
+    }
+}
+
+impl fmt::Display for LoopStatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "loop {{\n{}\n}}", format_vec(&self.body, "\n"))
     }
 }
 
@@ -280,6 +339,7 @@ impl fmt::Display for Expression {
 
                 write!(f, "}}")
             }
+            Expression::None => write!(f, "None"),
         }
     }
 }

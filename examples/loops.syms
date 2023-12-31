@@ -1,0 +1,23 @@
+
+# Basic for syntax
+println["For:"];
+for (let b = 0; b < 10; ++b) println[b];
+println[];
+
+# While
+println["While:"];
+let b = 0;
+while (b < 10) {
+  println[b];
+  ++b;
+}
+println[];
+
+# Loop, now you dont need use while true
+println["Loop:"];
+let b = 0;
+loop {
+  println[b];
+  ++b;
+  if (b >= 10) break
+}

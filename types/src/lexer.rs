@@ -29,6 +29,7 @@ impl fmt::Display for Token {
 pub enum TokenKind {
     Eof, // end of file
     DocComment,
+    Comment,
     Unexpected,
     Skip,
     Start,
@@ -142,6 +143,7 @@ impl fmt::Display for TokenKind {
         match self {
             TokenKind::Eof => write!(f, "EOF"),
             TokenKind::DocComment => write!(f, "DocComment"),
+            TokenKind::Comment => write!(f, "Comment"),
             TokenKind::Unexpected => write!(f, "Unexpected"),
             TokenKind::Skip => write!(f, "Skip"),
             TokenKind::Start => write!(f, "Start"),

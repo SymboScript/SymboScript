@@ -8,7 +8,7 @@ pub mod expr_tests {
         macro_rules! assert_parser {
             ($str: expr, $ast_str: expr) => {
                 let test_str = $str;
-                let mut parser = Parser::new("test", test_str, Lexer::new("test", test_str));
+                let mut parser = Parser::new("test", test_str, Lexer::new("test", test_str, false));
 
                 let ast = format!("{}", parser.parse());
                 assert_eq!(ast, format!("{};\n", $ast_str));

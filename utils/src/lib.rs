@@ -19,28 +19,28 @@ pub fn output_tokens_colored(text: &str, tokens: &Vec<Token>, show_tokens: Optio
             format!("{}", text[token.start..token.end].to_string())
         };
 
-        match token.kind {
-            Identifier => print!("{}", s.yellow()),
+        print!("{}", {
+            match token.kind {
+                Identifier => s.yellow(),
 
-            Plus | Minus | Multiply | Divide | Power | Assign | Equal | Range | FormulaAssign
-            | And | Or | Xor | Not | BitAnd | BitOr | BitNot | BitXor | BitLeftShift
-            | BitRightShift => {
-                print!("{}", s.green())
+                Plus | Minus | Multiply | Divide | Power | Assign | Equal | Range
+                | FormulaAssign | And | Or | Xor | Not | BitAnd | BitOr | BitNot | BitXor
+                | BitLeftShift | BitRightShift => s.green(),
+
+                Number => s.blue(),
+
+                LParen | RParen | LBrace | RBrace => s.cyan(),
+
+                If | Else | While | For | Loop | Let | Return | Break | Continue | Function
+                | True | False | In => s.magenta(),
+
+                Str => s.truecolor(206, 145, 120),
+
+                DocComment | Comment => s.green(),
+
+                _ => s.into(),
             }
-
-            Number => print!("{}", s.blue()),
-
-            LParen | RParen | LBrace | RBrace => print!("{}", s.cyan()),
-
-            If | Else | While | For | Loop | Let | Return | Break | Continue | Function | True
-            | False | In => print!("{}", s.magenta()),
-
-            Str => print!("{}", s.truecolor(206, 145, 120)),
-
-            DocComment => print!("{}", s.green()),
-
-            _ => print!("{}", s),
-        }
+        });
     }
 
     print!("{}", text[last_end..].to_string());
@@ -52,8 +52,13 @@ pub fn report_error(path: &str, source: &str, error: &str, start: usize, end: us
     let line_start = max(source[..start].lines().count(), 1);
     let line_end = max(source[..end].lines().count(), 1);
 
-    let column_start = start - source[..start].rfind('\n').unwrap_or(0);
-    let column_end = end - source[..end].rfind('\n').unwrap_or(0);
+    let mut column_start = start - source[..start].rfind('\n').unwrap_or(0);
+    let mut column_end = end - source[..end].rfind('\n').unwrap_or(0);
+
+    if line_start == 1 || line_end == 1 {
+        column_end += 1;
+        column_start += 1;
+    }
 
     let near_text = source.lines().nth(line_end - 1).unwrap_or("").trim_end();
 

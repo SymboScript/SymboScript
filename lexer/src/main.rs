@@ -25,7 +25,7 @@ fn main() {
 
     let text = OpenOptions::new().read(true).open(&args.path).unwrap();
     let text = &std::io::read_to_string(text).unwrap();
-    let mut lexer = lexer::Lexer::new(&args.path, text);
+    let mut lexer = lexer::Lexer::new(&args.path, text, true);
     let tokens = lexer.tokenize();
 
     if args.debug {
