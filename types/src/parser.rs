@@ -46,6 +46,7 @@ pub enum Statement {
     YieldStatement(YieldStatement),
     VariableDeclaration(VariableDeclarator),
     FunctionDeclaration(FunctionDeclarator),
+    IfStatement(IfStatement),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -73,6 +74,14 @@ pub struct FunctionDeclarator {
     pub id: Token,
     pub params: Vec<Token>,
     pub body: BlockStatement,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct IfStatement {
+    pub node: Node,
+    pub test: Expression,
+    pub consequent: BlockStatement,
+    pub alternate: BlockStatement,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -190,6 +199,7 @@ impl fmt::Display for Statement {
             Statement::ContinueStatement => write!(f, "continue;"),
             Statement::BreakStatement => write!(f, "break;"),
             Statement::YieldStatement(expr) => write!(f, "{}", expr),
+            Statement::IfStatement(expr) => write!(f, "{}", expr),
         }
     }
 }
@@ -220,6 +230,18 @@ impl fmt::Display for FunctionDeclarator {
             self.id,
             format_vec(&self.params, ", "),
             format_vec(&self.body, "\n")
+        )
+    }
+}
+
+impl fmt::Display for IfStatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "if {} {{\n{}\n}} else {{\n{}\n}}",
+            self.test,
+            format_vec(&self.consequent, "\n"),
+            format_vec(&self.alternate, "\n")
         )
     }
 }

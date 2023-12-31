@@ -19,7 +19,6 @@ pub struct Parser<'a> {
     lexer: Lexer<'a>,
 
     cur_token: Token,
-    prev_token_end: usize,
 }
 
 impl<'a> Parser<'a> {
@@ -29,7 +28,6 @@ impl<'a> Parser<'a> {
             source,
             lexer,
 
-            prev_token_end: 0,
             cur_token: Token {
                 kind: TokenKind::Start,
                 start: 0,
@@ -79,12 +77,64 @@ impl<'a> Parser<'a> {
         match self.cur_kind() {
             TokenKind::Let => self.var_decl(),
             TokenKind::Function => self.fn_decl(),
+            TokenKind::If => self.if_stmt(),
             TokenKind::Return => self.return_stmt(),
             TokenKind::Yield => self.yield_stmt(),
             TokenKind::Continue => self.continue_stmt(),
             TokenKind::Break => self.break_stmt(),
             _ => self.expr_stmt(),
         }
+    }
+
+    // --------------- if statement -------------------
+
+    fn if_stmt(&mut self) -> Statement {
+        let start = self.cur_token.start;
+
+        self.eat(TokenKind::If);
+
+        let test = {
+            let start = self.cur_token.start;
+            self.eat(TokenKind::LParen);
+            let test = self.expr();
+            self.eat_with_start(TokenKind::RParen, start);
+            test
+        };
+
+        let mut consequent = vec![];
+
+        if self.cur_kind() == TokenKind::LBrace {
+            consequent = {
+                let start = self.cur_token.start;
+                self.eat(TokenKind::LBrace);
+                let consequent = self.body();
+                self.eat_with_start(TokenKind::RBrace, start);
+                consequent
+            }
+        } else {
+            consequent.push(self.statement());
+        }
+
+        let mut alternate = vec![];
+
+        if self.cur_kind() == TokenKind::Else {
+            self.advance();
+            let start = self.cur_token.start;
+            if self.cur_kind() == TokenKind::LBrace {
+                self.advance();
+                alternate = self.body();
+                self.eat_with_start(TokenKind::RBrace, start);
+            } else {
+                alternate.push(self.statement());
+            }
+        }
+
+        Statement::IfStatement(IfStatement {
+            node: Node::new(start, self.cur_token.end),
+            test,
+            consequent,
+            alternate,
+        })
     }
 
     // -------------- word statements -----------------
@@ -117,16 +167,22 @@ impl<'a> Parser<'a> {
 
         let id = self.cur_token.clone();
         self.eat(TokenKind::Identifier);
-        self.eat(TokenKind::LBracket);
 
-        let params = self.parse_params();
+        let params = {
+            let start = self.cur_token.start;
+            self.eat(TokenKind::LBracket);
+            let params = self.parse_params();
+            self.eat_with_start(TokenKind::RBracket, start);
+            params
+        };
 
-        self.eat(TokenKind::RBracket);
-        self.eat(TokenKind::LBrace);
-
-        let body = self.body();
-
-        self.eat(TokenKind::RBrace);
+        let body = {
+            let start = self.cur_token.start;
+            self.eat(TokenKind::LBrace);
+            let body = self.body();
+            self.eat_with_start(TokenKind::RBrace, start);
+            body
+        };
 
         Statement::FunctionDeclaration(uni_builder!(
             self,
@@ -625,7 +681,6 @@ impl<'a> Parser<'a> {
     /// Move to the next token
     fn advance(&mut self) {
         let token = self.lexer.next_token();
-        self.prev_token_end = self.cur_token.end;
         self.cur_token = token;
     }
 
