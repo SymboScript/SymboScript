@@ -340,22 +340,37 @@ impl<'a> Parser<'a> {
         let id = self.cur_token.clone();
         self.eat(TokenKind::Identifier);
 
+        let mut is_formula = false;
+
         let init = {
             let start = self.cur_token.start;
-            if self.cur_kind() == TokenKind::Assign {
-                self.advance();
-                self.expr()
-            } else if !only_with_init {
-                Expression::None
-            } else {
-                self.report_expected(start, TokenKind::Assign, self.cur_kind());
-                unreachable!("Report ends proccess");
+
+            match self.cur_kind() {
+                TokenKind::Assign => {
+                    self.advance();
+                    self.expr()
+                }
+                TokenKind::FormulaAssign => {
+                    is_formula = true;
+                    self.advance();
+                    self.expr()
+                }
+                _ if !only_with_init => Expression::None,
+                _ => {
+                    self.report_expected(start, "Assign or FormulaAssign", self.cur_kind());
+                    unreachable!("Report ends proccess");
+                }
             }
         };
 
         self.eat(TokenKind::Semicolon);
 
-        Statement::VariableDeclaration(uni_builder!(self, VariableDeclarator, start, [id, init]))
+        Statement::VariableDeclaration(uni_builder!(
+            self,
+            VariableDeclarator,
+            start,
+            [id, init, is_formula]
+        ))
     }
 
     // -------------------- expressions --------------------
@@ -793,10 +808,20 @@ impl<'a> Parser<'a> {
             return true;
         }
 
+        let val = self.cur_token.value.to_string();
+
         self.report_expected(
             start,
             kind,
-            format!("{}({})", self.cur_kind(), self.cur_token),
+            format!(
+                "{}{}",
+                self.cur_kind(),
+                if self.cur_token.value == TokenValue::None {
+                    ""
+                } else {
+                    &val
+                }
+            ),
         );
         unreachable!("Report ends proccess");
     }

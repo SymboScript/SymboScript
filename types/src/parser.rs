@@ -107,6 +107,7 @@ pub struct VariableDeclarator {
     pub node: Node,
     pub id: Token,
     pub init: Expression,
+    pub is_formula: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -314,7 +315,13 @@ impl fmt::Display for YieldStatement {
 
 impl fmt::Display for VariableDeclarator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "let {} = {}", self.id, self.init)
+        write!(
+            f,
+            "let {} {} {}",
+            self.id,
+            if self.is_formula == true { ":=" } else { "=" },
+            self.init
+        )
     }
 }
 
