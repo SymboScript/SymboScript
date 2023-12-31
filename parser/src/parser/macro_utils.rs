@@ -81,14 +81,14 @@ macro_rules! word_right_associative_expr {
 }
 
 #[macro_export]
-macro_rules! word_right_associative_statement {
-    ($self:ident, $Kind: path, $Op: ident, $Stmt: ident) => {{
+macro_rules! word_stmt {
+    ($self:ident, $Kind: path, $Stmt: ident) => {{
         let start = $self.cur_token.start;
         match $self.cur_kind() {
             $Kind => {
                 $self.advance();
 
-                let argument = $self.$Op();
+                let argument = $self.expr();
 
                 $self.eat(TokenKind::Semicolon);
 

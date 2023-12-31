@@ -1,5 +1,5 @@
 fn foo[a,b,s] {
   a.[b] += s;
 
-  return a.[b] + b + s;
+  yield  {all:[a,b,s]; mul: a.[b] * s;};
 }

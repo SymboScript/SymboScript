@@ -41,12 +41,21 @@ pub struct Property {
 pub enum Statement {
     ExpressionStatement(Expression),
     ReturnStatement(ReturnStatement),
+    ContinueStatement,
+    BreakStatement,
+    YieldStatement(YieldStatement),
     VariableDeclaration(VariableDeclarator),
     FunctionDeclaration(FunctionDeclarator),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ReturnStatement {
+    pub node: Node,
+    pub argument: Expression,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct YieldStatement {
     pub node: Node,
     pub argument: Expression,
 }
@@ -178,6 +187,9 @@ impl fmt::Display for Statement {
             Statement::VariableDeclaration(expr) => write!(f, "{};", expr),
             Statement::FunctionDeclaration(expr) => write!(f, "{}", expr),
             Statement::ReturnStatement(expr) => write!(f, "{}", expr),
+            Statement::ContinueStatement => write!(f, "continue;"),
+            Statement::BreakStatement => write!(f, "break;"),
+            Statement::YieldStatement(expr) => write!(f, "{}", expr),
         }
     }
 }
@@ -185,6 +197,12 @@ impl fmt::Display for Statement {
 impl fmt::Display for ReturnStatement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "return {};", self.argument)
+    }
+}
+
+impl fmt::Display for YieldStatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "yield {};", self.argument)
     }
 }
 

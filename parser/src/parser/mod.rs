@@ -77,22 +77,41 @@ impl<'a> Parser<'a> {
 
     fn statement(&mut self) -> Statement {
         match self.cur_kind() {
-            TokenKind::Let => self.variable_declaration(),
-            TokenKind::Function => self.function_declaration(),
-            TokenKind::Return => self.return_statement(),
-            _ => self.expression_statement(),
+            TokenKind::Let => self.var_decl(),
+            TokenKind::Function => self.fn_decl(),
+            TokenKind::Return => self.return_stmt(),
+            TokenKind::Yield => self.yield_stmt(),
+            TokenKind::Continue => self.continue_stmt(),
+            TokenKind::Break => self.break_stmt(),
+            _ => self.expr_stmt(),
         }
     }
 
-    // -------------- return statement -----------------
+    // -------------- word statements -----------------
 
-    fn return_statement(&mut self) -> Statement {
-        word_right_associative_statement!(self, TokenKind::Return, expr, ReturnStatement)
+    fn return_stmt(&mut self) -> Statement {
+        word_stmt!(self, TokenKind::Return, ReturnStatement)
+    }
+
+    fn yield_stmt(&mut self) -> Statement {
+        word_stmt!(self, TokenKind::Yield, YieldStatement)
+    }
+
+    fn continue_stmt(&mut self) -> Statement {
+        self.eat(TokenKind::Continue);
+
+        Statement::ContinueStatement
+    }
+
+    fn break_stmt(&mut self) -> Statement {
+        self.eat(TokenKind::Break);
+
+        Statement::BreakStatement
     }
 
     // --------------- function declaration -----------------
 
-    fn function_declaration(&mut self) -> Statement {
+    fn fn_decl(&mut self) -> Statement {
         let start = self.cur_token.start;
         self.advance();
 
@@ -139,7 +158,7 @@ impl<'a> Parser<'a> {
 
     // -------------- variable declaration -----------------
 
-    fn variable_declaration(&mut self) -> Statement {
+    fn var_decl(&mut self) -> Statement {
         let start = self.cur_token.start;
         self.advance();
 
@@ -156,7 +175,7 @@ impl<'a> Parser<'a> {
 
     // -------------------- expressions --------------------
 
-    fn expression_statement(&mut self) -> Statement {
+    fn expr_stmt(&mut self) -> Statement {
         let expression = self.expr();
         self.eat(TokenKind::Semicolon);
 
@@ -173,10 +192,10 @@ impl<'a> Parser<'a> {
         let start = self.cur_token.start;
         let mut nodes = vec![];
 
-        nodes.push(self.yield_expr());
+        nodes.push(self.assign());
         while self.cur_kind() == TokenKind::Comma {
             self.advance();
-            nodes.push(self.yield_expr());
+            nodes.push(self.assign());
         }
 
         if !only_sequence && nodes.len() == 1 {
@@ -184,11 +203,6 @@ impl<'a> Parser<'a> {
         }
 
         self.sequence_expression(start, nodes)
-    }
-
-    /// yield assign | assign
-    fn yield_expr(&mut self) -> Expression {
-        word_right_associative_expr!(self, TokenKind::Yield, assign, expr)
     }
 
     ///ternary (Assign | FormulaAssign | PlusAssign | MinusAssign | MultiplyAssign | DivideAssign | PowerAssign | ModuloAssign) ternary
