@@ -1,6 +1,6 @@
 [package]
 name = "symboscript-utils"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 authors = ["artegoser"]
 license = "MIT"
@@ -14,4 +14,4 @@ categories = ["compilers"]
 
 [dependencies]
 colored = "2.1.0"
-symboscript-types = { path = "../types", version = "0.4.0" }
+symboscript-types = { path = "../types", version = "0.5.0" }

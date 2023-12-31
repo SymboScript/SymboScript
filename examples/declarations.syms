@@ -1,0 +1,12 @@
+let a = "foo";
+let b = "bar";
+
+fn foo[a, b] {
+  println[a, b];
+  println[a+b];
+  println[a-b];
+}
+
+async fn bar[a, b] {
+  await write["./test.txt", a+b];
+}

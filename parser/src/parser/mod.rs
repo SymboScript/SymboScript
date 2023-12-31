@@ -76,7 +76,7 @@ impl<'a> Parser<'a> {
     fn statement(&mut self) -> Statement {
         match self.cur_kind() {
             TokenKind::Let => self.var_decl(false),
-            TokenKind::Function => self.fn_decl(),
+            TokenKind::Function | TokenKind::Async => self.fn_decl(),
 
             TokenKind::If => self.if_stmt(),
 
@@ -86,6 +86,9 @@ impl<'a> Parser<'a> {
 
             TokenKind::Continue => self.continue_stmt(),
             TokenKind::Break => self.break_stmt(),
+
+            TokenKind::Try => self.try_stmt(),
+            TokenKind::Throw => self.throw_stmt(),
 
             TokenKind::Return => self.return_stmt(),
             TokenKind::Yield => self.yield_stmt(),
@@ -112,6 +115,36 @@ impl<'a> Parser<'a> {
         return body;
     }
 
+    // --------------- try statement -------------------
+
+    fn try_stmt(&mut self) -> Statement {
+        let start = self.cur_token.start;
+        self.eat(TokenKind::Try);
+
+        let body = self.block_stmt();
+
+        let mut handler = vec![];
+
+        if self.cur_kind() == TokenKind::Catch {
+            self.eat(TokenKind::Catch);
+            handler = self.block_stmt();
+        }
+
+        let mut finalizer = vec![];
+
+        if self.cur_kind() == TokenKind::Finally {
+            self.eat(TokenKind::Finally);
+            finalizer = self.block_stmt();
+        }
+
+        Statement::TryStatement(uni_builder!(
+            self,
+            TryStatement,
+            start,
+            [body, handler, finalizer]
+        ))
+    }
+
     // --------------- loop statement ------------------
 
     fn loop_stmt(&mut self) -> Statement {
@@ -119,10 +152,7 @@ impl<'a> Parser<'a> {
         self.eat(TokenKind::Loop);
         let body = self.block_stmt();
 
-        Statement::LoopStatement(LoopStatement {
-            node: Node::new(start, self.cur_token.end),
-            body,
-        })
+        Statement::LoopStatement(uni_builder!(self, LoopStatement, start, [body]))
     }
 
     // --------------- while statement ------------------
@@ -141,11 +171,7 @@ impl<'a> Parser<'a> {
 
         let body = self.block_stmt();
 
-        Statement::WhileStatement(WhileStatement {
-            node: Node::new(start, self.cur_token.end),
-            test,
-            body,
-        })
+        Statement::WhileStatement(uni_builder!(self, WhileStatement, start, [test, body]))
     }
 
     // --------------- for statement ------------------
@@ -174,13 +200,12 @@ impl<'a> Parser<'a> {
 
         let body = self.block_stmt();
 
-        Statement::ForStatement(Box::new(ForStatement {
-            node: Node::new(start, self.cur_token.end),
-            init,
-            test,
-            update,
-            body,
-        }))
+        Statement::ForStatement(Box::new(uni_builder!(
+            self,
+            ForStatement,
+            start,
+            [init, test, update, body]
+        )))
     }
 
     // --------------- if statement -------------------
@@ -207,12 +232,12 @@ impl<'a> Parser<'a> {
             alternate = self.block_stmt();
         }
 
-        Statement::IfStatement(IfStatement {
-            node: Node::new(start, self.cur_token.end),
-            test,
-            consequent,
-            alternate,
-        })
+        Statement::IfStatement(uni_builder!(
+            self,
+            IfStatement,
+            start,
+            [test, consequent, alternate]
+        ))
     }
 
     // -------------- word statements -----------------
@@ -223,6 +248,10 @@ impl<'a> Parser<'a> {
 
     fn yield_stmt(&mut self) -> Statement {
         word_stmt!(self, TokenKind::Yield, YieldStatement)
+    }
+
+    fn throw_stmt(&mut self) -> Statement {
+        word_stmt!(self, TokenKind::Throw, ThrowStatement)
     }
 
     fn continue_stmt(&mut self) -> Statement {
@@ -243,6 +272,16 @@ impl<'a> Parser<'a> {
 
     fn fn_decl(&mut self) -> Statement {
         let start = self.cur_token.start;
+
+        let is_async = {
+            if self.cur_kind() == TokenKind::Async {
+                self.eat(TokenKind::Async);
+                true
+            } else {
+                false
+            }
+        };
+
         self.advance();
 
         let id = self.cur_token.clone();
@@ -268,7 +307,7 @@ impl<'a> Parser<'a> {
             self,
             FunctionDeclarator,
             start,
-            [id, params, body]
+            [id, params, body, is_async]
         ))
     }
 

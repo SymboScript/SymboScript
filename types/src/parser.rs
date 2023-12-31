@@ -41,6 +41,7 @@ pub struct Property {
 pub enum Statement {
     ExpressionStatement(Expression),
     ReturnStatement(ReturnStatement),
+    ThrowStatement(ThrowStatement),
     ContinueStatement(Node),
     BreakStatement(Node),
     YieldStatement(YieldStatement),
@@ -50,6 +51,15 @@ pub enum Statement {
     ForStatement(Box<ForStatement>),
     WhileStatement(WhileStatement),
     LoopStatement(LoopStatement),
+    TryStatement(TryStatement),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TryStatement {
+    pub node: Node,
+    pub body: BlockStatement,
+    pub handler: BlockStatement,
+    pub finalizer: BlockStatement,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -81,6 +91,12 @@ pub struct ReturnStatement {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ThrowStatement {
+    pub node: Node,
+    pub argument: Expression,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct YieldStatement {
     pub node: Node,
     pub argument: Expression,
@@ -99,6 +115,7 @@ pub struct FunctionDeclarator {
     pub id: Token,
     pub params: Vec<Token>,
     pub body: BlockStatement,
+    pub is_async: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -222,6 +239,7 @@ impl fmt::Display for Statement {
             Statement::VariableDeclaration(expr) => write!(f, "{};", expr),
             Statement::FunctionDeclaration(expr) => write!(f, "{}", expr),
             Statement::ReturnStatement(expr) => write!(f, "{}", expr),
+            Statement::ThrowStatement(expr) => write!(f, "{}", expr),
             Statement::ContinueStatement(_) => write!(f, "continue;"),
             Statement::BreakStatement(_) => write!(f, "break;"),
             Statement::YieldStatement(expr) => write!(f, "{}", expr),
@@ -229,7 +247,26 @@ impl fmt::Display for Statement {
             Statement::ForStatement(expr) => write!(f, "{}", expr),
             Statement::WhileStatement(expr) => write!(f, "{}", expr),
             Statement::LoopStatement(expr) => write!(f, "{}", expr),
+            Statement::TryStatement(expr) => write!(f, "{}", expr),
         }
+    }
+}
+
+impl fmt::Display for TryStatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "try {{\n{}\n}} catch {{\n{}\n}} finally {{\n{}\n}}",
+            format_vec(&self.body, "\n"),
+            format_vec(&self.handler, "\n"),
+            format_vec(&self.finalizer, "\n")
+        )
+    }
+}
+
+impl fmt::Display for ThrowStatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "throw {};", self.argument)
     }
 }
 
@@ -285,7 +322,8 @@ impl fmt::Display for FunctionDeclarator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "fn {}({}) {{\n{}\n}}",
+            "{}fn {}({}) {{\n{}\n}}",
+            if self.is_async { "async " } else { "" },
             self.id,
             format_vec(&self.params, ", "),
             format_vec(&self.body, "\n")

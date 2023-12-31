@@ -187,6 +187,11 @@ impl<'a> Lexer<'a> {
             "delete" => TokenKind::Delete,
             "new" => TokenKind::New,
 
+            "try" => TokenKind::Try,
+            "catch" => TokenKind::Catch,
+            "finally" => TokenKind::Finally,
+            "throw" => TokenKind::Throw,
+
             "import" => TokenKind::Import,
             "export" => TokenKind::Export,
             "as" => TokenKind::As,

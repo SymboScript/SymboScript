@@ -127,6 +127,10 @@ pub enum TokenKind {
     Of,
     Delete,
     New,
+    Try,
+    Catch,
+    Finally,
+    Throw,
 
     // Import/Export
     Import,
@@ -224,6 +228,10 @@ impl fmt::Display for TokenKind {
             TokenKind::Of => write!(f, "of"),
             TokenKind::Delete => write!(f, "delete"),
             TokenKind::New => write!(f, "new"),
+            TokenKind::Try => write!(f, "try"),
+            TokenKind::Catch => write!(f, "catch"),
+            TokenKind::Throw => write!(f, "throw"),
+            TokenKind::Finally => write!(f, "finally"),
 
             TokenKind::Import => write!(f, "import"),
             TokenKind::Export => write!(f, "export"),

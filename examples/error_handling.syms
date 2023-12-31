@@ -1,0 +1,3 @@
+try doSomething[];
+catch doSomethingAnother[];
+finally println["finally"];

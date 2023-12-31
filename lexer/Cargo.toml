@@ -1,6 +1,6 @@
 [package]
 name = "symboscript-lexer"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 authors = ["artegoser"]
 license = "MIT"
@@ -20,7 +20,7 @@ path = "src/main.rs"
 serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"
 
-symboscript-utils = { path = "../utils", version = "0.1.4" }
-symboscript-types = { path = "../types", version = "0.4.0" }
+symboscript-utils = { path = "../utils", version = "0.1.5" }
+symboscript-types = { path = "../types", version = "0.5.0" }
 
 clap = { version = "4.4.12", features = ["derive"] }
