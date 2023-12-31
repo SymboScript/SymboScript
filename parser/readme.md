@@ -4,13 +4,11 @@
 
 ## Roadmap
 
-- [ ] expressions
-- [ ] functions
-- [ ] variables
-- [ ] loops
-- [ ] if statements
-- [ ] classes
-- [ ] objects
+- [x] expressions
+- [x] functions
+- [x] variables
+- [x] loops
+- [x] if statements
 - [ ] other?
 
 ### Expressions
@@ -19,8 +17,7 @@
 - [x] Unary expressions
 - [x] Parenthesized expressions
 - [x] Ternary expressions
-- [ ] Lists
-- [ ] Objects
-- [x] Functions
+- [x] Lists
+- [x] Objects
 - [x] Call expressions
-- [x] other?
+- [ ] other?

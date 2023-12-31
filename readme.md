@@ -21,11 +21,11 @@ SymboScript is a a language without limits.
 
 Take JavaScript, Rust, and WolframLanguage and make a great language out of them without any restrictions.
 
-## Roadmap
+## Roadmap (MVC)
 
 - [ ] [Documentation](https://symboscript.github.io/Book/) (started)
-- [ ] [Lexer](./lexer/readme.md) (started)
-- [ ] [Parser](./parser/readme.md) (started)
+- [x] [Lexer](./lexer/readme.md) (started)
+- [x] [Parser](./parser/readme.md) (started)
 - [ ] Optimizer
 - [ ] Interpreter
 - [ ] REPL
