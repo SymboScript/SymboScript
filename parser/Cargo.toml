@@ -1,6 +1,6 @@
 [package]
 name = "symboscript-parser"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 authors = ["artegoser"]
 license = "MIT"
@@ -17,9 +17,9 @@ name = "symboscript-parser"
 path = "src/main.rs"
 
 [dependencies]
-symboscript-lexer = { path = "../lexer", version = "0.4.0" }
+symboscript-lexer = { path = "../lexer", version = "0.5.0" }
 symboscript-types = { path = "../types", version = "0.5.0" }
-symboscript-utils = { path = "../utils", version = "0.1.5" }
+symboscript-utils = { path = "../utils", version = "0.5.0" }
 
 clap = { version = "4.4.12", features = ["derive"] }
 serde = { version = "1.0.193", features = ["derive"] }
