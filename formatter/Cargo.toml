@@ -1,6 +1,6 @@
 [package]
 name = "symboscript-formatter"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
 authors = ["artegoser"]
 license = "MIT"
@@ -10,3 +10,10 @@ homepage = "https://github.com/artegoser/SymboScript/tree/main/formatter"
 documentation = "https://github.com/artegoser/SymboScript/blob/master/doc/main.md"
 keywords = ["programming-language", "formatter", "symbolic", "symboscript"]
 categories = ["compilers"]
+
+[dependencies]
+symboscript-lexer = { path = "../lexer", version = "0.6.1" }
+symboscript-types = { path = "../types", version = "0.7.0", features = [
+  "lexer",
+] }
+clap = { version = "4.4.12", features = ["derive"] }

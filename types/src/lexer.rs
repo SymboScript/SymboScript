@@ -25,6 +25,17 @@ impl fmt::Display for Token {
     }
 }
 
+impl Default for Token {
+    fn default() -> Self {
+        Self {
+            kind: TokenKind::Start,
+            start: 0,
+            end: 0,
+            value: TokenValue::None,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
 pub enum TokenKind {
     Eof, // end of file
