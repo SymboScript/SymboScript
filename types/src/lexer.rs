@@ -140,6 +140,8 @@ pub enum TokenKind {
     // Async/Await
     Async,
     Await,
+
+    Block,
 }
 
 impl fmt::Display for TokenKind {
@@ -239,6 +241,8 @@ impl fmt::Display for TokenKind {
 
             TokenKind::Await => write!(f, "await"),
             TokenKind::Async => write!(f, "async"),
+
+            TokenKind::Block => write!(f, "block"),
         }
     }
 }

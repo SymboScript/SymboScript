@@ -52,6 +52,7 @@ pub enum Statement {
     WhileStatement(WhileStatement),
     LoopStatement(LoopStatement),
     TryStatement(TryStatement),
+    BlockStatement(BlockStatement),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -249,6 +250,7 @@ impl fmt::Display for Statement {
             Statement::WhileStatement(expr) => write!(f, "{}", expr),
             Statement::LoopStatement(expr) => write!(f, "{}", expr),
             Statement::TryStatement(expr) => write!(f, "{}", expr),
+            Statement::BlockStatement(expr) => write!(f, "{{\n{}\n}}", format_vec(expr, "\n")),
         }
     }
 }

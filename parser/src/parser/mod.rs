@@ -93,6 +93,9 @@ impl<'a> Parser<'a> {
             TokenKind::Return => self.return_stmt(),
             TokenKind::Yield => self.yield_stmt(),
 
+            TokenKind::Block => self.block_decl(),
+            TokenKind::LBrace => Statement::BlockStatement(self.block_stmt()),
+
             _ => self.expr_stmt(),
         }
     }
@@ -252,6 +255,12 @@ impl<'a> Parser<'a> {
 
     fn throw_stmt(&mut self) -> Statement {
         word_stmt!(self, TokenKind::Throw, ThrowStatement)
+    }
+
+    fn block_decl(&mut self) -> Statement {
+        self.advance();
+
+        Statement::BlockStatement(self.block_stmt())
     }
 
     fn continue_stmt(&mut self) -> Statement {

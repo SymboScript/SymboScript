@@ -199,6 +199,8 @@ impl<'a> Lexer<'a> {
             "async" => TokenKind::Async,
             "await" => TokenKind::Await,
 
+            "block" => TokenKind::Block,
+
             // ---Keyword2Operator---
             "band" => TokenKind::BitAnd,
             "bxor" => TokenKind::BitXor,

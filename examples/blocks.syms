@@ -1,0 +1,9 @@
+let a;
+
+{
+  let b = 2;
+  a += b * 2;
+}
+
+println[a];
+println[b]; # Should throw error, because b is in local scope
