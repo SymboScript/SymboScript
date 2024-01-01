@@ -21,6 +21,8 @@ serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"
 
 symboscript-utils = { path = "../utils", version = "0.5.0" }
-symboscript-types = { path = "../types", version = "0.5.0" }
+symboscript-types = { path = "../types", version = "0.5.0", features = [
+  "lexer",
+] }
 
 clap = { version = "4.4.12", features = ["derive"] }
