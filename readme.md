@@ -21,7 +21,7 @@ SymboScript is a a language without limits.
 
 Take JavaScript, Rust, and WolframLanguage and make a great language out of them without any restrictions.
 
-## Roadmap (MVC)
+## Roadmap (MVP)
 
 - [ ] [Documentation](https://symboscript.github.io/Book/) (started)
 - [x] [Lexer](./lexer/readme.md) (started)
