@@ -1,13 +1,14 @@
 [workspace]
 
 members = [
-  "utils",
   "types",
+  "utils",
   "lexer",
+  "formatter",
   "parser",
   "optimizer",
   "interpreter",
   "analyzer",
-  "formatter",
 ]
+
 resolver = "2"
