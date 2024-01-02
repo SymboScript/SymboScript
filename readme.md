@@ -26,7 +26,7 @@ Take JavaScript, Rust, and WolframLanguage and make a great language out of them
 - [ ] [Documentation](https://symboscript.github.io/Book/) (started)
 - [x] [Lexer](./lexer/readme.md) (started)
 - [x] [Parser](./parser/readme.md) (started)
-- [ ] Optimizer
+- [ ] Optimizer(./optimizer/readme.md) (started)
 - [ ] Interpreter
 - [ ] REPL
 - [ ] Analyzer
