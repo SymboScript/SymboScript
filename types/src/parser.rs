@@ -3,7 +3,7 @@ use std::fmt::{self};
 use crate::lexer::{Token, TokenKind};
 use serde::{Deserialize, Serialize};
 
-type BlockStatement = Vec<Statement>;
+pub type BlockStatement = Vec<Statement>;
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Ast {
     pub program: Program,

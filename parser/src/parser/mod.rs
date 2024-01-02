@@ -509,18 +509,20 @@ impl<'a> Parser<'a> {
         let start = self.cur_token.start;
         let mut expr = self.power();
 
-        while [TokenKind::Identifier, TokenKind::LParen].contains(&self.cur_token.kind) {
+        while [TokenKind::Identifier, TokenKind::LParen, TokenKind::Number]
+            .contains(&self.cur_kind())
+        {
             let right = self.power();
             expr = self.binary_expression(start, expr, right, TokenKind::Multiply);
         }
 
-        while [TokenKind::Multiply, TokenKind::Divide, TokenKind::Modulo]
-            .contains(&self.cur_token.kind)
+        while [TokenKind::Multiply, TokenKind::Divide, TokenKind::Modulo].contains(&self.cur_kind())
         {
-            let operator = self.cur_token.kind;
+            let operator = self.cur_kind();
             self.advance();
 
             let right = self.power();
+
             expr = self.binary_expression(start, expr, right, operator);
         }
 
@@ -817,7 +819,7 @@ impl<'a> Parser<'a> {
             start,
             kind,
             format!(
-                "{}{}",
+                "{} {}",
                 self.cur_kind(),
                 if self.cur_token.value == TokenValue::None {
                     ""

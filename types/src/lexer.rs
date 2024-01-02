@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, ops};
 
 use serde::{Deserialize, Serialize};
 
@@ -266,6 +266,28 @@ pub enum TokenValue {
     Identifier(String),
 }
 
+// ------------- Math -------------
+
+#[macro_use]
+mod math {
+    macro_rules! token_math {
+        ($Op:path, $fn: ident) => {
+            impl $Op for Token {
+                type Output = Token;
+
+                fn $fn(self, rhs: Self) -> Self::Output {
+                    Token {
+                        kind: self.kind,
+                        start: self.start,
+                        end: rhs.end,
+                        value: self.value + rhs.value,
+                    }
+                }
+            }
+        };
+    }
+}
+
 impl fmt::Display for TokenValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -273,6 +295,92 @@ impl fmt::Display for TokenValue {
             TokenValue::Number(s) => write!(f, "{}", s),
             TokenValue::Str(s) => write!(f, "\"{}\"", s),
             TokenValue::Identifier(s) => write!(f, "{}", s),
+        }
+    }
+}
+
+token_math!(ops::Add, add);
+token_math!(ops::Sub, sub);
+token_math!(ops::Mul, mul);
+token_math!(ops::Div, div);
+
+impl ops::Add for TokenValue {
+    type Output = TokenValue;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (TokenValue::Number(n1), TokenValue::Number(n2)) => TokenValue::Number(n1 + n2),
+
+            (TokenValue::Number(n), TokenValue::Str(str)) => {
+                TokenValue::Str(format!("{}{}", n, str))
+            }
+
+            (TokenValue::Str(str), TokenValue::Number(n)) => {
+                TokenValue::Str(format!("{}{}", str, n))
+            }
+
+            (TokenValue::Str(str1), TokenValue::Str(str2)) => TokenValue::Str(str1 + &str2),
+
+            (TokenValue::None, _) | (_, TokenValue::None) => TokenValue::None,
+            (TokenValue::Identifier(_), _) | (_, TokenValue::Identifier(_)) => {
+                panic!("Identifiers can't be added")
+            }
+        }
+    }
+}
+
+impl ops::Sub for TokenValue {
+    type Output = TokenValue;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (TokenValue::Number(n1), TokenValue::Number(n2)) => TokenValue::Number(n1 - n2),
+
+            (TokenValue::Identifier(_), _) | (_, TokenValue::Identifier(_)) => {
+                panic!("Identifiers can't be subtracted")
+            }
+
+            _ => TokenValue::None,
+        }
+    }
+}
+
+impl ops::Mul for TokenValue {
+    type Output = TokenValue;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (TokenValue::Number(n1), TokenValue::Number(n2)) => TokenValue::Number(n1 * n2),
+
+            (TokenValue::Str(str), TokenValue::Number(n)) => {
+                TokenValue::Str(str.repeat(n as usize))
+            }
+
+            (TokenValue::Number(n), TokenValue::Str(str)) => {
+                TokenValue::Str(str.repeat(n as usize))
+            }
+
+            (TokenValue::Identifier(_), _) | (_, TokenValue::Identifier(_)) => {
+                panic!("Identifiers can't be multiplied")
+            }
+
+            _ => TokenValue::None,
+        }
+    }
+}
+
+impl ops::Div for TokenValue {
+    type Output = TokenValue;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (TokenValue::Number(n1), TokenValue::Number(n2)) => TokenValue::Number(n1 / n2),
+
+            (TokenValue::Identifier(_), _) | (_, TokenValue::Identifier(_)) => {
+                panic!("Identifiers can't be divided")
+            }
+
+            _ => TokenValue::None,
         }
     }
 }
