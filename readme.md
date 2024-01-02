@@ -13,6 +13,9 @@
       <a href="https://crates.io/crates/symboscript-parser">
             <img src="https://img.shields.io/crates/v/symboscript-parser?label=parser" alt="Crates.io Version parser">
       </a>
+      <a href="https://crates.io/crates/symboscript-optimizer">
+            <img src="https://img.shields.io/crates/v/symboscript-optimizer?label=optimizer" alt="Crates.io Version optimizer">
+      </a>
 </div>
 
 SymboScript is a a language without limits.
@@ -26,7 +29,7 @@ Take JavaScript, Rust, and WolframLanguage and make a great language out of them
 - [ ] [Documentation](https://symboscript.github.io/Book/) (started)
 - [x] [Lexer](./lexer/readme.md) (started)
 - [x] [Parser](./parser/readme.md) (started)
-- [ ] Optimizer(./optimizer/readme.md) (started)
+- [ ] [Optimizer](./optimizer/readme.md) (started)
 - [ ] Interpreter
 - [ ] REPL
 - [ ] Analyzer
