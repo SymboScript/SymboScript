@@ -4,8 +4,6 @@ use std::fs::OpenOptions;
 
 mod parser;
 
-use symboscript_lexer as lexer;
-
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
@@ -22,9 +20,8 @@ fn main() {
 
     let text = OpenOptions::new().read(true).open(&args.path).unwrap();
     let text = &std::io::read_to_string(text).unwrap();
-    let lexer = lexer::Lexer::new(&args.path, text, false);
 
-    let mut parser = parser::Parser::new(&args.path, &text, lexer);
+    let mut parser = parser::Parser::new(&args.path, text);
 
     let ast = parser.parse();
 

@@ -1,18 +1,16 @@
 pub mod expr_tests {
-
     use crate::parser::Parser;
-    use symboscript_lexer::Lexer;
 
     #[macro_use]
     mod utils {
         macro_rules! assert_parser {
-            ($str: expr, $ast_str: expr) => {
+            ($str: expr, $ast_str: expr) => {{
                 let test_str = $str;
-                let mut parser = Parser::new("test", test_str, Lexer::new("test", test_str, false));
+                let mut parser = Parser::new("test", test_str);
 
                 let ast = format!("{}", parser.parse());
                 assert_eq!(ast, format!("{};\n", $ast_str));
-            };
+            }};
         }
     }
 

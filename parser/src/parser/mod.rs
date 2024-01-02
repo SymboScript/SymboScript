@@ -22,18 +22,12 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(path: &'a str, source: &'a str, lexer: Lexer<'a>) -> Self {
+    pub fn new(path: &'a str, source: &'a str) -> Self {
         Self {
             path,
             source,
-            lexer,
-
-            cur_token: Token {
-                kind: TokenKind::Start,
-                start: 0,
-                end: 0,
-                value: TokenValue::None,
-            },
+            lexer: Lexer::new(path, source, false),
+            cur_token: Token::default(),
         }
     }
 
