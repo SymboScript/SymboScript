@@ -266,6 +266,7 @@ pub enum TokenValue {
     Number(f64),
     Str(String),
     Identifier(String),
+    Bool(bool),
 }
 
 // ------------- Math -------------
@@ -297,6 +298,7 @@ impl fmt::Display for TokenValue {
             TokenValue::Number(s) => write!(f, "{}", s),
             TokenValue::Str(s) => write!(f, "\"{}\"", s),
             TokenValue::Identifier(s) => write!(f, "{}", s),
+            TokenValue::Bool(b) => write!(f, "{}", b),
         }
     }
 }
@@ -322,6 +324,10 @@ impl ops::Add for TokenValue {
             }
 
             (TokenValue::Str(str1), TokenValue::Str(str2)) => TokenValue::Str(str1 + &str2),
+
+            (TokenValue::Bool(b1), TokenValue::Bool(b2)) => TokenValue::Bool(b1 || b2),
+
+            (TokenValue::Bool(_), _) | (_, TokenValue::Bool(_)) => TokenValue::None,
 
             (TokenValue::None, _) | (_, TokenValue::None) => TokenValue::None,
             (TokenValue::Identifier(_), _) | (_, TokenValue::Identifier(_)) => {

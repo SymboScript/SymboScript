@@ -7,8 +7,12 @@ pub type Vault = HashMap<String, ScopeValue>;
 pub enum Value {
     None,
     Number(f64),
+    Bool(bool),
     Str(String),
     Sequence(Vec<Value>),
+
+    Ast(Expression),
+    ScopeRef(String),
 }
 
 #[derive(Clone, Debug)]
@@ -54,6 +58,7 @@ impl ops::Add for Value {
             (Value::Number(n), Value::Str(str)) => Value::Str(format!("{}{}", n, str)),
             (Value::Str(str), Value::Number(n)) => Value::Str(format!("{}{}", str, n)),
             (Value::Str(str1), Value::Str(str2)) => Value::Str(str1 + &str2),
+            (Value::Bool(b1), Value::Bool(b2)) => Value::Bool(b1 || b2),
 
             _ => Value::None,
         }
@@ -80,6 +85,7 @@ impl ops::Mul for Value {
             (Value::Number(n1), Value::Number(n2)) => Value::Number(n1 * n2),
             (Value::Str(str), Value::Number(n)) => Value::Str(str.repeat(n as usize)),
             (Value::Number(n), Value::Str(str)) => Value::Str(str.repeat(n as usize)),
+            (Value::Bool(b1), Value::Bool(b2)) => Value::Bool(b1 && b2),
 
             _ => Value::None,
         }
@@ -105,5 +111,97 @@ impl ops::Rem for Value {
             (Value::Number(n1), Value::Number(n2)) => Value::Number(n1 % n2),
             _ => Value::None,
         }
+    }
+}
+
+impl ops::Neg for Value {
+    type Output = Value;
+
+    fn neg(self) -> Self::Output {
+        match self {
+            Value::Number(n) => Value::Number(-n),
+            _ => Value::None,
+        }
+    }
+}
+
+impl ops::Not for Value {
+    type Output = Value;
+
+    fn not(self) -> Self::Output {
+        match self {
+            Value::None => Value::None,
+            Value::Number(n) => Value::Bool(if n == 0.0 { true } else { false }),
+            Value::Bool(b) => Value::Bool(!b),
+            _ => Value::Bool(false),
+        }
+    }
+}
+
+impl ops::Shl for Value {
+    type Output = Value;
+
+    fn shl(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Value::Number(n1), Value::Number(n2)) => {
+                Value::Number(((n1 as usize) << n2 as usize) as f64)
+            }
+            _ => Value::None,
+        }
+    }
+}
+
+impl ops::Shr for Value {
+    type Output = Value;
+
+    fn shr(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Value::Number(n1), Value::Number(n2)) => {
+                Value::Number(((n1 as usize) >> n2 as usize) as f64)
+            }
+            _ => Value::None,
+        }
+    }
+}
+
+impl ops::AddAssign for Value {
+    fn add_assign(&mut self, rhs: Self) {
+        *self = self.clone() + rhs
+    }
+}
+
+impl ops::SubAssign for Value {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = self.clone() - rhs
+    }
+}
+
+impl ops::MulAssign for Value {
+    fn mul_assign(&mut self, rhs: Self) {
+        *self = self.clone() * rhs
+    }
+}
+
+impl ops::DivAssign for Value {
+    fn div_assign(&mut self, rhs: Self) {
+        *self = self.clone() / rhs
+    }
+}
+
+impl ops::RemAssign for Value {
+    fn rem_assign(&mut self, rhs: Self) {
+        *self = self.clone() % rhs
+    }
+}
+
+impl ops::ShlAssign for Value {
+    fn shl_assign(&mut self, rhs: Self) {
+        *self = self.clone() << rhs
+    }
+}
+
+impl ops::ShrAssign for Value {
+    fn shr_assign(&mut self, rhs: Self) {
+        *self = self.clone() >> rhs
     }
 }

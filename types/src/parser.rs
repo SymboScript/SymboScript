@@ -215,7 +215,14 @@ pub struct SequenceExpression {
 pub struct WordExpression {
     pub node: Node,
     pub argument: Expression,
-    pub operator: BinaryOperator,
+    pub operator: WordOperator,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum WordOperator {
+    Await,
+    New,
+    Delete,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
@@ -515,6 +522,16 @@ impl fmt::Display for SequenceExpression {
 impl fmt::Display for WordExpression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}", self.operator, self.argument)
+    }
+}
+
+impl fmt::Display for WordOperator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            WordOperator::Await => write!(f, "await"),
+            WordOperator::New => write!(f, "new"),
+            WordOperator::Delete => write!(f, "delete"),
+        }
     }
 }
 

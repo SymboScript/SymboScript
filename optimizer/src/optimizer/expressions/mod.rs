@@ -1,4 +1,4 @@
-use symboscript_types::{lexer::*, parser::*};
+use symboscript_types::parser::*;
 
 pub fn optim_expression(expression_stmt: &Expression) -> Expression {
     match expression_stmt {

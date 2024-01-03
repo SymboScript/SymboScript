@@ -52,14 +52,23 @@ impl<'a> Interpreter<'a> {
     fn eval_statement(&mut self, statement: &Statement) {
         match statement {
             Statement::ExpressionStatement(expr) => {
-                self.eval_expression(&expr);
+                let val = self.eval_expression(&expr);
+                println!("expr: {:?}", val);
             }
             Statement::ReturnStatement(_) => todo!(),
             Statement::ThrowStatement(_) => todo!(),
             Statement::ContinueStatement(_) => todo!(),
             Statement::BreakStatement(_) => todo!(),
             Statement::YieldStatement(_) => todo!(),
-            Statement::VariableDeclaration(_) => todo!(),
+            Statement::VariableDeclaration(decl) => {
+                let value = if decl.is_formula {
+                    Value::Ast(decl.init.clone())
+                } else {
+                    self.eval_expression(&decl.init)
+                };
+
+                self.set_variable_force(&decl.id, value);
+            }
             Statement::FunctionDeclaration(_) => todo!(),
             Statement::ScopeDeclaration(decl) => {
                 self.enter_named_scope(&format!("{}", decl.id));
@@ -82,7 +91,7 @@ impl<'a> Interpreter<'a> {
     fn eval_expression(&mut self, expression: &Expression) -> Value {
         match expression {
             Expression::BinaryExpression(binary_expr) => self.eval_binary_expression(binary_expr),
-            Expression::UnaryExpression(_) => todo!(),
+            Expression::UnaryExpression(unary_expr) => self.eval_unary_expression(unary_expr),
             Expression::ConditionalExpression(_) => todo!(),
             Expression::CallExpression(_) => todo!(),
             Expression::MemberExpression(_) => todo!(),
@@ -94,6 +103,19 @@ impl<'a> Interpreter<'a> {
             Expression::Identifier(id) => self.get_variable_value(id),
 
             Expression::None(_) => Value::None,
+        }
+    }
+
+    fn eval_unary_expression(&mut self, expression: &UnaryExpression) -> Value {
+        let right = self.eval_expression(&expression.right);
+
+        match expression.operator {
+            UnaryOperator::Plus => right,
+            UnaryOperator::Minus => -right,
+            UnaryOperator::Not => !right,
+            UnaryOperator::BitNot => todo!(),
+            UnaryOperator::PlusPlus => right + Value::Number(1.0),
+            UnaryOperator::MinusMinus => right - Value::Number(1.0),
         }
     }
 
@@ -119,8 +141,8 @@ impl<'a> Interpreter<'a> {
             BinaryOperator::BitOr => todo!(),
             BinaryOperator::BitXor => todo!(),
 
-            BinaryOperator::BitLeftShift => todo!(),
-            BinaryOperator::BitRightShift => todo!(),
+            BinaryOperator::BitLeftShift => left << right,
+            BinaryOperator::BitRightShift => left >> right,
 
             BinaryOperator::Assign => todo!(),
             BinaryOperator::PlusAssign => todo!(),
@@ -144,12 +166,10 @@ impl<'a> Interpreter<'a> {
             TokenValue::None => Value::None,
             TokenValue::Number(val) => Value::Number(*val),
             TokenValue::Str(val) => Value::Str(val.clone()),
-            TokenValue::Identifier(val) => self.get_variable_value(&Identifier {
-                name: val.clone(),
-                node: Node {
-                    start: literal.node.start,
-                    end: literal.node.end,
-                },
+            TokenValue::Bool(val) => Value::Bool(*val),
+            TokenValue::Identifier(id) => self.get_variable_value(&Identifier {
+                node: Node::new(literal.node.start, literal.node.end),
+                name: id.clone(),
             }),
         }
     }
@@ -157,6 +177,7 @@ impl<'a> Interpreter<'a> {
     /// Gets the value of a variable from the current scope to the global scope if it doesn't exist in the current scope
     fn get_variable_value(&mut self, identifier: &Identifier) -> Value {
         let id = identifier.name.clone();
+        let (scope_name, _) = self.parse_current_scope();
 
         for scope in self.scope_stack.iter().rev() {
             let var = self.vault.get(scope).unwrap().values.get(&id);
@@ -172,7 +193,16 @@ impl<'a> Interpreter<'a> {
                         );
                     }
                 },
-                None => continue,
+                None => {
+                    for named_scope in self.get_curr_scope_refs() {
+                        match self.vault.get(&format!("{scope_name}.{id}.$0")) {
+                            Some(_) => {
+                                return Value::ScopeRef(named_scope.clone());
+                            }
+                            None => continue,
+                        }
+                    }
+                }
             }
         }
 
@@ -182,6 +212,11 @@ impl<'a> Interpreter<'a> {
             identifier.node.end,
         );
         unreachable!("Report ends proccess");
+    }
+
+    fn set_variable_force(&mut self, identifier: &String, value: Value) {
+        self.get_curr_scope_values()
+            .insert(identifier.clone(), ScopeValues::Variable(value));
     }
 
     fn pow(&mut self, left: Value, right: Value) -> Value {
@@ -216,7 +251,7 @@ impl<'a> Interpreter<'a> {
     }
 
     fn add_native_functions(&mut self) {
-        let scope = self.get_curr_value();
+        let scope = self.get_curr_scope_values();
 
         scope.insert(
             "print".to_owned(),
@@ -250,7 +285,7 @@ impl<'a> Interpreter<'a> {
 
     /// Adds a reference to the current scope
     fn send_scope_ref(&mut self, name: &str) {
-        self.get_curr_scope_refs().push(name.to_owned());
+        self.get_curr_scope_refs_mut().push(name.to_owned());
     }
 
     /// Increments the current scope
@@ -292,7 +327,7 @@ impl<'a> Interpreter<'a> {
     }
 
     /// Gets the current scope values
-    fn get_curr_value(&mut self) -> &mut HashMap<String, ScopeValues> {
+    fn get_curr_scope_values(&mut self) -> &mut HashMap<String, ScopeValues> {
         &mut self
             .vault
             .get_mut(self.current_scope.as_str())
@@ -300,11 +335,20 @@ impl<'a> Interpreter<'a> {
             .values
     }
 
-    /// Gets the current named scopes in the current scope
-    fn get_curr_scope_refs(&mut self) -> &mut Vec<String> {
+    /// Gets the current named scopes in the current scope (mutable)
+    fn get_curr_scope_refs_mut(&mut self) -> &mut Vec<String> {
         &mut self
             .vault
             .get_mut(self.current_scope.as_str())
+            .unwrap()
+            .named_scope_refs
+    }
+
+    /// Gets the current named scopes in the current scope
+    fn get_curr_scope_refs(&self) -> &Vec<String> {
+        &self
+            .vault
+            .get(self.current_scope.as_str())
             .unwrap()
             .named_scope_refs
     }
@@ -319,7 +363,7 @@ impl<'a> Interpreter<'a> {
         report_error(self.path, self.source, error, start, end);
     }
 
-    fn report_str(&self, error: &str) {
-        eprintln!("{}", error);
-    }
+    // fn report_str(&self, error: &str) {
+    //     eprintln!("{}", error);
+    // }
 }

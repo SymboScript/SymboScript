@@ -561,13 +561,30 @@ impl<'a> Parser<'a> {
         let token = self.cur_token.clone();
 
         match token.kind {
-            TokenKind::Number | TokenKind::Str | TokenKind::True | TokenKind::False => {
+            TokenKind::Number | TokenKind::Str => {
                 self.advance();
                 return Expression::Literal(Literal {
                     node: Node::new(token.start, token.end),
                     value: token.value,
                 });
             }
+
+            TokenKind::True => {
+                self.advance();
+                return Expression::Literal(Literal {
+                    node: Node::new(token.start, token.end),
+                    value: TokenValue::Bool(true),
+                });
+            }
+
+            TokenKind::False => {
+                self.advance();
+                return Expression::Literal(Literal {
+                    node: Node::new(token.start, token.end),
+                    value: TokenValue::Bool(false),
+                });
+            }
+
             TokenKind::LParen => {
                 self.advance();
                 let node = self.expr();
@@ -792,6 +809,16 @@ impl<'a> Parser<'a> {
 
     // ------------------------------- Utility functions -------------------------------
 
+    fn kind_to_word_op(&mut self, kind: TokenKind) -> WordOperator {
+        match kind {
+            TokenKind::Await => WordOperator::Await,
+            TokenKind::New => WordOperator::New,
+            TokenKind::Delete => WordOperator::Delete,
+
+            got => unreachable!("This function can't be called for other tokens: ({})", got),
+        }
+    }
+
     fn kind_to_un_op(&mut self, kind: TokenKind) -> UnaryOperator {
         match kind {
             TokenKind::MinusMinus => UnaryOperator::MinusMinus,
@@ -802,7 +829,7 @@ impl<'a> Parser<'a> {
             TokenKind::Plus => UnaryOperator::Plus,
             TokenKind::Minus => UnaryOperator::Minus,
 
-            got => unreachable!("This function can't be called for other tokens, {}", got),
+            got => unreachable!("This function can't be called for other tokens: ({})", got),
         }
     }
 
@@ -841,7 +868,7 @@ impl<'a> Parser<'a> {
             TokenKind::LessEqual => BinaryOperator::LessEqual,
             TokenKind::Greater => BinaryOperator::Greater,
             TokenKind::GreaterEqual => BinaryOperator::GreaterEqual,
-            _ => unreachable!("This function can't be called for other tokens"),
+            _ => unreachable!("This function can't be called for other tokens: ({kind})"),
         }
     }
 

@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::fs::OpenOptions;
 
-use symboscript_optimizer as optimizer;
+// use symboscript_optimizer as optimizer;
 use symboscript_parser as parser;
 
 mod interpreter;
@@ -25,11 +25,8 @@ fn main() {
 
     let mut parser = parser::Parser::new(&args.path, text);
 
-    let ast = {
-        let ast = parser.parse();
-
-        optimizer::optimize(&ast)
-    };
+    let ast = parser.parse();
+    // let ast = optimizer::optimize(&ast);
 
     let mut interpreter = interpreter::Interpreter::new(&args.path, text, &ast);
 

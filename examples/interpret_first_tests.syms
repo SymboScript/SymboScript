@@ -1,0 +1,21 @@
+let a = 2^-1;
+let b = 10;
+
+2+b+a; #2+10+0.5 = 12.5 
+
+!true; # false
+!false; # true
+
+"2"+2; # "22"
+
+!!true; # true
+!!false; # false
+
+scope obj {
+  let a = 1;
+}
+
+obj; # ScopeRef: global.obj.$0
+
+# Then we can use it
+# obj.a; # 1

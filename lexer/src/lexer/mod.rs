@@ -71,15 +71,13 @@ impl<'a> Lexer<'a> {
                 value = TokenValue::Str(s[1..s.len() - 1].to_string());
             }
 
-            TokenKind::DocComment => {
-                value = TokenValue::Str(s);
-            }
+            TokenKind::DocComment => value = TokenValue::Str(s),
 
             TokenKind::Unexpected => {
                 report_error(self.path, self.source, "Unexpected token", start, end)
             }
             _ => {}
-        }
+        };
 
         Token {
             kind,
@@ -378,9 +376,9 @@ impl<'a> Lexer<'a> {
     }
 
     fn peek_two(&self) -> Option<char> {
-        let new_chars = self.chars.as_str();
-        new_chars.chars().next();
-        new_chars.chars().next()
+        let mut new_chars = self.chars.as_str().chars();
+        new_chars.next();
+        new_chars.next()
     }
 
     fn eat(&mut self, ch: char) -> bool {
