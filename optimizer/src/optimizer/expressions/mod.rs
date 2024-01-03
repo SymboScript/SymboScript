@@ -25,10 +25,10 @@ pub fn optim_binary_expression(binary_expression: &BinaryExpression) -> Expressi
     match (left.clone(), right.clone()) {
         (Expression::Literal(left), Expression::Literal(right)) => {
             match binary_expression.operator {
-                Operator::Plus => return Expression::Literal(left + right),
-                Operator::Minus => return Expression::Literal(left - right),
-                Operator::Multiply => return Expression::Literal(left * right),
-                Operator::Divide => return Expression::Literal(left / right),
+                BinaryOperator::Plus => return Expression::Literal(left + right),
+                BinaryOperator::Minus => return Expression::Literal(left - right),
+                BinaryOperator::Multiply => return Expression::Literal(left * right),
+                BinaryOperator::Divide => return Expression::Literal(left / right),
                 _ => {}
             }
         }
@@ -72,7 +72,7 @@ fn unflat_plus_binary_expression(flat: &Vec<Expression>) -> BinaryExpression {
     let mut node = BinaryExpression {
         right: flat.pop().unwrap(),
         left: flat.pop().unwrap(),
-        operator: Operator::Plus,
+        operator: BinaryOperator::Plus,
         node: Node::new(0, 0),
     };
 
@@ -82,7 +82,7 @@ fn unflat_plus_binary_expression(flat: &Vec<Expression>) -> BinaryExpression {
         node = BinaryExpression {
             right: expression.clone(),
             left: Expression::BinaryExpression(Box::new(node)),
-            operator: Operator::Plus,
+            operator: BinaryOperator::Plus,
             node: Node::new(0, 0),
         }
     }
@@ -98,7 +98,7 @@ fn flatten_plus_binary_expression(binary_expression: &BinaryExpression) -> Vec<E
 
     // println!("A: {} {} {}", left, op, right);
 
-    if op == Operator::Plus {
+    if op == BinaryOperator::Plus {
         match (left.clone(), right.clone()) {
             (Expression::BinaryExpression(left), Expression::BinaryExpression(right)) => {
                 let mut vec = vec![];

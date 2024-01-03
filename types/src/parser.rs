@@ -155,14 +155,14 @@ pub enum Expression {
 pub struct BinaryExpression {
     pub node: Node,
     pub left: Expression,
-    pub operator: Operator,
+    pub operator: BinaryOperator,
     pub right: Expression,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UnaryExpression {
     pub node: Node,
-    pub operator: Operator,
+    pub operator: UnaryOperator,
     pub right: Expression,
 }
 
@@ -207,11 +207,11 @@ pub struct SequenceExpression {
 pub struct WordExpression {
     pub node: Node,
     pub argument: Expression,
-    pub operator: Operator,
+    pub operator: BinaryOperator,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
-pub enum Operator {
+pub enum BinaryOperator {
     // Binary
     Plus,
     Minus,
@@ -247,12 +247,18 @@ pub enum Operator {
     LessEqual,
     Greater,
     GreaterEqual,
+}
 
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
+pub enum UnaryOperator {
     // Unary
     BitNot,
     Not,
     PlusPlus,
     MinusMinus,
+
+    Minus,
+    Plus,
 }
 
 //----------Display------------
@@ -500,43 +506,51 @@ impl fmt::Display for WordExpression {
     }
 }
 
-impl fmt::Display for Operator {
+impl fmt::Display for BinaryOperator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Operator::Plus => write!(f, "+"),
-            Operator::Minus => write!(f, "-"),
-            Operator::Multiply => write!(f, "*"),
-            Operator::Divide => write!(f, "/"),
-            Operator::Power => write!(f, "^"),
-            Operator::Range => write!(f, ".."),
-            Operator::Modulo => write!(f, "%"),
-            Operator::And => write!(f, "&&"),
-            Operator::Or => write!(f, "||"),
-            Operator::Xor => write!(f, "^"),
-            Operator::BitAnd => write!(f, "&"),
-            Operator::BitOr => write!(f, "|"),
-            Operator::BitXor => write!(f, "bxor"),
-            Operator::BitLeftShift => write!(f, "<<"),
-            Operator::BitRightShift => write!(f, ">>"),
-            Operator::Assign => write!(f, "="),
-            Operator::FormulaAssign => write!(f, ":="),
-            Operator::PlusAssign => write!(f, "+="),
-            Operator::MinusAssign => write!(f, "-="),
-            Operator::MultiplyAssign => write!(f, "*="),
-            Operator::DivideAssign => write!(f, "/="),
-            Operator::PowerAssign => write!(f, "^="),
-            Operator::ModuloAssign => write!(f, "%="),
-            Operator::Equal => write!(f, "=="),
-            Operator::NotEqual => write!(f, "!="),
-            Operator::Less => write!(f, "<"),
-            Operator::LessEqual => write!(f, "<="),
-            Operator::Greater => write!(f, ">"),
-            Operator::GreaterEqual => write!(f, ">="),
+            BinaryOperator::Plus => write!(f, "+"),
+            BinaryOperator::Minus => write!(f, "-"),
+            BinaryOperator::Multiply => write!(f, "*"),
+            BinaryOperator::Divide => write!(f, "/"),
+            BinaryOperator::Power => write!(f, "^"),
+            BinaryOperator::Range => write!(f, ".."),
+            BinaryOperator::Modulo => write!(f, "%"),
+            BinaryOperator::And => write!(f, "&&"),
+            BinaryOperator::Or => write!(f, "||"),
+            BinaryOperator::Xor => write!(f, "^"),
+            BinaryOperator::BitAnd => write!(f, "&"),
+            BinaryOperator::BitOr => write!(f, "|"),
+            BinaryOperator::BitXor => write!(f, "bxor"),
+            BinaryOperator::BitLeftShift => write!(f, "<<"),
+            BinaryOperator::BitRightShift => write!(f, ">>"),
+            BinaryOperator::Assign => write!(f, "="),
+            BinaryOperator::FormulaAssign => write!(f, ":="),
+            BinaryOperator::PlusAssign => write!(f, "+="),
+            BinaryOperator::MinusAssign => write!(f, "-="),
+            BinaryOperator::MultiplyAssign => write!(f, "*="),
+            BinaryOperator::DivideAssign => write!(f, "/="),
+            BinaryOperator::PowerAssign => write!(f, "^="),
+            BinaryOperator::ModuloAssign => write!(f, "%="),
+            BinaryOperator::Equal => write!(f, "=="),
+            BinaryOperator::NotEqual => write!(f, "!="),
+            BinaryOperator::Less => write!(f, "<"),
+            BinaryOperator::LessEqual => write!(f, "<="),
+            BinaryOperator::Greater => write!(f, ">"),
+            BinaryOperator::GreaterEqual => write!(f, ">="),
+        }
+    }
+}
 
-            Operator::MinusMinus => write!(f, "--"),
-            Operator::BitNot => write!(f, "~"),
-            Operator::Not => write!(f, "!"),
-            Operator::PlusPlus => write!(f, "++"),
+impl fmt::Display for UnaryOperator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            UnaryOperator::MinusMinus => write!(f, "--"),
+            UnaryOperator::BitNot => write!(f, "~"),
+            UnaryOperator::Not => write!(f, "!"),
+            UnaryOperator::PlusPlus => write!(f, "++"),
+            UnaryOperator::Minus => write!(f, "-"),
+            UnaryOperator::Plus => write!(f, "+"),
         }
     }
 }

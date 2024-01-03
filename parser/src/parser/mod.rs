@@ -756,7 +756,7 @@ impl<'a> Parser<'a> {
         Expression::BinaryExpression(Box::new(BinaryExpression {
             node: Node::new(start, self.cur_token.end),
             left,
-            operator: self.kind_to_op(operator),
+            operator: self.kind_to_bin_op(operator),
             right,
         }))
     }
@@ -769,55 +769,63 @@ impl<'a> Parser<'a> {
     ) -> Expression {
         Expression::UnaryExpression(Box::new(UnaryExpression {
             node: Node::new(start, self.cur_token.end),
-            operator: self.kind_to_op(operator),
+            operator: self.kind_to_un_op(operator),
             right,
         }))
     }
 
     // ------------------------------- Utility functions -------------------------------
 
-    fn kind_to_op(&mut self, kind: TokenKind) -> Operator {
+    fn kind_to_un_op(&mut self, kind: TokenKind) -> UnaryOperator {
         match kind {
-            TokenKind::Plus => Operator::Plus,
-            TokenKind::Minus => Operator::Minus,
-            TokenKind::Multiply => Operator::Multiply,
-            TokenKind::Divide => Operator::Divide,
-            TokenKind::Power => Operator::Power,
-            TokenKind::Range => Operator::Range,
-            TokenKind::Modulo => Operator::Modulo,
+            TokenKind::MinusMinus => UnaryOperator::MinusMinus,
+            TokenKind::BitNot => UnaryOperator::BitNot,
+            TokenKind::Not => UnaryOperator::Not,
+            TokenKind::PlusPlus => UnaryOperator::PlusPlus,
 
-            TokenKind::And => Operator::And,
-            TokenKind::Or => Operator::Or,
-            TokenKind::Xor => Operator::Xor,
+            TokenKind::Plus => UnaryOperator::Plus,
+            TokenKind::Minus => UnaryOperator::Minus,
 
-            TokenKind::BitAnd => Operator::BitAnd,
-            TokenKind::BitOr => Operator::BitOr,
-            TokenKind::BitXor => Operator::BitXor,
+            got => unreachable!("This function can't be called for other tokens, {}", got),
+        }
+    }
 
-            TokenKind::BitLeftShift => Operator::BitLeftShift,
-            TokenKind::BitRightShift => Operator::BitRightShift,
+    fn kind_to_bin_op(&mut self, kind: TokenKind) -> BinaryOperator {
+        match kind {
+            TokenKind::Plus => BinaryOperator::Plus,
+            TokenKind::Minus => BinaryOperator::Minus,
+            TokenKind::Multiply => BinaryOperator::Multiply,
+            TokenKind::Divide => BinaryOperator::Divide,
+            TokenKind::Power => BinaryOperator::Power,
+            TokenKind::Range => BinaryOperator::Range,
+            TokenKind::Modulo => BinaryOperator::Modulo,
 
-            TokenKind::Assign => Operator::Assign,
-            TokenKind::FormulaAssign => Operator::FormulaAssign,
-            TokenKind::PlusAssign => Operator::PlusAssign,
-            TokenKind::MinusAssign => Operator::MinusAssign,
-            TokenKind::MultiplyAssign => Operator::MultiplyAssign,
-            TokenKind::DivideAssign => Operator::DivideAssign,
-            TokenKind::PowerAssign => Operator::PowerAssign,
-            TokenKind::ModuloAssign => Operator::ModuloAssign,
+            TokenKind::And => BinaryOperator::And,
+            TokenKind::Or => BinaryOperator::Or,
+            TokenKind::Xor => BinaryOperator::Xor,
 
-            TokenKind::Equal => Operator::Equal,
-            TokenKind::NotEqual => Operator::NotEqual,
-            TokenKind::Less => Operator::Less,
-            TokenKind::LessEqual => Operator::LessEqual,
-            TokenKind::Greater => Operator::Greater,
-            TokenKind::GreaterEqual => Operator::GreaterEqual,
+            TokenKind::BitAnd => BinaryOperator::BitAnd,
+            TokenKind::BitOr => BinaryOperator::BitOr,
+            TokenKind::BitXor => BinaryOperator::BitXor,
 
-            TokenKind::MinusMinus => Operator::MinusMinus,
-            TokenKind::BitNot => Operator::BitNot,
-            TokenKind::Not => Operator::Not,
-            TokenKind::PlusPlus => Operator::PlusPlus,
+            TokenKind::BitLeftShift => BinaryOperator::BitLeftShift,
+            TokenKind::BitRightShift => BinaryOperator::BitRightShift,
 
+            TokenKind::Assign => BinaryOperator::Assign,
+            TokenKind::FormulaAssign => BinaryOperator::FormulaAssign,
+            TokenKind::PlusAssign => BinaryOperator::PlusAssign,
+            TokenKind::MinusAssign => BinaryOperator::MinusAssign,
+            TokenKind::MultiplyAssign => BinaryOperator::MultiplyAssign,
+            TokenKind::DivideAssign => BinaryOperator::DivideAssign,
+            TokenKind::PowerAssign => BinaryOperator::PowerAssign,
+            TokenKind::ModuloAssign => BinaryOperator::ModuloAssign,
+
+            TokenKind::Equal => BinaryOperator::Equal,
+            TokenKind::NotEqual => BinaryOperator::NotEqual,
+            TokenKind::Less => BinaryOperator::Less,
+            TokenKind::LessEqual => BinaryOperator::LessEqual,
+            TokenKind::Greater => BinaryOperator::Greater,
+            TokenKind::GreaterEqual => BinaryOperator::GreaterEqual,
             _ => unreachable!("This function can't be called for other tokens"),
         }
     }
