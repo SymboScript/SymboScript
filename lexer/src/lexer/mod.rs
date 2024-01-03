@@ -178,6 +178,7 @@ impl<'a> Lexer<'a> {
             "for" => TokenKind::For,
             "let" => TokenKind::Let,
             "fn" => TokenKind::Function,
+            "scope" => TokenKind::Scope,
             "return" => TokenKind::Return,
             "yield" => TokenKind::Yield,
             "break" => TokenKind::Break,

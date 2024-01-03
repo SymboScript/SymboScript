@@ -19,3 +19,4 @@ serde_json = "1.0.108"
 [features]
 parser = []
 lexer = []
+interpreter = []

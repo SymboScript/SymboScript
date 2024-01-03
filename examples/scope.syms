@@ -1,0 +1,6 @@
+scope a {
+  let b = 1;
+  scope c {
+    let d = 2;
+  }
+}

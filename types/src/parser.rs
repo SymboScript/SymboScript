@@ -47,6 +47,7 @@ pub enum Statement {
     YieldStatement(YieldStatement),
     VariableDeclaration(VariableDeclarator),
     FunctionDeclaration(FunctionDeclarator),
+    ScopeDeclaration(ScopeDeclarator),
     IfStatement(IfStatement),
     ForStatement(Box<ForStatement>),
     WhileStatement(WhileStatement),
@@ -121,6 +122,13 @@ pub struct FunctionDeclarator {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ScopeDeclarator {
+    pub node: Node,
+    pub id: Token,
+    pub body: BlockStatement,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct IfStatement {
     pub node: Node,
     pub test: Expression,
@@ -138,7 +146,6 @@ pub enum Expression {
     MemberExpression(Box<MemberExpression>),
     SequenceExpression(Box<SequenceExpression>),
     WordExpression(Box<WordExpression>),
-    MapExpression(Box<MapExpression>),
     Literal(Token),
     Identifier(Token),
     None,
@@ -197,12 +204,6 @@ pub struct SequenceExpression {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MapExpression {
-    pub node: Node,
-    pub properties: Vec<Property>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct WordExpression {
     pub node: Node,
     pub argument: Expression,
@@ -240,6 +241,7 @@ impl fmt::Display for Statement {
             Statement::ExpressionStatement(expr) => write!(f, "{};", expr),
             Statement::VariableDeclaration(expr) => write!(f, "{};", expr),
             Statement::FunctionDeclaration(expr) => write!(f, "{}", expr),
+            Statement::ScopeDeclaration(expr) => write!(f, "{}", expr),
             Statement::ReturnStatement(expr) => write!(f, "{}", expr),
             Statement::ThrowStatement(expr) => write!(f, "{}", expr),
             Statement::ContinueStatement(_) => write!(f, "continue;"),
@@ -340,6 +342,17 @@ impl fmt::Display for FunctionDeclarator {
     }
 }
 
+impl fmt::Display for ScopeDeclarator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "scope {} {{\n{}\n}}",
+            self.id,
+            format_vec(&self.body, "\n")
+        )
+    }
+}
+
 impl fmt::Display for IfStatement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -377,14 +390,6 @@ impl fmt::Display for Expression {
                     }
                 }
                 write!(f, "]")
-            }
-            Expression::MapExpression(expr) => {
-                write!(f, "{{")?;
-                for property in &expr.properties {
-                    write!(f, " {}: {}; ", property.key, property.value)?;
-                }
-
-                write!(f, "}}")
             }
             Expression::None => write!(f, "None"),
         }

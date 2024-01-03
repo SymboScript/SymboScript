@@ -71,6 +71,7 @@ impl<'a> Parser<'a> {
         match self.cur_kind() {
             TokenKind::Let => self.var_decl(false),
             TokenKind::Function | TokenKind::Async => self.fn_decl(),
+            TokenKind::Scope => self.scope_decl(),
 
             TokenKind::If => self.if_stmt(),
 
@@ -110,6 +111,20 @@ impl<'a> Parser<'a> {
         }
 
         return body;
+    }
+
+    // --------------- scope declaration ---------------
+
+    fn scope_decl(&mut self) -> Statement {
+        let start = self.cur_token.start;
+        self.eat(TokenKind::Scope);
+
+        let id = self.cur_token.clone();
+        self.eat(TokenKind::Identifier);
+
+        let body = self.block_stmt();
+
+        Statement::ScopeDeclaration(uni_builder!(self, ScopeDeclarator, start, [id, body]))
     }
 
     // --------------- try statement -------------------
@@ -551,7 +566,6 @@ impl<'a> Parser<'a> {
             }
 
             TokenKind::LBracket => self.read_seq_expr(token),
-            TokenKind::LBrace => self.read_map_expr(),
 
             TokenKind::Not
             | TokenKind::PlusPlus
@@ -590,47 +604,6 @@ impl<'a> Parser<'a> {
         }
 
         return node;
-    }
-
-    fn read_map_expr(&mut self) -> Expression {
-        let start = self.cur_token.start;
-        self.advance();
-        let mut properties = vec![self.read_map_key_value()];
-
-        while self.cur_kind() == TokenKind::Semicolon {
-            self.advance();
-
-            match self.cur_kind() {
-                TokenKind::RBrace => {
-                    self.advance();
-                    break;
-                }
-                _ => {
-                    properties.push(self.read_map_key_value());
-                }
-            }
-        }
-
-        return Expression::MapExpression(Box::new(MapExpression {
-            node: Node::new(start, self.cur_token.end),
-            properties,
-        }));
-    }
-
-    fn read_map_key_value(&mut self) -> Property {
-        let ident_name = self.cur_token.clone();
-
-        self.eat(TokenKind::Identifier);
-        self.eat(TokenKind::Colon);
-        let value = self.expr();
-
-        // return (Expression::Identifier(ident_name), value);
-
-        return Property {
-            node: Node::new(ident_name.start, self.cur_token.end),
-            key: Expression::Identifier(ident_name),
-            value: value,
-        };
     }
 
     /// await delete_expr | delete_expr
