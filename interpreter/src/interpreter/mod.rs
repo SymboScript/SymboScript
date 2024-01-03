@@ -67,11 +67,13 @@ impl<'a> Interpreter<'a> {
                     self.eval_expression(&decl.init)
                 };
 
+                println!("decl: {} = {:?}", decl.id, value);
+
                 self.set_variable_force(&decl.id, value);
             }
             Statement::FunctionDeclaration(_) => todo!(),
             Statement::ScopeDeclaration(decl) => {
-                self.enter_named_scope(&format!("{}", decl.id));
+                self.enter_named_scope(&decl.id);
                 self.eval_program_body(&decl.body);
                 self.exit_named_scope();
             }
@@ -177,7 +179,7 @@ impl<'a> Interpreter<'a> {
     /// Gets the value of a variable from the current scope to the global scope if it doesn't exist in the current scope
     fn get_variable_value(&mut self, identifier: &Identifier) -> Value {
         let id = identifier.name.clone();
-        let (scope_name, _) = self.parse_current_scope();
+        let (scope_name, num) = self.parse_current_scope();
 
         for scope in self.scope_stack.iter().rev() {
             let var = self.vault.get(scope).unwrap().values.get(&id);
@@ -195,7 +197,7 @@ impl<'a> Interpreter<'a> {
                 },
                 None => {
                     for named_scope in self.get_curr_scope_refs() {
-                        match self.vault.get(&format!("{scope_name}.{id}.$0")) {
+                        match self.vault.get(&format!("{scope_name}.${num}.{id}.$0")) {
                             Some(_) => {
                                 return Value::ScopeRef(named_scope.clone());
                             }
@@ -266,9 +268,7 @@ impl<'a> Interpreter<'a> {
 
     /// Initializes a new named scope
     fn enter_named_scope(&mut self, name: &str) {
-        let (scope_name, _) = self.parse_current_scope();
-
-        let new_scope = format!("{}.{}.$0", scope_name, name);
+        let new_scope = format!("{}.{}.$0", self.current_scope, name);
 
         self.send_scope_ref(&new_scope);
 

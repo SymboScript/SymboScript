@@ -1,9 +1,10 @@
-let a;
+let a = 2;
 
 {
   let b = 2;
-  a += b * 2;
+  let a = b * 2;
+  a; # 4
 }
 
-println[a];
-println[b]; # Should throw error, because b is in local scope
+a; # 2
+b; # Should throw error, because b is in local scope

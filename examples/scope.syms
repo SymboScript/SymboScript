@@ -4,3 +4,5 @@ scope a {
     let d = 2;
   }
 }
+
+a;
