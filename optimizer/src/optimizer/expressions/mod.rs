@@ -9,9 +9,18 @@ pub fn optim_expression(expression_stmt: &Expression) -> Expression {
     }
 }
 
+pub fn optim_expression_sub(expression_stmt: &Expression) -> Expression {
+    match expression_stmt {
+        Expression::BinaryExpression(binary_expression) => {
+            optim_binary_expression(&sort_plus_binary_expression(binary_expression))
+        }
+        _ => expression_stmt.clone(),
+    }
+}
+
 pub fn optim_binary_expression(binary_expression: &BinaryExpression) -> Expression {
-    let left = optim_expression(&binary_expression.left);
-    let right = optim_expression(&binary_expression.right);
+    let left = optim_expression_sub(&binary_expression.left);
+    let right = optim_expression_sub(&binary_expression.right);
 
     match (left.clone(), right.clone()) {
         (Expression::Literal(left), Expression::Literal(right)) => {
@@ -56,15 +65,6 @@ fn sort_plus_binary_expression(binary_expression: &BinaryExpression) -> BinaryEx
 }
 
 fn unflat_plus_binary_expression(flat: &Vec<Expression>) -> BinaryExpression {
-    if flat.len() == 1 {
-        return BinaryExpression {
-            node: todo!(),
-            left: todo!(),
-            operator: todo!(),
-            right: todo!(),
-        };
-    }
-
     let mut flat = flat.clone();
 
     flat.reverse();
