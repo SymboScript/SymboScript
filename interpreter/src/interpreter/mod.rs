@@ -84,7 +84,6 @@ impl<'a> Interpreter<'a> {
             Expression::BinaryExpression(binary_expr) => self.eval_binary_expression(binary_expr),
             Expression::UnaryExpression(_) => todo!(),
             Expression::ConditionalExpression(_) => todo!(),
-            Expression::AssignmentExpression(_) => todo!(),
             Expression::CallExpression(_) => todo!(),
             Expression::MemberExpression(_) => todo!(),
             Expression::SequenceExpression(_) => todo!(),

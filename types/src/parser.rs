@@ -141,7 +141,6 @@ pub enum Expression {
     BinaryExpression(Box<BinaryExpression>),
     UnaryExpression(Box<UnaryExpression>),
     ConditionalExpression(Box<ConditionalExpression>),
-    AssignmentExpression(Box<AssignmentExpression>),
     CallExpression(Box<CallExpression>),
     MemberExpression(Box<MemberExpression>),
     SequenceExpression(Box<SequenceExpression>),
@@ -187,14 +186,6 @@ pub struct MemberExpression {
     pub object: Expression,
     pub property: Expression,
     pub is_expr: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct AssignmentExpression {
-    pub node: Node,
-    pub assignment: TokenKind,
-    pub left: Expression,
-    pub right: Expression,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -428,7 +419,6 @@ impl fmt::Display for Expression {
             Expression::CallExpression(expr) => write!(f, "({})", expr),
             Expression::MemberExpression(expr) => write!(f, "({})", expr),
             Expression::WordExpression(expr) => write!(f, "({})", expr),
-            Expression::AssignmentExpression(expr) => write!(f, "({})", expr),
             Expression::SequenceExpression(expr) => {
                 let len = expr.expressions.len();
                 let mut k = 0;
@@ -482,12 +472,6 @@ impl fmt::Display for MemberExpression {
         } else {
             write!(f, "{}.{}", self.object, self.property)
         }
-    }
-}
-
-impl fmt::Display for AssignmentExpression {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} = {}", self.left, self.right)
     }
 }
 
