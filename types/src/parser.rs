@@ -1,6 +1,6 @@
 use std::fmt::{self};
 
-use crate::lexer::{Token, TokenKind};
+use crate::lexer::TokenValue;
 use serde::{Deserialize, Serialize};
 
 pub type BlockStatement = Vec<Statement>;
@@ -107,7 +107,7 @@ pub struct YieldStatement {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct VariableDeclarator {
     pub node: Node,
-    pub id: Token,
+    pub id: String,
     pub init: Expression,
     pub is_formula: bool,
 }
@@ -115,8 +115,8 @@ pub struct VariableDeclarator {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FunctionDeclarator {
     pub node: Node,
-    pub id: Token,
-    pub params: Vec<Token>,
+    pub id: String,
+    pub params: Vec<String>,
     pub body: BlockStatement,
     pub is_async: bool,
 }
@@ -124,7 +124,7 @@ pub struct FunctionDeclarator {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ScopeDeclarator {
     pub node: Node,
-    pub id: Token,
+    pub id: String,
     pub body: BlockStatement,
 }
 
@@ -145,8 +145,8 @@ pub enum Expression {
     MemberExpression(Box<MemberExpression>),
     SequenceExpression(Box<SequenceExpression>),
     WordExpression(Box<WordExpression>),
-    Literal(Token),
-    Identifier(Token),
+    Literal(TokenValue),
+    Identifier(String),
     None,
 }
 
@@ -411,9 +411,9 @@ impl fmt::Display for Expression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Expression::BinaryExpression(expr) => write!(f, "({})", expr),
-            Expression::Literal(token) | Expression::Identifier(token) => {
-                write!(f, "{}", token)
-            }
+            Expression::Literal(token) => write!(f, "{}", token),
+            Expression::Identifier(token) => write!(f, "{}", token),
+
             Expression::UnaryExpression(expr) => write!(f, "({})", expr),
             Expression::ConditionalExpression(expr) => write!(f, "({})", expr),
             Expression::CallExpression(expr) => write!(f, "({})", expr),

@@ -79,7 +79,7 @@ impl<'a> Interpreter<'a> {
         }
     }
 
-    fn eval_expression(&mut self, expression: &Expression) -> Expression {
+    fn eval_expression(&mut self, expression: &Expression) -> VariableValue {
         match expression {
             Expression::BinaryExpression(binary_expr) => self.eval_binary_expression(binary_expr),
             Expression::UnaryExpression(_) => todo!(),
@@ -88,9 +88,16 @@ impl<'a> Interpreter<'a> {
             Expression::MemberExpression(_) => todo!(),
             Expression::SequenceExpression(_) => todo!(),
             Expression::WordExpression(_) => todo!(),
-            Expression::Literal(_) => todo!(),
-            Expression::Identifier(_) => todo!(),
-            Expression::None => todo!(),
+
+            Expression::Literal(_) => return expression.clone(),
+
+            Expression::Identifier(id) => return self.get_variable(id),
+
+            Expression::None => return VariableValue::None,
+
+            _ => {
+                unreachable!("If you see this, something went wrong. Create an issue. https://github.com/symboscript/symboscript/issues/new")
+            }
         }
     }
 
@@ -135,6 +142,10 @@ impl<'a> Interpreter<'a> {
             BinaryOperator::Greater => todo!(),
             BinaryOperator::GreaterEqual => todo!(),
         }
+    }
+
+    fn get_variable(&mut self, identifier: &String) -> ScopeValues {
+        let (scope_name, _) = self.parse_current_scope();
     }
 
     fn initialize(&mut self) {

@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use symboscript_lexer::Lexer;
 use symboscript_types::{
     lexer::{Token, TokenKind, TokenValue},
@@ -119,7 +121,7 @@ impl<'a> Parser<'a> {
         let start = self.cur_token.start;
         self.eat(TokenKind::Scope);
 
-        let id = self.cur_token.clone();
+        let id = format!("{}", self.cur_token.clone().value);
         self.eat(TokenKind::Identifier);
 
         let body = self.block_stmt();
@@ -302,13 +304,19 @@ impl<'a> Parser<'a> {
 
         self.advance();
 
-        let id = self.cur_token.clone();
+        let id = format!("{}", self.cur_token.clone().value);
         self.eat(TokenKind::Identifier);
 
         let params = {
             let start = self.cur_token.start;
             self.eat(TokenKind::LBracket);
-            let params = self.parse_params();
+
+            let params = self
+                .parse_params()
+                .into_iter()
+                .map(|p| format!("{}", p.value))
+                .collect();
+
             self.eat_with_start(TokenKind::RBracket, start);
             params
         };
@@ -355,7 +363,7 @@ impl<'a> Parser<'a> {
         let start = self.cur_token.start;
         self.advance();
 
-        let id = self.cur_token.clone();
+        let id = format!("{}", self.cur_token.clone().value);
         self.eat(TokenKind::Identifier);
 
         let mut is_formula = false;
@@ -556,7 +564,7 @@ impl<'a> Parser<'a> {
         match token.kind {
             TokenKind::Number | TokenKind::Str | TokenKind::True | TokenKind::False => {
                 self.advance();
-                return Expression::Literal(token);
+                return Expression::Literal(token.value);
             }
             TokenKind::LParen => {
                 self.advance();
@@ -649,7 +657,7 @@ impl<'a> Parser<'a> {
                                 return (
                                     self.call_expression(
                                         sequence_start,
-                                        Expression::Identifier(token),
+                                        Expression::Identifier(format!("{}", token.value)),
                                         node,
                                     ),
                                     true,
@@ -670,12 +678,16 @@ impl<'a> Parser<'a> {
                         }
 
                         return (
-                            self.call_expression(token.start, Expression::Identifier(token), node),
+                            self.call_expression(
+                                token.start,
+                                Expression::Identifier(format!("{}", token.value)),
+                                node,
+                            ),
                             true,
                         );
                     }
                     _ => {
-                        return (Expression::Identifier(token), false);
+                        return (Expression::Identifier(format!("{}", token.value)), false);
                     }
                 }
             }
