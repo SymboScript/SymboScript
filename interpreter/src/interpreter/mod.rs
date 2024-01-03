@@ -79,7 +79,7 @@ impl<'a> Interpreter<'a> {
         }
     }
 
-    fn eval_expression(&mut self, expression: &Expression) -> VariableValue {
+    fn eval_expression(&mut self, expression: &Expression) -> Value {
         match expression {
             Expression::BinaryExpression(binary_expr) => self.eval_binary_expression(binary_expr),
             Expression::UnaryExpression(_) => todo!(),
@@ -89,31 +89,27 @@ impl<'a> Interpreter<'a> {
             Expression::SequenceExpression(_) => todo!(),
             Expression::WordExpression(_) => todo!(),
 
-            Expression::Literal(_) => return expression.clone(),
+            Expression::Literal(val) => self.match_literal(val),
 
-            Expression::Identifier(id) => return self.get_variable(id),
+            Expression::Identifier(id) => self.get_variable_value(id),
 
-            Expression::None => return VariableValue::None,
-
-            _ => {
-                unreachable!("If you see this, something went wrong. Create an issue. https://github.com/symboscript/symboscript/issues/new")
-            }
+            Expression::None(_) => Value::None,
         }
     }
 
-    fn eval_binary_expression(&mut self, expression: &BinaryExpression) -> Expression {
+    fn eval_binary_expression(&mut self, expression: &BinaryExpression) -> Value {
         let left = self.eval_expression(&expression.left);
         let right = self.eval_expression(&expression.right);
 
         match expression.operator {
-            BinaryOperator::Plus => todo!(),
-            BinaryOperator::Minus => todo!(),
-            BinaryOperator::Multiply => todo!(),
-            BinaryOperator::Divide => todo!(),
-            BinaryOperator::Power => todo!(),
-            BinaryOperator::Range => todo!(),
+            BinaryOperator::Plus => left + right,
+            BinaryOperator::Minus => left - right,
+            BinaryOperator::Multiply => left * right,
+            BinaryOperator::Divide => left / right,
+            BinaryOperator::Power => self.pow(left, right),
+            BinaryOperator::Range => self.range(left, right),
 
-            BinaryOperator::Modulo => todo!(),
+            BinaryOperator::Modulo => left % right,
 
             BinaryOperator::And => todo!(),
             BinaryOperator::Or => todo!(),
@@ -127,7 +123,6 @@ impl<'a> Interpreter<'a> {
             BinaryOperator::BitRightShift => todo!(),
 
             BinaryOperator::Assign => todo!(),
-            BinaryOperator::FormulaAssign => todo!(),
             BinaryOperator::PlusAssign => todo!(),
             BinaryOperator::MinusAssign => todo!(),
             BinaryOperator::MultiplyAssign => todo!(),
@@ -144,8 +139,69 @@ impl<'a> Interpreter<'a> {
         }
     }
 
-    fn get_variable(&mut self, identifier: &String) -> ScopeValues {
-        let (scope_name, _) = self.parse_current_scope();
+    fn match_literal(&mut self, literal: &Literal) -> Value {
+        match &literal.value {
+            TokenValue::None => Value::None,
+            TokenValue::Number(val) => Value::Number(*val),
+            TokenValue::Str(val) => Value::Str(val.clone()),
+            TokenValue::Identifier(val) => self.get_variable_value(&Identifier {
+                name: val.clone(),
+                node: Node {
+                    start: literal.node.start,
+                    end: literal.node.end,
+                },
+            }),
+        }
+    }
+
+    /// Gets the value of a variable from the current scope to the global scope if it doesn't exist in the current scope
+    fn get_variable_value(&mut self, identifier: &Identifier) -> Value {
+        let id = identifier.name.clone();
+
+        for scope in self.scope_stack.iter().rev() {
+            let var = self.vault.get(scope).unwrap().values.get(&id);
+
+            match var {
+                Some(var) => match var {
+                    ScopeValues::Variable(val) => return val.clone(),
+                    _ => {
+                        self.report(
+                            &format!("`{id}` is not a variable"),
+                            identifier.node.start,
+                            identifier.node.end,
+                        );
+                    }
+                },
+                None => continue,
+            }
+        }
+
+        self.report(
+            &format!("Variable `{identifier}` not found"),
+            identifier.node.start,
+            identifier.node.end,
+        );
+        unreachable!("Report ends proccess");
+    }
+
+    fn pow(&mut self, left: Value, right: Value) -> Value {
+        match (left, right) {
+            (Value::Number(left), Value::Number(right)) => Value::Number(left.powf(right)),
+            _ => Value::None,
+        }
+    }
+
+    fn range(&mut self, left: Value, right: Value) -> Value {
+        match (left, right) {
+            (Value::Number(left), Value::Number(right)) => {
+                let left = left.round() as usize;
+                let right = right.round() as usize;
+
+                let val = (left..=right).collect::<Vec<usize>>();
+                Value::Sequence(val.into_iter().map(|p| Value::Number(p as f64)).collect())
+            }
+            _ => Value::None,
+        }
     }
 
     fn initialize(&mut self) {
@@ -261,5 +317,9 @@ impl<'a> Interpreter<'a> {
     /// Reports an interpreter error
     fn report(&self, error: &str, start: usize, end: usize) {
         report_error(self.path, self.source, error, start, end);
+    }
+
+    fn report_str(&self, error: &str) {
+        eprintln!("{}", error);
     }
 }

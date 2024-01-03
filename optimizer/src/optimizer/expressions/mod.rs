@@ -25,10 +25,30 @@ pub fn optim_binary_expression(binary_expression: &BinaryExpression) -> Expressi
     match (left.clone(), right.clone()) {
         (Expression::Literal(left), Expression::Literal(right)) => {
             match binary_expression.operator {
-                BinaryOperator::Plus => return Expression::Literal(left + right),
-                BinaryOperator::Minus => return Expression::Literal(left - right),
-                BinaryOperator::Multiply => return Expression::Literal(left * right),
-                BinaryOperator::Divide => return Expression::Literal(left / right),
+                BinaryOperator::Plus => {
+                    return Expression::Literal(Literal {
+                        node: binary_expression.node.clone(),
+                        value: left.value + right.value,
+                    })
+                }
+                BinaryOperator::Minus => {
+                    return Expression::Literal(Literal {
+                        node: binary_expression.node.clone(),
+                        value: left.value - right.value,
+                    })
+                }
+                BinaryOperator::Multiply => {
+                    return Expression::Literal(Literal {
+                        node: binary_expression.node.clone(),
+                        value: left.value * right.value,
+                    })
+                }
+                BinaryOperator::Divide => {
+                    return Expression::Literal(Literal {
+                        node: binary_expression.node.clone(),
+                        value: left.value / right.value,
+                    })
+                }
                 _ => {}
             }
         }

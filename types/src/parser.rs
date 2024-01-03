@@ -145,9 +145,26 @@ pub enum Expression {
     MemberExpression(Box<MemberExpression>),
     SequenceExpression(Box<SequenceExpression>),
     WordExpression(Box<WordExpression>),
-    Literal(TokenValue),
-    Identifier(String),
-    None,
+    Literal(Literal),
+    Identifier(Identifier),
+    None(None),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct None {
+    pub node: Node,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Identifier {
+    pub node: Node,
+    pub name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Literal {
+    pub node: Node,
+    pub value: TokenValue,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -176,7 +193,7 @@ pub struct ConditionalExpression {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CallExpression {
     pub node: Node,
-    pub callee: Expression,
+    pub callee: String,
     pub arguments: Expression,
 }
 
@@ -224,7 +241,6 @@ pub enum BinaryOperator {
     BitRightShift,
 
     Assign,
-    FormulaAssign,
     PlusAssign,
     MinusAssign,
     MultiplyAssign,
@@ -432,8 +448,20 @@ impl fmt::Display for Expression {
                 }
                 write!(f, "]")
             }
-            Expression::None => write!(f, "None"),
+            Expression::None(_) => write!(f, "None"),
         }
+    }
+}
+
+impl fmt::Display for Literal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.value)
+    }
+}
+
+impl fmt::Display for Identifier {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.name)
     }
 }
 
@@ -509,7 +537,6 @@ impl fmt::Display for BinaryOperator {
             BinaryOperator::BitLeftShift => write!(f, "<<"),
             BinaryOperator::BitRightShift => write!(f, ">>"),
             BinaryOperator::Assign => write!(f, "="),
-            BinaryOperator::FormulaAssign => write!(f, ":="),
             BinaryOperator::PlusAssign => write!(f, "+="),
             BinaryOperator::MinusAssign => write!(f, "-="),
             BinaryOperator::MultiplyAssign => write!(f, "*="),

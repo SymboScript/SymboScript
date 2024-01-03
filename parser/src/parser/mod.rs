@@ -1,5 +1,3 @@
-use std::fmt::format;
-
 use symboscript_lexer::Lexer;
 use symboscript_types::{
     lexer::{Token, TokenKind, TokenValue},
@@ -381,7 +379,9 @@ impl<'a> Parser<'a> {
                     self.advance();
                     self.expr()
                 }
-                _ if !only_with_init => Expression::None,
+                _ if !only_with_init => Expression::None(None {
+                    node: Node::new(start, self.cur_token.end),
+                }),
                 _ => {
                     self.report_expected(start, "Assign or FormulaAssign", self.cur_kind());
                     unreachable!("Report ends proccess");
@@ -431,14 +431,13 @@ impl<'a> Parser<'a> {
         self.sequence_expression(start, nodes)
     }
 
-    ///ternary (Assign | FormulaAssign | PlusAssign | MinusAssign | MultiplyAssign | DivideAssign | PowerAssign | ModuloAssign) ternary
+    ///ternary (Assign | PlusAssign | MinusAssign | MultiplyAssign | DivideAssign | PowerAssign | ModuloAssign) ternary
     fn assign(&mut self) -> Expression {
         binary_right_associative!(
             self,
             ternary,
             [
                 TokenKind::Assign,
-                TokenKind::FormulaAssign,
                 TokenKind::PlusAssign,
                 TokenKind::MinusAssign,
                 TokenKind::MultiplyAssign,
@@ -564,7 +563,10 @@ impl<'a> Parser<'a> {
         match token.kind {
             TokenKind::Number | TokenKind::Str | TokenKind::True | TokenKind::False => {
                 self.advance();
-                return Expression::Literal(token.value);
+                return Expression::Literal(Literal {
+                    node: Node::new(token.start, token.end),
+                    value: token.value,
+                });
             }
             TokenKind::LParen => {
                 self.advance();
@@ -657,7 +659,7 @@ impl<'a> Parser<'a> {
                                 return (
                                     self.call_expression(
                                         sequence_start,
-                                        Expression::Identifier(format!("{}", token.value)),
+                                        format!("{}", token.value),
                                         node,
                                     ),
                                     true,
@@ -678,16 +680,18 @@ impl<'a> Parser<'a> {
                         }
 
                         return (
-                            self.call_expression(
-                                token.start,
-                                Expression::Identifier(format!("{}", token.value)),
-                                node,
-                            ),
+                            self.call_expression(token.start, format!("{}", token.value), node),
                             true,
                         );
                     }
                     _ => {
-                        return (Expression::Identifier(format!("{}", token.value)), false);
+                        return (
+                            Expression::Identifier(Identifier {
+                                node: Node::new(token.start, token.end),
+                                name: format!("{}", token.value),
+                            }),
+                            false,
+                        );
                     }
                 }
             }
@@ -711,7 +715,7 @@ impl<'a> Parser<'a> {
     fn call_expression(
         &mut self,
         start: usize,
-        callee: Expression,
+        callee: String,
         arguments: Expression,
     ) -> Expression {
         Expression::CallExpression(Box::new(CallExpression {
@@ -824,7 +828,6 @@ impl<'a> Parser<'a> {
             TokenKind::BitRightShift => BinaryOperator::BitRightShift,
 
             TokenKind::Assign => BinaryOperator::Assign,
-            TokenKind::FormulaAssign => BinaryOperator::FormulaAssign,
             TokenKind::PlusAssign => BinaryOperator::PlusAssign,
             TokenKind::MinusAssign => BinaryOperator::MinusAssign,
             TokenKind::MultiplyAssign => BinaryOperator::MultiplyAssign,
