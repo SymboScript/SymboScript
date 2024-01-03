@@ -813,6 +813,11 @@ impl<'a> Parser<'a> {
             TokenKind::Greater => Operator::Greater,
             TokenKind::GreaterEqual => Operator::GreaterEqual,
 
+            TokenKind::MinusMinus => Operator::MinusMinus,
+            TokenKind::BitNot => Operator::BitNot,
+            TokenKind::Not => Operator::Not,
+            TokenKind::PlusPlus => Operator::PlusPlus,
+
             _ => unreachable!("This function can't be called for other tokens"),
         }
     }

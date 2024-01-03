@@ -135,6 +135,15 @@ impl<'a> Interpreter<'a> {
             Operator::LessEqual => todo!(),
             Operator::Greater => todo!(),
             Operator::GreaterEqual => todo!(),
+
+            _ => {
+                self.report(
+                    "Unsupported binary operator",
+                    expression.node.start,
+                    expression.node.end,
+                );
+                unreachable!("Report ends proccess")
+            }
         }
     }
 

@@ -212,6 +212,7 @@ pub struct WordExpression {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
 pub enum Operator {
+    // Binary
     Plus,
     Minus,
     Multiply,
@@ -246,6 +247,12 @@ pub enum Operator {
     LessEqual,
     Greater,
     GreaterEqual,
+
+    // Unary
+    BitNot,
+    Not,
+    PlusPlus,
+    MinusMinus,
 }
 
 //----------Display------------
@@ -525,6 +532,11 @@ impl fmt::Display for Operator {
             Operator::LessEqual => write!(f, "<="),
             Operator::Greater => write!(f, ">"),
             Operator::GreaterEqual => write!(f, ">="),
+
+            Operator::MinusMinus => write!(f, "--"),
+            Operator::BitNot => write!(f, "~"),
+            Operator::Not => write!(f, "!"),
+            Operator::PlusPlus => write!(f, "++"),
         }
     }
 }
