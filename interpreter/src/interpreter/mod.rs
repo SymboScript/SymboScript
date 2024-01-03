@@ -100,45 +100,41 @@ impl<'a> Interpreter<'a> {
         let right = self.eval_expression(&expression.right);
 
         match expression.operator {
-            TokenKind::Plus => todo!(),
-            TokenKind::Minus => todo!(),
-            TokenKind::Multiply => todo!(),
-            TokenKind::Divide => todo!(),
-            TokenKind::Power => todo!(),
-            TokenKind::Range => todo!(),
+            Operator::Plus => todo!(),
+            Operator::Minus => todo!(),
+            Operator::Multiply => todo!(),
+            Operator::Divide => todo!(),
+            Operator::Power => todo!(),
+            Operator::Range => todo!(),
 
-            TokenKind::Modulo => todo!(),
+            Operator::Modulo => todo!(),
 
-            TokenKind::And => todo!(),
-            TokenKind::Or => todo!(),
-            TokenKind::Xor => todo!(),
+            Operator::And => todo!(),
+            Operator::Or => todo!(),
+            Operator::Xor => todo!(),
 
-            TokenKind::BitAnd => todo!(),
-            TokenKind::BitOr => todo!(),
-            TokenKind::BitXor => todo!(),
+            Operator::BitAnd => todo!(),
+            Operator::BitOr => todo!(),
+            Operator::BitXor => todo!(),
 
-            TokenKind::BitLeftShift => todo!(),
-            TokenKind::BitRightShift => todo!(),
+            Operator::BitLeftShift => todo!(),
+            Operator::BitRightShift => todo!(),
 
-            TokenKind::Assign => todo!(),
-            TokenKind::FormulaAssign => todo!(),
-            TokenKind::PlusAssign => todo!(),
-            TokenKind::MinusAssign => todo!(),
-            TokenKind::MultiplyAssign => todo!(),
-            TokenKind::DivideAssign => todo!(),
-            TokenKind::PowerAssign => todo!(),
-            TokenKind::ModuloAssign => todo!(),
+            Operator::Assign => todo!(),
+            Operator::FormulaAssign => todo!(),
+            Operator::PlusAssign => todo!(),
+            Operator::MinusAssign => todo!(),
+            Operator::MultiplyAssign => todo!(),
+            Operator::DivideAssign => todo!(),
+            Operator::PowerAssign => todo!(),
+            Operator::ModuloAssign => todo!(),
 
-            TokenKind::Equal => todo!(),
-            TokenKind::NotEqual => todo!(),
-            TokenKind::Less => todo!(),
-            TokenKind::LessEqual => todo!(),
-            TokenKind::Greater => todo!(),
-            TokenKind::GreaterEqual => todo!(),
-
-            _ => {
-                unreachable!("Other operators can't be in binary expression.")
-            }
+            Operator::Equal => todo!(),
+            Operator::NotEqual => todo!(),
+            Operator::Less => todo!(),
+            Operator::LessEqual => todo!(),
+            Operator::Greater => todo!(),
+            Operator::GreaterEqual => todo!(),
         }
     }
 

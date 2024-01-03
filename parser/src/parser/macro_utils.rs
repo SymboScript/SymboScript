@@ -128,7 +128,7 @@ macro_rules! word_expr_build {
         Expression::WordExpression(Box::new(WordExpression {
             node: Node::new($start, $self.cur_token.end),
             argument: $argument,
-            operator: $operator,
+            operator: $self.kind_to_op($operator),
         }))
     };
 }

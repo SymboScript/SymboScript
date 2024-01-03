@@ -756,7 +756,7 @@ impl<'a> Parser<'a> {
         Expression::BinaryExpression(Box::new(BinaryExpression {
             node: Node::new(start, self.cur_token.end),
             left,
-            operator,
+            operator: self.kind_to_op(operator),
             right,
         }))
     }
@@ -769,12 +769,53 @@ impl<'a> Parser<'a> {
     ) -> Expression {
         Expression::UnaryExpression(Box::new(UnaryExpression {
             node: Node::new(start, self.cur_token.end),
-            operator,
+            operator: self.kind_to_op(operator),
             right,
         }))
     }
 
     // ------------------------------- Utility functions -------------------------------
+
+    fn kind_to_op(&mut self, kind: TokenKind) -> Operator {
+        match kind {
+            TokenKind::Plus => Operator::Plus,
+            TokenKind::Minus => Operator::Minus,
+            TokenKind::Multiply => Operator::Multiply,
+            TokenKind::Divide => Operator::Divide,
+            TokenKind::Power => Operator::Power,
+            TokenKind::Range => Operator::Range,
+            TokenKind::Modulo => Operator::Modulo,
+
+            TokenKind::And => Operator::And,
+            TokenKind::Or => Operator::Or,
+            TokenKind::Xor => Operator::Xor,
+
+            TokenKind::BitAnd => Operator::BitAnd,
+            TokenKind::BitOr => Operator::BitOr,
+            TokenKind::BitXor => Operator::BitXor,
+
+            TokenKind::BitLeftShift => Operator::BitLeftShift,
+            TokenKind::BitRightShift => Operator::BitRightShift,
+
+            TokenKind::Assign => Operator::Assign,
+            TokenKind::FormulaAssign => Operator::FormulaAssign,
+            TokenKind::PlusAssign => Operator::PlusAssign,
+            TokenKind::MinusAssign => Operator::MinusAssign,
+            TokenKind::MultiplyAssign => Operator::MultiplyAssign,
+            TokenKind::DivideAssign => Operator::DivideAssign,
+            TokenKind::PowerAssign => Operator::PowerAssign,
+            TokenKind::ModuloAssign => Operator::ModuloAssign,
+
+            TokenKind::Equal => Operator::Equal,
+            TokenKind::NotEqual => Operator::NotEqual,
+            TokenKind::Less => Operator::Less,
+            TokenKind::LessEqual => Operator::LessEqual,
+            TokenKind::Greater => Operator::Greater,
+            TokenKind::GreaterEqual => Operator::GreaterEqual,
+
+            _ => unreachable!("This function can't be called for other tokens"),
+        }
+    }
 
     fn eat(&mut self, kind: TokenKind) {
         self.eat_with_start(kind, self.cur_token.start);
