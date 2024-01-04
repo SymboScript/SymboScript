@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use symboscript_types::{interpreter::*, lexer::*, parser::*};
 use symboscript_utils::report_error;
 
+mod macro_utils;
 mod native;
+
+use crate::loop_controls;
 
 pub struct Interpreter<'a> {
     /// Path of the source file
@@ -42,24 +45,38 @@ impl<'a> Interpreter<'a> {
     }
 
     fn eval_ast(&mut self, ast: Ast) {
-        self.eval_program_body(&ast.program.body);
+        self.eval_block(&ast.program.body);
     }
 
-    fn eval_program_body(&mut self, body: &BlockStatement) {
+    fn eval_block(&mut self, body: &BlockStatement) -> ControlFlow {
         for statement in body {
-            self.eval_statement(&statement);
+            let control = self.eval_statement(&statement);
+
+            match control {
+                ControlFlow::None => {}
+                _ => return control,
+            }
         }
+
+        return ControlFlow::None;
     }
 
-    fn eval_statement(&mut self, statement: &Statement) {
+    fn eval_statement(&mut self, statement: &Statement) -> ControlFlow {
         match statement {
             Statement::ExpressionStatement(expr) => {
                 self.eval_expression(&expr);
             }
-            Statement::ReturnStatement(_) => todo!(),
+
+            Statement::ReturnStatement(v) => {
+                return ControlFlow::Return(self.eval_expression(&v.argument));
+            }
             Statement::ThrowStatement(_) => todo!(),
-            Statement::ContinueStatement(_) => todo!(),
-            Statement::BreakStatement(_) => todo!(),
+            Statement::ContinueStatement(_) => {
+                return ControlFlow::Continue;
+            }
+            Statement::BreakStatement(_) => {
+                return ControlFlow::Break;
+            }
             Statement::YieldStatement(_) => todo!(),
             Statement::VariableDeclaration(decl) => {
                 let value = if decl.is_formula {
@@ -73,20 +90,64 @@ impl<'a> Interpreter<'a> {
             Statement::FunctionDeclaration(_) => todo!(),
             Statement::ScopeDeclaration(decl) => {
                 let scope = self.start_declaration_of_named_scope(&decl.id);
-                self.eval_program_body(&decl.body);
+                self.eval_block(&decl.body);
                 self.end_declaration_of_named_scope(&scope);
             }
-            Statement::IfStatement(_) => todo!(),
+            Statement::IfStatement(if_stmt) => {
+                return self.eval_if_statement(if_stmt);
+            }
             Statement::ForStatement(_) => todo!(),
-            Statement::WhileStatement(_) => todo!(),
-            Statement::LoopStatement(_) => todo!(),
+            Statement::WhileStatement(while_stmt) => {
+                self.eval_while_statement(while_stmt);
+            }
+            Statement::LoopStatement(loop_stmt) => {
+                self.eval_loop_statement(loop_stmt);
+            }
             Statement::TryStatement(_) => todo!(),
             Statement::BlockStatement(body) => {
                 self.increment_scope();
-                self.eval_program_body(body);
+                self.eval_block(body);
                 self.decrement_scope();
             }
         }
+
+        return ControlFlow::None;
+    }
+
+    fn eval_if_statement(&mut self, if_stmt: &IfStatement) -> ControlFlow {
+        if (self.eval_expression(&if_stmt.test)).as_bool() {
+            return self.eval_block(&if_stmt.consequent);
+        } else {
+            return self.eval_block(&if_stmt.alternate);
+        }
+    }
+
+    fn eval_while_statement(&mut self, while_stmt: &WhileStatement) -> ControlFlow {
+        self.increment_scope();
+
+        loop {
+            if (self.eval_expression(&while_stmt.test)).as_bool() == true {
+                break;
+            }
+
+            loop_controls!(self, while_stmt.body);
+        }
+
+        self.decrement_scope();
+
+        return ControlFlow::None;
+    }
+
+    fn eval_loop_statement(&mut self, loop_stmt: &LoopStatement) -> ControlFlow {
+        self.increment_scope();
+
+        loop {
+            loop_controls!(self, loop_stmt.body);
+        }
+
+        self.decrement_scope();
+
+        return ControlFlow::None;
     }
 
     fn eval_expression(&mut self, expression: &Expression) -> Value {
@@ -203,7 +264,11 @@ impl<'a> Interpreter<'a> {
     }
 
     fn eval_binary_expression(&mut self, expression: &BinaryExpression) -> Value {
-        let left = self.eval_expression(&expression.left);
+        let left = match &expression.left {
+            Expression::Identifier(id) => self.get_variable_value(id),
+            _ => self.eval_expression(&expression.left),
+        };
+
         let right = self.eval_expression(&expression.right);
 
         match expression.operator {
@@ -211,18 +276,18 @@ impl<'a> Interpreter<'a> {
             BinaryOperator::Substract => left - right,
             BinaryOperator::Multiply => left * right,
             BinaryOperator::Divide => left / right,
-            BinaryOperator::Power => self.pow(left, right),
-            BinaryOperator::Range => self.range(left, right),
+            BinaryOperator::Power => left.pow(&right),
+            BinaryOperator::Range => left.range(&right),
 
             BinaryOperator::Modulo => left % right,
 
-            BinaryOperator::And => todo!(),
-            BinaryOperator::Or => todo!(),
-            BinaryOperator::Xor => todo!(),
+            BinaryOperator::And => left.and(&right),
+            BinaryOperator::Or => left.or(&right),
+            BinaryOperator::Xor => left.xor(&right),
 
-            BinaryOperator::BitAnd => todo!(),
-            BinaryOperator::BitOr => todo!(),
-            BinaryOperator::BitXor => todo!(),
+            BinaryOperator::BitAnd => left.bit_and(&right),
+            BinaryOperator::BitOr => left.bit_or(&right),
+            BinaryOperator::BitXor => left.bit_xor(&right),
 
             BinaryOperator::BitLeftShift => left << right,
             BinaryOperator::BitRightShift => left >> right,
@@ -235,12 +300,12 @@ impl<'a> Interpreter<'a> {
             BinaryOperator::PowerAssign => todo!(),
             BinaryOperator::ModuloAssign => todo!(),
 
-            BinaryOperator::Equal => todo!(),
-            BinaryOperator::NotEqual => todo!(),
-            BinaryOperator::Less => todo!(),
-            BinaryOperator::LessEqual => todo!(),
-            BinaryOperator::Greater => todo!(),
-            BinaryOperator::GreaterEqual => todo!(),
+            BinaryOperator::Equal => left.equal(&right),
+            BinaryOperator::NotEqual => left.not_equal(&right),
+            BinaryOperator::Less => left.less(&right),
+            BinaryOperator::LessEqual => left.less_equal(&right),
+            BinaryOperator::Greater => left.greater(&right),
+            BinaryOperator::GreaterEqual => left.greater_equal(&right),
         }
     }
 
@@ -278,29 +343,27 @@ impl<'a> Interpreter<'a> {
         unreachable!("Report ends proccess");
     }
 
+    fn get_variable_full_name(&self, identifier: &Identifier) -> String {
+        for scope in self.scope_stack.iter().rev() {
+            let var = self.vault.get(scope).unwrap().values.get(&identifier.name);
+
+            match var {
+                Some(_) => return format!("{}.{}", scope, identifier.name),
+                None => {}
+            }
+        }
+
+        self.report(
+            &format!("Variable `{identifier}` not found"),
+            identifier.node.start,
+            identifier.node.end,
+        );
+        unreachable!("Report ends proccess");
+    }
+
     fn set_variable_force(&mut self, identifier: &String, value: Value) {
         self.get_curr_scope_values_mut()
             .insert(identifier.clone(), value);
-    }
-
-    fn pow(&mut self, left: Value, right: Value) -> Value {
-        match (left, right) {
-            (Value::Number(left), Value::Number(right)) => Value::Number(left.powf(right)),
-            _ => Value::None,
-        }
-    }
-
-    fn range(&mut self, left: Value, right: Value) -> Value {
-        match (left, right) {
-            (Value::Number(left), Value::Number(right)) => {
-                let left = left.round() as usize;
-                let right = right.round() as usize;
-
-                let val = (left..=right).collect::<Vec<usize>>();
-                Value::Sequence(val.into_iter().map(|p| Value::Number(p as f64)).collect())
-            }
-            _ => Value::None,
-        }
     }
 
     fn initialize(&mut self) {
