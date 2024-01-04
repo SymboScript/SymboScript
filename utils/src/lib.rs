@@ -23,13 +23,13 @@ pub fn output_tokens_colored(text: &str, tokens: &Vec<Token>, show_tokens: Optio
             match token.kind {
                 Identifier => s.yellow(),
 
-                Plus | Minus | Multiply | Divide | Power | Assign | Equal | Range
-                | FormulaAssign | And | Or | Xor | Not | BitAnd | BitOr | BitNot | BitXor
-                | BitLeftShift | BitRightShift => s.green(),
+                Plus | Minus | Star | Slash | Caret | Assign | Equal | Range | FormulaAssign
+                | AmpersandAmpersand | PipePipe | Xor | ExclamationMark | Ampersand | Pipe
+                | Tilde | BitXor | BitLeftShift | BitRightShift => s.green(),
 
                 Number => s.blue(),
 
-                LParen | RParen | LBrace | RBrace => s.cyan(),
+                LParen | RParen | LAngle | RAngle => s.cyan(),
 
                 If | Else | While | For | Loop | Let | Return | Break | Continue | Function
                 | True | False | In => s.magenta(),

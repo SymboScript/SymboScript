@@ -55,7 +55,7 @@ impl<'a> Parser<'a> {
 
         loop {
             match self.cur_kind() {
-                TokenKind::Eof | TokenKind::RBrace => break,
+                TokenKind::Eof | TokenKind::RAngle => break,
                 _ => {
                     body.push(self.statement());
                 }
@@ -89,7 +89,7 @@ impl<'a> Parser<'a> {
             TokenKind::Yield => self.yield_stmt(),
 
             TokenKind::Block => self.block_decl(),
-            TokenKind::LBrace => Statement::BlockStatement(self.block_stmt()),
+            TokenKind::LAngle => Statement::BlockStatement(self.block_stmt()),
 
             _ => self.expr_stmt(),
         }
@@ -98,12 +98,12 @@ impl<'a> Parser<'a> {
     fn block_stmt(&mut self) -> Vec<Statement> {
         let mut body = vec![];
 
-        if self.cur_kind() == TokenKind::LBrace {
+        if self.cur_kind() == TokenKind::LAngle {
             body = {
                 let start = self.cur_token.start;
-                self.eat(TokenKind::LBrace);
+                self.eat(TokenKind::LAngle);
                 let consequent = self.body();
-                self.eat_with_start(TokenKind::RBrace, start);
+                self.eat_with_start(TokenKind::RAngle, start);
                 consequent
             }
         } else {
@@ -307,7 +307,7 @@ impl<'a> Parser<'a> {
 
         let params = {
             let start = self.cur_token.start;
-            self.eat(TokenKind::LBracket);
+            self.eat(TokenKind::LSquare);
 
             let params = self
                 .parse_params()
@@ -315,15 +315,15 @@ impl<'a> Parser<'a> {
                 .map(|p| format!("{}", p.value))
                 .collect();
 
-            self.eat_with_start(TokenKind::RBracket, start);
+            self.eat_with_start(TokenKind::RSquare, start);
             params
         };
 
         let body = {
             let start = self.cur_token.start;
-            self.eat(TokenKind::LBrace);
+            self.eat(TokenKind::LAngle);
             let body = self.body();
-            self.eat_with_start(TokenKind::RBrace, start);
+            self.eat_with_start(TokenKind::RAngle, start);
             body
         };
 
@@ -338,7 +338,7 @@ impl<'a> Parser<'a> {
     fn parse_params(&mut self) -> Vec<Token> {
         let mut params = vec![];
 
-        if self.cur_kind() == TokenKind::RBracket {
+        if self.cur_kind() == TokenKind::RSquare {
             self.advance();
             return params;
         }
@@ -473,12 +473,12 @@ impl<'a> Parser<'a> {
 
     /// logical_and || logical_and
     fn logical_or(&mut self) -> Expression {
-        binary_left_associative!(self, [TokenKind::Or], logical_and)
+        binary_left_associative!(self, [TokenKind::PipePipe], logical_and)
     }
 
     /// cmp && cmp
     fn logical_and(&mut self) -> Expression {
-        binary_left_associative!(self, [TokenKind::And], cmp)
+        binary_left_associative!(self, [TokenKind::AmpersandAmpersand], cmp)
     }
 
     /// bit_or (< | <= | > | >= | == | !=) bit_or
@@ -499,7 +499,7 @@ impl<'a> Parser<'a> {
 
     ///bit_xor | bit_xor
     fn bit_or(&mut self) -> Expression {
-        binary_left_associative!(self, [TokenKind::BitOr], bit_xor)
+        binary_left_associative!(self, [TokenKind::Pipe], bit_xor)
     }
 
     /// bit_and bxor bit_and
@@ -509,7 +509,7 @@ impl<'a> Parser<'a> {
 
     /// shift & shift
     fn bit_and(&mut self) -> Expression {
-        binary_left_associative!(self, [TokenKind::BitAnd], shift)
+        binary_left_associative!(self, [TokenKind::Ampersand], shift)
     }
 
     /// add_sub (>> | <<) add_sub
@@ -535,11 +535,10 @@ impl<'a> Parser<'a> {
             .contains(&self.cur_kind())
         {
             let right = self.power();
-            expr = self.binary_expression(start, expr, right, TokenKind::Multiply);
+            expr = self.binary_expression(start, expr, right, TokenKind::Star);
         }
 
-        while [TokenKind::Multiply, TokenKind::Divide, TokenKind::Modulo].contains(&self.cur_kind())
-        {
+        while [TokenKind::Star, TokenKind::Slash, TokenKind::Modulo].contains(&self.cur_kind()) {
             let operator = self.cur_kind();
             self.advance();
 
@@ -553,7 +552,7 @@ impl<'a> Parser<'a> {
 
     /// factor (Power) factor
     fn power(&mut self) -> Expression {
-        binary_left_associative!(self, [TokenKind::Power], factor)
+        binary_left_associative!(self, [TokenKind::Caret], factor)
     }
 
     /// Number | LParen expr Rparen | Identifier | (! | ++ | -- | ~)factor
@@ -592,12 +591,12 @@ impl<'a> Parser<'a> {
                 return node;
             }
 
-            TokenKind::LBracket => self.read_seq_expr(token),
+            TokenKind::LSquare => self.read_seq_expr(token),
 
-            TokenKind::Not
+            TokenKind::ExclamationMark
             | TokenKind::PlusPlus
             | TokenKind::MinusMinus
-            | TokenKind::BitNot
+            | TokenKind::Tilde
             | TokenKind::Minus
             | TokenKind::Plus => {
                 self.advance();
@@ -613,7 +612,7 @@ impl<'a> Parser<'a> {
         self.advance();
 
         match self.cur_kind() {
-            TokenKind::RBracket => {
+            TokenKind::RSquare => {
                 self.advance();
                 return self.sequence_expression(token.start, vec![]);
             }
@@ -621,7 +620,7 @@ impl<'a> Parser<'a> {
         }
 
         let mut node = self.comma(true);
-        self.eat_with_start(TokenKind::RBracket, token.start);
+        self.eat_with_start(TokenKind::RSquare, token.start);
 
         match node {
             Expression::SequenceExpression(seq_exp) => {
@@ -662,13 +661,13 @@ impl<'a> Parser<'a> {
                 self.advance();
 
                 match self.cur_kind() {
-                    TokenKind::LBracket => {
+                    TokenKind::LSquare => {
                         let sequence_start = self.cur_token.start;
 
                         self.advance();
 
                         match self.cur_kind() {
-                            TokenKind::RBracket => {
+                            TokenKind::RSquare => {
                                 self.advance();
 
                                 let node = self.sequence_expression(sequence_start, vec![]);
@@ -686,7 +685,7 @@ impl<'a> Parser<'a> {
                         }
 
                         let mut node = self.expr();
-                        self.eat_with_start(TokenKind::RBracket, token.start);
+                        self.eat_with_start(TokenKind::RSquare, token.start);
 
                         match node {
                             Expression::SequenceExpression(seq_exp) => {
@@ -712,11 +711,11 @@ impl<'a> Parser<'a> {
                     }
                 }
             }
-            TokenKind::LBracket => {
+            TokenKind::LSquare => {
                 self.advance();
 
                 let node = self.expr();
-                self.eat_with_start(TokenKind::RBracket, token.start);
+                self.eat_with_start(TokenKind::RSquare, token.start);
 
                 return (node, true);
             }
@@ -822,8 +821,8 @@ impl<'a> Parser<'a> {
     fn kind_to_un_op(&mut self, kind: TokenKind) -> UnaryOperator {
         match kind {
             TokenKind::MinusMinus => UnaryOperator::MinusMinus,
-            TokenKind::BitNot => UnaryOperator::BitNot,
-            TokenKind::Not => UnaryOperator::Not,
+            TokenKind::Tilde => UnaryOperator::BitNot,
+            TokenKind::ExclamationMark => UnaryOperator::Not,
             TokenKind::PlusPlus => UnaryOperator::PlusPlus,
 
             TokenKind::Plus => UnaryOperator::Plus,
@@ -837,18 +836,18 @@ impl<'a> Parser<'a> {
         match kind {
             TokenKind::Plus => BinaryOperator::Add,
             TokenKind::Minus => BinaryOperator::Substract,
-            TokenKind::Multiply => BinaryOperator::Multiply,
-            TokenKind::Divide => BinaryOperator::Divide,
-            TokenKind::Power => BinaryOperator::Power,
+            TokenKind::Star => BinaryOperator::Multiply,
+            TokenKind::Slash => BinaryOperator::Divide,
+            TokenKind::Caret => BinaryOperator::Power,
             TokenKind::Range => BinaryOperator::Range,
             TokenKind::Modulo => BinaryOperator::Modulo,
 
-            TokenKind::And => BinaryOperator::And,
-            TokenKind::Or => BinaryOperator::Or,
+            TokenKind::AmpersandAmpersand => BinaryOperator::And,
+            TokenKind::PipePipe => BinaryOperator::Or,
             TokenKind::Xor => BinaryOperator::Xor,
 
-            TokenKind::BitAnd => BinaryOperator::BitAnd,
-            TokenKind::BitOr => BinaryOperator::BitOr,
+            TokenKind::Ampersand => BinaryOperator::BitAnd,
+            TokenKind::Pipe => BinaryOperator::BitOr,
             TokenKind::BitXor => BinaryOperator::BitXor,
 
             TokenKind::BitLeftShift => BinaryOperator::BitLeftShift,

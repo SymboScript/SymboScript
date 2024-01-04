@@ -111,20 +111,26 @@ impl<'a> Lexer<'a> {
                         &[TokenKind::MinusAssign, TokenKind::MinusMinus],
                     )
                 }
-                '*' => {
-                    return self.read_one_more('=', TokenKind::MultiplyAssign, TokenKind::Multiply)
-                }
-                '/' => return self.read_one_more('=', TokenKind::DivideAssign, TokenKind::Divide),
-                '^' => return self.read_one_more('=', TokenKind::PowerAssign, TokenKind::Power),
+                '*' => return self.read_one_more('=', TokenKind::MultiplyAssign, TokenKind::Star),
+                '/' => return self.read_one_more('=', TokenKind::DivideAssign, TokenKind::Slash),
+                '^' => return self.read_one_more('=', TokenKind::PowerAssign, TokenKind::Caret),
                 '%' => return self.read_one_more('=', TokenKind::ModuloAssign, TokenKind::Modulo),
 
-                '&' => return self.read_one_more('&', TokenKind::And, TokenKind::BitAnd),
-                '|' => return self.read_one_more('|', TokenKind::Or, TokenKind::BitOr),
-                '~' => return TokenKind::BitNot,
+                '&' => {
+                    return self.read_one_more(
+                        '&',
+                        TokenKind::AmpersandAmpersand,
+                        TokenKind::Ampersand,
+                    )
+                }
+                '|' => return self.read_one_more('|', TokenKind::PipePipe, TokenKind::Pipe),
+                '~' => return TokenKind::Tilde,
                 '?' => return TokenKind::Question,
 
                 '=' => return self.read_one_more('=', TokenKind::Equal, TokenKind::Assign),
-                '!' => return self.read_one_more('=', TokenKind::NotEqual, TokenKind::Not),
+                '!' => {
+                    return self.read_one_more('=', TokenKind::NotEqual, TokenKind::ExclamationMark)
+                }
                 '<' => {
                     return self.read_one_more_variants(
                         TokenKind::Less,
@@ -142,10 +148,10 @@ impl<'a> Lexer<'a> {
 
                 '(' => return TokenKind::LParen,
                 ')' => return TokenKind::RParen,
-                '{' => return TokenKind::LBrace,
-                '}' => return TokenKind::RBrace,
-                '[' => return TokenKind::LBracket,
-                ']' => return TokenKind::RBracket,
+                '{' => return TokenKind::LAngle,
+                '}' => return TokenKind::RAngle,
+                '[' => return TokenKind::LSquare,
+                ']' => return TokenKind::RSquare,
 
                 'a'..='z' | 'A'..='Z' | '_' => return self.read_identifier(),
 
@@ -201,17 +207,17 @@ impl<'a> Lexer<'a> {
             "block" => TokenKind::Block,
 
             // ---Keyword2Operator---
-            "band" => TokenKind::BitAnd,
+            "band" => TokenKind::Ampersand,
             "bxor" => TokenKind::BitXor,
-            "bor" => TokenKind::BitOr,
-            "bnot" => TokenKind::BitNot,
+            "bor" => TokenKind::Pipe,
+            "bnot" => TokenKind::Tilde,
             "bshl" => TokenKind::BitLeftShift,
             "bshr" => TokenKind::BitRightShift,
 
             "xor" => TokenKind::Xor,
-            "and" => TokenKind::And,
-            "or" => TokenKind::Or,
-            "not" => TokenKind::Not,
+            "and" => TokenKind::AmpersandAmpersand,
+            "or" => TokenKind::PipePipe,
+            "not" => TokenKind::ExclamationMark,
             //---Keyword2Operator---
 
             //

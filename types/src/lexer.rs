@@ -53,16 +53,16 @@ pub enum TokenKind {
     // Operators
     Plus,
     Minus,
-    Multiply,
-    Divide,
-    Power,
+    Star,
+    Slash,
+    Caret,
     Range,
     Modulo,
 
     // Bitwise operators (Keyword2Operator)
-    BitAnd,
-    BitOr,
-    BitNot,
+    Ampersand,
+    Pipe,
+    Tilde,
     BitXor,
     BitLeftShift,
     BitRightShift,
@@ -75,12 +75,12 @@ pub enum TokenKind {
     Question,
 
     // Logic operators (Keyword2Operator)
-    And,
-    Or,
+    AmpersandAmpersand,
+    PipePipe,
     Xor,
 
     // Unary logic operators
-    Not,
+    ExclamationMark,
 
     /// Assignments operators (+=, -=, *=, /=...)
     Assign,
@@ -101,12 +101,12 @@ pub enum TokenKind {
     GreaterEqual,
 
     // Brackets
-    LParen,   // (
-    RParen,   // )
-    LBrace,   // {
-    RBrace,   // }
-    LBracket, // [
-    RBracket, // ]
+    LParen,  // (
+    RParen,  // )
+    LAngle,  // {
+    RAngle,  // }
+    LSquare, // [
+    RSquare, // ]
 
     // Identifiers
     Identifier,
@@ -173,15 +173,15 @@ impl fmt::Display for TokenKind {
 
             TokenKind::Plus => write!(f, "+"),
             TokenKind::Minus => write!(f, "-"),
-            TokenKind::Multiply => write!(f, "*"),
-            TokenKind::Divide => write!(f, "/"),
-            TokenKind::Power => write!(f, "^"),
+            TokenKind::Star => write!(f, "*"),
+            TokenKind::Slash => write!(f, "/"),
+            TokenKind::Caret => write!(f, "^"),
             TokenKind::Range => write!(f, ".."),
             TokenKind::Modulo => write!(f, "%"),
 
-            TokenKind::BitAnd => write!(f, "&"),
-            TokenKind::BitOr => write!(f, "|"),
-            TokenKind::BitNot => write!(f, "~"),
+            TokenKind::Ampersand => write!(f, "&"),
+            TokenKind::Pipe => write!(f, "|"),
+            TokenKind::Tilde => write!(f, "~"),
             TokenKind::BitXor => write!(f, "^"),
             TokenKind::BitLeftShift => write!(f, "<<"),
             TokenKind::BitRightShift => write!(f, ">>"),
@@ -190,10 +190,10 @@ impl fmt::Display for TokenKind {
             TokenKind::MinusMinus => write!(f, "--"),
             TokenKind::Question => write!(f, "?"),
 
-            TokenKind::And => write!(f, "&&"),
-            TokenKind::Or => write!(f, "||"),
+            TokenKind::AmpersandAmpersand => write!(f, "&&"),
+            TokenKind::PipePipe => write!(f, "||"),
             TokenKind::Xor => write!(f, "xor"),
-            TokenKind::Not => write!(f, "!"),
+            TokenKind::ExclamationMark => write!(f, "!"),
 
             TokenKind::Assign => write!(f, "="),
             TokenKind::FormulaAssign => write!(f, ":="),
@@ -213,10 +213,10 @@ impl fmt::Display for TokenKind {
 
             TokenKind::LParen => write!(f, "("),
             TokenKind::RParen => write!(f, ")"),
-            TokenKind::LBrace => write!(f, "{{"),
-            TokenKind::RBrace => write!(f, "}}"),
-            TokenKind::LBracket => write!(f, "["),
-            TokenKind::RBracket => write!(f, "]"),
+            TokenKind::LAngle => write!(f, "{{"),
+            TokenKind::RAngle => write!(f, "}}"),
+            TokenKind::LSquare => write!(f, "["),
+            TokenKind::RSquare => write!(f, "]"),
 
             TokenKind::Identifier => write!(f, "Identifier"),
 

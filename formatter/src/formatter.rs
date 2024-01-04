@@ -32,11 +32,11 @@ impl<'a> Formatter<'a> {
         loop {
             match self.cur_kind() {
                 TokenKind::Eof => break,
-                TokenKind::LBrace | TokenKind::LBracket => {
+                TokenKind::LAngle | TokenKind::LSquare => {
                     self.indent();
                     self.write("\n");
                 }
-                TokenKind::RBrace | TokenKind::RBracket => {
+                TokenKind::RAngle | TokenKind::RSquare => {
                     self.dedent();
                     self.write("\n");
                 }
