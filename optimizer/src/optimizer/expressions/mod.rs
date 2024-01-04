@@ -25,13 +25,13 @@ pub fn optim_binary_expression(binary_expression: &BinaryExpression) -> Expressi
     match (left.clone(), right.clone()) {
         (Expression::Literal(left), Expression::Literal(right)) => {
             match binary_expression.operator {
-                BinaryOperator::Plus => {
+                BinaryOperator::Add => {
                     return Expression::Literal(Literal {
                         node: binary_expression.node.clone(),
                         value: left.value + right.value,
                     })
                 }
-                BinaryOperator::Minus => {
+                BinaryOperator::Substract => {
                     return Expression::Literal(Literal {
                         node: binary_expression.node.clone(),
                         value: left.value - right.value,
@@ -92,7 +92,7 @@ fn unflat_plus_binary_expression(flat: &Vec<Expression>) -> BinaryExpression {
     let mut node = BinaryExpression {
         right: flat.pop().unwrap(),
         left: flat.pop().unwrap(),
-        operator: BinaryOperator::Plus,
+        operator: BinaryOperator::Add,
         node: Node::new(0, 0),
     };
 
@@ -102,7 +102,7 @@ fn unflat_plus_binary_expression(flat: &Vec<Expression>) -> BinaryExpression {
         node = BinaryExpression {
             right: expression.clone(),
             left: Expression::BinaryExpression(Box::new(node)),
-            operator: BinaryOperator::Plus,
+            operator: BinaryOperator::Add,
             node: Node::new(0, 0),
         }
     }
@@ -118,7 +118,7 @@ fn flatten_plus_binary_expression(binary_expression: &BinaryExpression) -> Vec<E
 
     // println!("A: {} {} {}", left, op, right);
 
-    if op == BinaryOperator::Plus {
+    if op == BinaryOperator::Add {
         match (left.clone(), right.clone()) {
             (Expression::BinaryExpression(left), Expression::BinaryExpression(right)) => {
                 let mut vec = vec![];

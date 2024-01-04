@@ -228,8 +228,8 @@ pub enum WordOperator {
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
 pub enum BinaryOperator {
     // Binary
-    Plus,
-    Minus,
+    Add,
+    Substract,
     Multiply,
     Divide,
     Power,
@@ -538,8 +538,8 @@ impl fmt::Display for WordOperator {
 impl fmt::Display for BinaryOperator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            BinaryOperator::Plus => write!(f, "+"),
-            BinaryOperator::Minus => write!(f, "-"),
+            BinaryOperator::Add => write!(f, "+"),
+            BinaryOperator::Substract => write!(f, "-"),
             BinaryOperator::Multiply => write!(f, "*"),
             BinaryOperator::Divide => write!(f, "/"),
             BinaryOperator::Power => write!(f, "^"),

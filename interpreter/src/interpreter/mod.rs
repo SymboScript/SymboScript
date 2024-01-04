@@ -126,8 +126,8 @@ impl<'a> Interpreter<'a> {
         let right = self.eval_expression(&expression.right);
 
         match expression.operator {
-            BinaryOperator::Plus => left + right,
-            BinaryOperator::Minus => left - right,
+            BinaryOperator::Add => left + right,
+            BinaryOperator::Substract => left - right,
             BinaryOperator::Multiply => left * right,
             BinaryOperator::Divide => left / right,
             BinaryOperator::Power => self.pow(left, right),

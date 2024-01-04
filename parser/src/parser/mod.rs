@@ -835,8 +835,8 @@ impl<'a> Parser<'a> {
 
     fn kind_to_bin_op(&mut self, kind: TokenKind) -> BinaryOperator {
         match kind {
-            TokenKind::Plus => BinaryOperator::Plus,
-            TokenKind::Minus => BinaryOperator::Minus,
+            TokenKind::Plus => BinaryOperator::Add,
+            TokenKind::Minus => BinaryOperator::Substract,
             TokenKind::Multiply => BinaryOperator::Multiply,
             TokenKind::Divide => BinaryOperator::Divide,
             TokenKind::Power => BinaryOperator::Power,
