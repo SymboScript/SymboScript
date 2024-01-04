@@ -16,3 +16,9 @@ pub fn run_function(
 
     Value::None
 }
+
+pub fn inject(interpreter: &mut Interpreter) {
+    interpreter.declare_named_scope("io");
+    io::inject(interpreter.get_curr_scope_values());
+    interpreter.exit_named_scope();
+}

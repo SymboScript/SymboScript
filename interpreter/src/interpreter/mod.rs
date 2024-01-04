@@ -260,22 +260,13 @@ impl<'a> Interpreter<'a> {
     /// Gets the value of a variable from the current scope to the global scope if it doesn't exist in the current scope
     fn get_variable_value(&mut self, identifier: &Identifier) -> Value {
         let id = identifier.name.clone();
-        let (scope_name, num) = self.parse_current_scope();
 
         for scope in self.scope_stack.iter().rev() {
             let var = self.vault.get(scope).unwrap().values.get(&id);
 
             match var {
                 Some(var) => return var.clone(),
-                None => {
-                    for named_scope in self.get_curr_scope_refs().into_iter().rev() {
-                        let expected_scope = format!("{scope_name}${num}.{id}$0");
-
-                        if &expected_scope == named_scope {
-                            return Value::ScopeRef(named_scope.clone());
-                        }
-                    }
-                }
+                None => {}
             }
         }
 
@@ -313,21 +304,25 @@ impl<'a> Interpreter<'a> {
     }
 
     fn initialize(&mut self) {
+        // Add std library
+        self.vault.insert("std$0".to_owned(), ScopeValue::new());
+        self.scope_stack.push("std$0".to_owned());
+        self.update_current_scope();
+        self.add_std_lib();
+
+        // Initialize global
         self.vault.insert("global$0".to_owned(), ScopeValue::new());
         self.scope_stack.push("global$0".to_owned());
         self.update_current_scope();
 
-        native::io::inject(self.get_curr_scope_values()); // Inject io to global too
+        //Include std ref to global
+        self.send_scope_ref("std$0");
 
-        self.declare_named_scope("std");
-        self.add_native_functions();
-        self.exit_named_scope();
+        native::io::inject(self.get_curr_scope_values()); // Inject io to global too
     }
 
-    fn add_native_functions(&mut self) {
-        self.declare_named_scope("io");
-        native::io::inject(self.get_curr_scope_values());
-        self.exit_named_scope();
+    fn add_std_lib(&mut self) {
+        native::inject(self);
     }
 
     /// Initializes a new named scope
@@ -340,8 +335,6 @@ impl<'a> Interpreter<'a> {
     }
 
     fn enter_named_scope(&mut self, name: &str) {
-        // println!("entering scope {}", name);
-        // println!("vault: {:#?}", self.vault);
         self.scope_stack.push(name.to_owned());
         self.update_current_scope();
     }
@@ -358,7 +351,20 @@ impl<'a> Interpreter<'a> {
 
     /// Adds a reference to the current scope
     fn send_scope_ref(&mut self, name: &str) {
+        let local_name = self.parse_local_name(name);
+        self.get_curr_scope_values()
+            .insert(local_name, Value::ScopeRef(name.to_owned()));
         self.get_curr_scope_refs_mut().push(name.to_owned());
+    }
+
+    fn parse_local_name(&self, name: &str) -> String {
+        name.rsplit_once(".")
+            .unwrap_or(("", name))
+            .1
+            .rsplit_once("$")
+            .unwrap()
+            .0
+            .to_owned()
     }
 
     /// Increments the current scope
@@ -428,13 +434,13 @@ impl<'a> Interpreter<'a> {
     }
 
     /// Gets the current named scopes in the current scope
-    fn get_curr_scope_refs(&self) -> &Vec<String> {
-        &self
-            .vault
-            .get(self.current_scope.as_str())
-            .unwrap()
-            .named_scope_refs
-    }
+    // fn get_curr_scope_refs(&self) -> &Vec<String> {
+    //     &self
+    //         .vault
+    //         .get(self.current_scope.as_str())
+    //         .unwrap()
+    //         .named_scope_refs
+    // }
 
     /// Updates the current scope
     fn update_current_scope(&mut self) {

@@ -8,6 +8,6 @@ scope a {
 }
 
 
-std.io.println["a.b =", a.b];
-std.io.println["a.d =", a.d];
-std.io.println["a.c.d =", a.c.d];
+io.println["a.b =", a.b];
+io.println["a.d =", a.d];
+io.println["a.c.d =", a.c.d];
