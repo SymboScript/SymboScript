@@ -1,6 +1,6 @@
 [package]
 name = "symboscript-interpreter"
-version = "0.8.1"
+version = "0.9.0"
 edition = "2021"
 authors = ["artegoser"]
 license = "MIT"
@@ -21,3 +21,11 @@ symboscript-optimizer = { path = "../optimizer", version = "0.7.7" }
 
 clap = { version = "4.4.12", features = ["derive"] }
 colored = "2.1.0"
+
+[[bin]]
+name = "symboscript"
+path = "src/main.rs"
+
+[[bin]]
+name = "symboscript-interpreter"
+path = "src/main.rs"

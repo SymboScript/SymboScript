@@ -24,14 +24,23 @@ SymboScript is a a language without limits.
 
 Take JavaScript, Rust, and WolframLanguage and make a great language out of them without any restrictions.
 
+## Hello, World!
+
+Check the interpreter crate - [Interpreter](./interpreter/readme.md)
+Check the examples - [Examples](./examples/)
+
+```syms
+println["Hello, World!"];
+```
+
 ## Roadmap (MVP)
 
 - [ ] [Documentation](https://symboscript.github.io/Book/) (started)
 - [x] [Lexer](./lexer/readme.md) (started)
 - [x] [Parser](./parser/readme.md) (started)
-- [ ] [Optimizer](./optimizer/readme.md) (started)
-- [ ] Interpreter
+- [ ] [Optimizer](./optimizer/readme.md) (started, not really)
+- [ ] [Interpreter](./interpreter/readme.md) (started)
 - [ ] REPL
 - [ ] Analyzer
-- [ ] Format
+- [ ] [Format](./formatter/readme.md) (started, not really)
 - [ ] Package manager
