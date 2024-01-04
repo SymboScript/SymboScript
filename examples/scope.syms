@@ -1,8 +1,13 @@
+
 scope a {
   let b = 1;
   scope c {
     let d = 2;
   }
+  let d = c.d + 2;
 }
 
-a;
+
+std.io.println["a.b =", a.b];
+std.io.println["a.d =", a.d];
+std.io.println["a.c.d =", a.c.d];

@@ -678,7 +678,7 @@ impl<'a> Parser<'a> {
                                         format!("{}", token.value),
                                         node,
                                     ),
-                                    true,
+                                    false,
                                 );
                             }
                             _ => {}
@@ -697,7 +697,7 @@ impl<'a> Parser<'a> {
 
                         return (
                             self.call_expression(token.start, format!("{}", token.value), node),
-                            true,
+                            false,
                         );
                     }
                     _ => {

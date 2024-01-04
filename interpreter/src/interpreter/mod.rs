@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use symboscript_types::{interpreter::*, lexer::*, parser::*};
 use symboscript_utils::report_error;
 
+mod native;
+
 pub struct Interpreter<'a> {
     /// Path of the source file
     path: &'a str,
@@ -52,8 +54,7 @@ impl<'a> Interpreter<'a> {
     fn eval_statement(&mut self, statement: &Statement) {
         match statement {
             Statement::ExpressionStatement(expr) => {
-                let val = self.eval_expression(&expr);
-                println!("expr: {:?}", val);
+                self.eval_expression(&expr);
             }
             Statement::ReturnStatement(_) => todo!(),
             Statement::ThrowStatement(_) => todo!(),
@@ -67,13 +68,11 @@ impl<'a> Interpreter<'a> {
                     self.eval_expression(&decl.init)
                 };
 
-                println!("decl: {} = {:?}", decl.id, value);
-
                 self.set_variable_force(&decl.id, value);
             }
             Statement::FunctionDeclaration(_) => todo!(),
             Statement::ScopeDeclaration(decl) => {
-                self.enter_named_scope(&decl.id);
+                self.declare_named_scope(&decl.id);
                 self.eval_program_body(&decl.body);
                 self.exit_named_scope();
             }
@@ -95,8 +94,8 @@ impl<'a> Interpreter<'a> {
             Expression::BinaryExpression(binary_expr) => self.eval_binary_expression(binary_expr),
             Expression::UnaryExpression(unary_expr) => self.eval_unary_expression(unary_expr),
             Expression::ConditionalExpression(_) => todo!(),
-            Expression::CallExpression(_) => todo!(),
-            Expression::MemberExpression(_) => todo!(),
+            Expression::CallExpression(call_expr) => self.eval_call_expression(call_expr, false),
+            Expression::MemberExpression(member_expr) => self.eval_member_expression(member_expr),
             Expression::SequenceExpression(_) => todo!(),
             Expression::WordExpression(_) => todo!(),
 
@@ -105,6 +104,88 @@ impl<'a> Interpreter<'a> {
             Expression::Identifier(id) => self.get_variable_value(id),
 
             Expression::None(_) => Value::None,
+        }
+    }
+
+    fn eval_member_expression(&mut self, member_expr: &MemberExpression) -> Value {
+        let object = self.eval_expression(&member_expr.object);
+
+        let object: Identifier = match object {
+            Value::ScopeRef(ref_name) => Identifier {
+                name: ref_name.clone(),
+                node: member_expr.node.clone(),
+            },
+            Value::Sequence(_) => todo!(),
+            _ => {
+                self.report(
+                    &format!("is not a scope"),
+                    member_expr.node.start,
+                    member_expr.node.end,
+                );
+                unreachable!("Report ends proccess");
+            }
+        };
+
+        self.enter_named_scope(&object.name);
+
+        let left = match &member_expr.property {
+            Expression::Identifier(id) => {
+                if member_expr.is_expr {
+                    self.eval_expression(&member_expr.property)
+                } else {
+                    self.get_variable_value(id)
+                }
+            }
+            Expression::CallExpression(call_expr) => self.eval_call_expression(call_expr, true),
+            _ => self.eval_expression(&member_expr.property),
+        };
+
+        self.exit_named_scope();
+
+        left
+    }
+
+    fn eval_call_expression(&mut self, call_expr: &CallExpression, member: bool) -> Value {
+        let var = self.get_variable_value(&Identifier {
+            name: call_expr.callee.clone(),
+            node: call_expr.node.clone(),
+        });
+
+        let args = match &call_expr.arguments {
+            Expression::SequenceExpression(seq_exp) => seq_exp,
+            _ => unreachable!("Arguments can only be sequence expressions"),
+        };
+
+        let exited;
+
+        if member {
+            exited = self.exit_named_scope();
+        } else {
+            exited = String::new();
+        }
+
+        let args = args
+            .expressions
+            .iter()
+            .map(|expr| self.eval_expression(expr))
+            .collect::<Vec<Value>>();
+
+        if member {
+            self.enter_named_scope(&exited);
+        }
+
+        match var {
+            Value::NativeFunction(name) => native::run_function(self, &name, args),
+            Value::Function(_) => todo!(),
+
+            _ => {
+                self.report(
+                    &format!("`{}` is not a function", call_expr.callee),
+                    call_expr.node.start,
+                    call_expr.node.end,
+                );
+                unreachable!("Report ends proccess")
+            }
         }
     }
 
@@ -185,23 +266,13 @@ impl<'a> Interpreter<'a> {
             let var = self.vault.get(scope).unwrap().values.get(&id);
 
             match var {
-                Some(var) => match var {
-                    ScopeValues::Variable(val) => return val.clone(),
-                    _ => {
-                        self.report(
-                            &format!("`{id}` is not a variable"),
-                            identifier.node.start,
-                            identifier.node.end,
-                        );
-                    }
-                },
+                Some(var) => return var.clone(),
                 None => {
-                    for named_scope in self.get_curr_scope_refs() {
-                        match self.vault.get(&format!("{scope_name}.${num}.{id}.$0")) {
-                            Some(_) => {
-                                return Value::ScopeRef(named_scope.clone());
-                            }
-                            None => continue,
+                    for named_scope in self.get_curr_scope_refs().into_iter().rev() {
+                        let expected_scope = format!("{scope_name}${num}.{id}$0");
+
+                        if &expected_scope == named_scope {
+                            return Value::ScopeRef(named_scope.clone());
                         }
                     }
                 }
@@ -218,7 +289,7 @@ impl<'a> Interpreter<'a> {
 
     fn set_variable_force(&mut self, identifier: &String, value: Value) {
         self.get_curr_scope_values()
-            .insert(identifier.clone(), ScopeValues::Variable(value));
+            .insert(identifier.clone(), value);
     }
 
     fn pow(&mut self, left: Value, right: Value) -> Value {
@@ -242,45 +313,47 @@ impl<'a> Interpreter<'a> {
     }
 
     fn initialize(&mut self) {
-        self.vault.insert("std.$0".to_owned(), ScopeValue::new());
-        self.scope_stack.push("std.$0".to_owned());
+        self.vault.insert("global$0".to_owned(), ScopeValue::new());
+        self.scope_stack.push("global$0".to_owned());
         self.update_current_scope();
-        self.add_native_functions();
 
-        self.vault.insert("global.$0".to_owned(), ScopeValue::new());
-        self.scope_stack.push("global.$0".to_owned());
-        self.update_current_scope();
+        native::io::inject(self.get_curr_scope_values()); // Inject io to global too
+
+        self.declare_named_scope("std");
+        self.add_native_functions();
+        self.exit_named_scope();
     }
 
     fn add_native_functions(&mut self) {
-        let scope = self.get_curr_scope_values();
-
-        scope.insert(
-            "print".to_owned(),
-            ScopeValues::NativeFunction(NativeFunction::Print),
-        );
-
-        scope.insert(
-            "println".to_owned(),
-            ScopeValues::NativeFunction(NativeFunction::Println),
-        );
+        self.declare_named_scope("io");
+        native::io::inject(self.get_curr_scope_values());
+        self.exit_named_scope();
     }
 
     /// Initializes a new named scope
-    fn enter_named_scope(&mut self, name: &str) {
-        let new_scope = format!("{}.{}.$0", self.current_scope, name);
+    fn declare_named_scope(&mut self, name: &str) {
+        let new_scope = format!("{}.{}$0", self.current_scope, name);
 
         self.send_scope_ref(&new_scope);
 
         self.init_scope(new_scope);
     }
 
+    fn enter_named_scope(&mut self, name: &str) {
+        // println!("entering scope {}", name);
+        // println!("vault: {:#?}", self.vault);
+        self.scope_stack.push(name.to_owned());
+        self.update_current_scope();
+    }
+
     /// Exits the current named scope
-    fn exit_named_scope(&mut self) {
+    fn exit_named_scope(&mut self) -> String {
         // named scopes not clears when exiting
         // named scopes cleared only when decrementing scope
-        self.scope_stack.pop();
+        let deleted = self.scope_stack.pop().unwrap();
         self.update_current_scope();
+
+        deleted
     }
 
     /// Adds a reference to the current scope
@@ -292,7 +365,7 @@ impl<'a> Interpreter<'a> {
     fn increment_scope(&mut self) {
         let (scope_name, num) = self.parse_current_scope();
 
-        let new_scope = format!("{}.${}", scope_name, num + 1);
+        let new_scope = format!("{}${}", scope_name, num + 1);
 
         self.init_scope(new_scope);
     }
@@ -301,14 +374,20 @@ impl<'a> Interpreter<'a> {
     fn decrement_scope(&mut self) {
         let scope = self.current_scope.clone();
 
-        for ref_name in self.get_curr_scope_refs().clone() {
-            self.vault.remove(&ref_name);
-        }
+        self.remove_refs(&scope);
 
         self.vault.remove(&scope);
         self.scope_stack.pop();
 
         self.update_current_scope();
+    }
+
+    /// Removes all references and subreferences in scope
+    fn remove_refs(&mut self, scope_name: &str) {
+        for ref_name in self.get_scope_refs_mut(scope_name).clone() {
+            self.remove_refs(&ref_name);
+            self.vault.remove(&ref_name);
+        }
     }
 
     /// Initializes the current scope
@@ -320,19 +399,23 @@ impl<'a> Interpreter<'a> {
 
     /// Parses the current scope name and number
     fn parse_current_scope(&mut self) -> (String, usize) {
-        let (scope_name, num) = self.current_scope.rsplit_once(".$").unwrap();
+        let (scope_name, num) = self.current_scope.rsplit_once("$").unwrap();
         let num = num.parse::<usize>().unwrap();
 
         (scope_name.to_owned(), num)
     }
 
     /// Gets the current scope values
-    fn get_curr_scope_values(&mut self) -> &mut HashMap<String, ScopeValues> {
+    fn get_curr_scope_values(&mut self) -> &mut HashMap<String, Value> {
         &mut self
             .vault
             .get_mut(self.current_scope.as_str())
             .unwrap()
             .values
+    }
+
+    fn get_scope_refs_mut(&mut self, scope_name: &str) -> &mut Vec<String> {
+        &mut self.vault.get_mut(scope_name).unwrap().named_scope_refs
     }
 
     /// Gets the current named scopes in the current scope (mutable)

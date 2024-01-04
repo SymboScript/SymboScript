@@ -68,7 +68,7 @@ impl<'a> Lexer<'a> {
             }
 
             TokenKind::Str => {
-                value = TokenValue::Str(s[1..s.len() - 1].to_string());
+                value = TokenValue::Str(s[1..s.len() - 1].to_string().replace("\\n", "\n"));
             }
 
             TokenKind::DocComment => value = TokenValue::Str(s),

@@ -3,6 +3,7 @@ use std::{collections::HashMap, ops};
 
 pub type Vault = HashMap<String, ScopeValue>;
 
+pub type Scope = HashMap<String, Value>;
 #[derive(Clone, Debug)]
 pub enum Value {
     None,
@@ -13,32 +14,24 @@ pub enum Value {
 
     Ast(Expression),
     ScopeRef(String),
+
+    NativeFunction(NativeFunction),
+    Function(FunctionDeclarator),
 }
 
 #[derive(Clone, Debug)]
 pub struct ScopeValue {
-    pub values: HashMap<String, ScopeValues>,
+    pub values: Scope,
     pub named_scope_refs: Vec<String>,
 }
 
 impl ScopeValue {
-    pub fn new() -> ScopeValue {
-        ScopeValue {
+    pub fn new() -> Self {
+        Self {
             values: HashMap::new(),
-            named_scope_refs: Vec::new(),
+            named_scope_refs: vec![],
         }
     }
-}
-
-#[derive(Clone, Debug)]
-pub enum ScopeValues {
-    Variable(Value),
-    FormulaVariable(Expression),
-
-    Function(FunctionDeclarator),
-    NativeFunction(NativeFunction),
-
-    ScopeRef(String),
 }
 
 #[derive(Clone, Debug)]

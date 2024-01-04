@@ -1,21 +1,20 @@
 let a = 2^-1;
 let b = 10;
 
-2+b+a; #2+10+0.5 = 12.5 
+println["2 + b + a =", 2 + b + a];
+println["!true =", !true];
+println["!false =", !false];
+println['"2" + 2 =', "2" + 2];
+println["!!true =", !!true];
+println["!!false =", !!false];
 
-!true; # false
-!false; # true
+println["\nWe also can use words:"];
+println["not false =", not false];
 
-"2"+2; # "22"
-
-!!true; # true
-!!false; # false
+println[];
 
 scope obj {
   let a = 1;
 }
 
-obj; # ScopeRef: global.obj.$0
-
-# Then we can use it
-# obj.a; # 1
+println["Obj:", obj];
