@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, os::windows::process};
 
 use symboscript_types::{interpreter::*, lexer::*, parser::*};
 use symboscript_utils::report_error;
@@ -46,6 +46,8 @@ impl<'a> Interpreter<'a> {
     fn eval_program_body(&mut self, body: &BlockStatement) {
         for statement in body {
             self.eval_statement(&statement);
+            println!("\n\n\nvault: {:#?}", self.vault);
+            println!("{:?}\n\n\n", self.scope_stack);
         }
     }
 
@@ -182,29 +184,14 @@ impl<'a> Interpreter<'a> {
         let (scope_name, num) = self.parse_current_scope();
 
         for scope in self.scope_stack.iter().rev() {
-            let var = self.vault.get(scope).unwrap().values.get(&id);
+            let var = self.vault.get(scope).unwrap().get(&id);
 
             match var {
                 Some(var) => match var {
                     ScopeValues::Variable(val) => return val.clone(),
-                    _ => {
-                        self.report(
-                            &format!("`{id}` is not a variable"),
-                            identifier.node.start,
-                            identifier.node.end,
-                        );
-                    }
+                    _ => {}
                 },
-                None => {
-                    for named_scope in self.get_curr_scope_refs() {
-                        match self.vault.get(&format!("{scope_name}.${num}.{id}.$0")) {
-                            Some(_) => {
-                                return Value::ScopeRef(named_scope.clone());
-                            }
-                            None => continue,
-                        }
-                    }
-                }
+                None => {}
             }
         }
 
@@ -217,7 +204,7 @@ impl<'a> Interpreter<'a> {
     }
 
     fn set_variable_force(&mut self, identifier: &String, value: Value) {
-        self.get_curr_scope_values()
+        self.get_curr_scope()
             .insert(identifier.clone(), ScopeValues::Variable(value));
     }
 
@@ -242,18 +229,18 @@ impl<'a> Interpreter<'a> {
     }
 
     fn initialize(&mut self) {
-        self.vault.insert("std.$0".to_owned(), ScopeValue::new());
-        self.scope_stack.push("std.$0".to_owned());
+        self.vault.insert("std$0".to_owned(), ScopeValue::new());
+        self.scope_stack.push("std$0".to_owned());
         self.update_current_scope();
         self.add_native_functions();
 
-        self.vault.insert("global.$0".to_owned(), ScopeValue::new());
-        self.scope_stack.push("global.$0".to_owned());
+        self.vault.insert("global$0".to_owned(), ScopeValue::new());
+        self.scope_stack.push("global$0".to_owned());
         self.update_current_scope();
     }
 
     fn add_native_functions(&mut self) {
-        let scope = self.get_curr_scope_values();
+        let scope = self.get_curr_scope();
 
         scope.insert(
             "print".to_owned(),
@@ -268,11 +255,13 @@ impl<'a> Interpreter<'a> {
 
     /// Initializes a new named scope
     fn enter_named_scope(&mut self, name: &str) {
-        let new_scope = format!("{}.{}.$0", self.current_scope, name);
+        // let (scope_name, _num) = self.parse_current_scope();
 
-        self.send_scope_ref(&new_scope);
-
-        self.init_scope(new_scope);
+        let new_scope = format!("{}.{}$0", self.current_scope, name);
+        self.scope_stack.push(new_scope.clone());
+        // self.update_current_scope();
+        self.get_curr_scope()
+            .insert(name.to_owned(), ScopeValues::Scope(ScopeValue::new()));
     }
 
     /// Exits the current named scope
@@ -283,27 +272,18 @@ impl<'a> Interpreter<'a> {
         self.update_current_scope();
     }
 
-    /// Adds a reference to the current scope
-    fn send_scope_ref(&mut self, name: &str) {
-        self.get_curr_scope_refs_mut().push(name.to_owned());
-    }
-
     /// Increments the current scope
     fn increment_scope(&mut self) {
         let (scope_name, num) = self.parse_current_scope();
 
-        let new_scope = format!("{}.${}", scope_name, num + 1);
+        let new_scope = format!("{}${}", scope_name, num + 1);
 
-        self.init_scope(new_scope);
+        self.init_root_scope(new_scope);
     }
 
     /// Decrements the current scope and deletes named scopes in the current scope
     fn decrement_scope(&mut self) {
         let scope = self.current_scope.clone();
-
-        for ref_name in self.get_curr_scope_refs().clone() {
-            self.vault.remove(&ref_name);
-        }
 
         self.vault.remove(&scope);
         self.scope_stack.pop();
@@ -312,7 +292,7 @@ impl<'a> Interpreter<'a> {
     }
 
     /// Initializes the current scope
-    fn init_scope(&mut self, scope_name: String) {
+    fn init_root_scope(&mut self, scope_name: String) {
         self.vault.insert(scope_name.clone(), ScopeValue::new());
         self.scope_stack.push(scope_name);
         self.update_current_scope();
@@ -320,37 +300,41 @@ impl<'a> Interpreter<'a> {
 
     /// Parses the current scope name and number
     fn parse_current_scope(&mut self) -> (String, usize) {
-        let (scope_name, num) = self.current_scope.rsplit_once(".$").unwrap();
+        self.parse_scope_name(&self.current_scope)
+    }
+
+    fn parse_scope_name(&self, scope_name: &str) -> (String, usize) {
+        let (scope_name, num) = scope_name.rsplit_once("$").unwrap();
         let num = num.parse::<usize>().unwrap();
 
         (scope_name.to_owned(), num)
     }
 
     /// Gets the current scope values
-    fn get_curr_scope_values(&mut self) -> &mut HashMap<String, ScopeValues> {
-        &mut self
-            .vault
-            .get_mut(self.current_scope.as_str())
-            .unwrap()
-            .values
-    }
+    fn get_curr_scope(&mut self) -> &mut HashMap<String, ScopeValues> {
+        let current_scopes: Vec<&str> = self.current_scope.split(".").collect();
+        let value = self.vault.get_mut(current_scopes[0]).unwrap();
 
-    /// Gets the current named scopes in the current scope (mutable)
-    fn get_curr_scope_refs_mut(&mut self) -> &mut Vec<String> {
-        &mut self
-            .vault
-            .get_mut(self.current_scope.as_str())
-            .unwrap()
-            .named_scope_refs
-    }
+        for scope in &current_scopes[1..] {
+            {
+                let val = value.entry((*scope).to_string());
 
-    /// Gets the current named scopes in the current scope
-    fn get_curr_scope_refs(&self) -> &Vec<String> {
-        &self
-            .vault
-            .get(self.current_scope.as_str())
-            .unwrap()
-            .named_scope_refs
+                match val {
+                    std::collections::hash_map::Entry::Occupied(mut v) => match v.get_mut() {
+                        ScopeValues::Scope(v) => val = v,
+                        _ => {
+                            eprintln!("It's not a scope: {}", scope)
+                        }
+                    },
+                    std::collections::hash_map::Entry::Vacant(_) => {
+                        eprintln!("Scope not found: {}", scope);
+                        std::process::exit(1);
+                    }
+                }
+            }
+        }
+
+        value
     }
 
     /// Updates the current scope
@@ -359,11 +343,7 @@ impl<'a> Interpreter<'a> {
     }
 
     /// Reports an interpreter error
-    fn report(&self, error: &str, start: usize, end: usize) {
+    fn report(&mut self, error: &str, start: usize, end: usize) {
         report_error(self.path, self.source, error, start, end);
     }
-
-    // fn report_str(&self, error: &str) {
-    //     eprintln!("{}", error);
-    // }
 }

@@ -12,32 +12,38 @@ pub enum Value {
     Sequence(Vec<Value>),
 
     Ast(Expression),
-    ScopeRef(String),
-}
-
-#[derive(Clone, Debug)]
-pub struct ScopeValue {
-    pub values: HashMap<String, ScopeValues>,
-    pub named_scope_refs: Vec<String>,
-}
-
-impl ScopeValue {
-    pub fn new() -> ScopeValue {
-        ScopeValue {
-            values: HashMap::new(),
-            named_scope_refs: Vec::new(),
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub enum ScopeValues {
-    Variable(Value),
-    FormulaVariable(Expression),
 
     Function(FunctionDeclarator),
     NativeFunction(NativeFunction),
 
+    Scope(ScopeValue),
+}
+
+pub type ScopeValue = HashMap<String, ScopeValues>;
+
+// #[derive(Clone, Debug)]
+// pub struct ScopeValue {
+//     pub values: HashMap<String, ScopeValues>,
+//     pub named_scope_refs: Vec<String>,
+// }
+
+// impl ScopeValue {
+//     pub fn new() -> ScopeValue {
+//         ScopeValue {
+//             values: HashMap::new(),
+//             named_scope_refs: Vec::new(),
+//         }
+//     }
+// }
+
+#[derive(Clone, Debug)]
+pub enum ScopeValues {
+    Variable(Value),
+
+    Function(FunctionDeclarator),
+    NativeFunction(NativeFunction),
+
+    Scope(ScopeValue),
     ScopeRef(String),
 }
 
