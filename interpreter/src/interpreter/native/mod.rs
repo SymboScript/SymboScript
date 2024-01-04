@@ -18,7 +18,7 @@ pub fn run_function(
 }
 
 pub fn inject(interpreter: &mut Interpreter) {
-    interpreter.declare_named_scope("io");
-    io::inject(interpreter.get_curr_scope_values());
-    interpreter.exit_named_scope();
+    let scope = interpreter.start_declaration_of_named_scope("io");
+    io::inject(interpreter.get_curr_scope_values_mut());
+    interpreter.end_declaration_of_named_scope(&scope);
 }

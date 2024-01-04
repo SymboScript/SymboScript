@@ -5,9 +5,11 @@ scope a {
     let d = 2;
   }
   let d = c.d + 2;
+  let e = d + 3;
 }
 
 
 io.println["a.b =", a.b];
 io.println["a.d =", a.d];
+io.println["a.e =", a.e];
 io.println["a.c.d =", a.c.d];

@@ -72,9 +72,9 @@ impl<'a> Interpreter<'a> {
             }
             Statement::FunctionDeclaration(_) => todo!(),
             Statement::ScopeDeclaration(decl) => {
-                self.declare_named_scope(&decl.id);
+                let scope = self.start_declaration_of_named_scope(&decl.id);
                 self.eval_program_body(&decl.body);
-                self.exit_named_scope();
+                self.end_declaration_of_named_scope(&scope);
             }
             Statement::IfStatement(_) => todo!(),
             Statement::ForStatement(_) => todo!(),
@@ -279,7 +279,7 @@ impl<'a> Interpreter<'a> {
     }
 
     fn set_variable_force(&mut self, identifier: &String, value: Value) {
-        self.get_curr_scope_values()
+        self.get_curr_scope_values_mut()
             .insert(identifier.clone(), value);
     }
 
@@ -318,7 +318,7 @@ impl<'a> Interpreter<'a> {
         //Include std ref to global
         self.send_scope_ref("std$0");
 
-        native::io::inject(self.get_curr_scope_values()); // Inject io to global too
+        native::io::inject(self.get_curr_scope_values_mut()); // Inject io to global too
     }
 
     fn add_std_lib(&mut self) {
@@ -326,12 +326,15 @@ impl<'a> Interpreter<'a> {
     }
 
     /// Initializes a new named scope
-    fn declare_named_scope(&mut self, name: &str) {
+    fn start_declaration_of_named_scope(&mut self, name: &str) -> String {
         let new_scope = format!("{}.{}$0", self.current_scope, name);
+        self.init_scope(new_scope.clone());
+        new_scope
+    }
 
-        self.send_scope_ref(&new_scope);
-
-        self.init_scope(new_scope);
+    fn end_declaration_of_named_scope(&mut self, name: &str) {
+        self.exit_named_scope();
+        self.send_scope_ref(name);
     }
 
     fn enter_named_scope(&mut self, name: &str) {
@@ -352,7 +355,7 @@ impl<'a> Interpreter<'a> {
     /// Adds a reference to the current scope
     fn send_scope_ref(&mut self, name: &str) {
         let local_name = self.parse_local_name(name);
-        self.get_curr_scope_values()
+        self.get_curr_scope_values_mut()
             .insert(local_name, Value::ScopeRef(name.to_owned()));
         self.get_curr_scope_refs_mut().push(name.to_owned());
     }
@@ -412,7 +415,7 @@ impl<'a> Interpreter<'a> {
     }
 
     /// Gets the current scope values
-    fn get_curr_scope_values(&mut self) -> &mut HashMap<String, Value> {
+    fn get_curr_scope_values_mut(&mut self) -> &mut HashMap<String, Value> {
         &mut self
             .vault
             .get_mut(self.current_scope.as_str())
