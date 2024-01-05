@@ -88,6 +88,8 @@ impl<'a> Parser<'a> {
             TokenKind::Return => self.return_stmt(),
             TokenKind::Yield => self.yield_stmt(),
 
+            TokenKind::Import => self.import_decl(),
+
             TokenKind::Block => self.block_decl(),
             TokenKind::LAngle => Statement::BlockStatement(self.block_stmt()),
 
@@ -113,6 +115,41 @@ impl<'a> Parser<'a> {
         }
 
         return body;
+    }
+
+    // --------------- import statement ----------------
+
+    fn import_decl(&mut self) -> Statement {
+        let start = self.cur_token.start;
+        self.advance();
+
+        let source = Identifier {
+            node: Node::new(self.cur_token.start, self.cur_token.end),
+            name: format!("{}", self.cur_token.clone().value),
+        };
+
+        self.eat(TokenKind::Identifier);
+
+        let as_name = match self.cur_kind() {
+            TokenKind::As => {
+                self.advance();
+                Identifier {
+                    node: Node::new(self.cur_token.start, self.cur_token.end),
+                    name: format!("{}", self.cur_token.clone().value),
+                }
+            }
+
+            _ => source.clone(),
+        };
+
+        self.eat(TokenKind::Semicolon);
+
+        Statement::ImportStatement(uni_builder!(
+            self,
+            ImportStatement,
+            start,
+            [source, as_name]
+        ))
     }
 
     // --------------- scope declaration ---------------

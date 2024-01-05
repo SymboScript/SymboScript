@@ -1,6 +1,6 @@
 [package]
 name = "symboscript-optimizer"
-version = "0.7.11"
+version = "0.7.12"
 edition = "2021"
 authors = ["artegoser"]
 license = "MIT"
@@ -17,7 +17,7 @@ symboscript-types = { path = "../types", version = "0.15.0", features = [
   "lexer",
 ] }
 symboscript-utils = { path = "../utils", version = "0.6.9" }
-symboscript-parser = { path = "../parser", version = "0.9.2" }
+symboscript-parser = { path = "../parser", version = "0.10.0" }
 
 clap = { version = "4.4.12", features = ["derive"] }
 serde = { version = "1.0.193", features = ["derive"] }
