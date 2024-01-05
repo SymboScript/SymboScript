@@ -13,7 +13,7 @@ Check the [examples](./examples/) folder.
 ## Example
 
 ```bash
-symboscript ./examples/hello_world.syms
+symboscript ./examples/basic/hello_world.syms
 ```
 
 ```syms
