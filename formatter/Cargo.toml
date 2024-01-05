@@ -1,6 +1,6 @@
 [package]
 name = "symboscript-formatter"
-version = "0.6.10"
+version = "0.6.11"
 edition = "2021"
 authors = ["artegoser"]
 license = "MIT"
@@ -12,8 +12,8 @@ keywords = ["programming-language", "formatter", "symbolic", "symboscript"]
 categories = ["compilers"]
 
 [dependencies]
-symboscript-lexer = { path = "../lexer", version = "0.7.9" }
-symboscript-types = { path = "../types", version = "0.15.1", features = [
+symboscript-lexer = { path = "../lexer", version = "0.7.10" }
+symboscript-types = { path = "../types", version = "0.15.2", features = [
   "lexer",
 ] }
 clap = { version = "4.4.13", features = ["derive"] }
