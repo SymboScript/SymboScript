@@ -47,6 +47,7 @@ impl ScopeValue {
 pub enum NativeFunction {
     Print,
     Println,
+    ToString,
 }
 
 // ----------------- Math -----------------

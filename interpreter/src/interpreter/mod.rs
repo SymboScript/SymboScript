@@ -205,8 +205,12 @@ impl<'a> Interpreter<'a> {
         }
     }
 
-    fn enter_member_scope(&mut self, member_expr: &MemberExpression) -> String {
-        todo!()
+    fn set_native_value(&mut self, name: &str, value: Value) {
+        self.vault
+            .get_mut(&format!("std$0.{name}$0"))
+            .unwrap()
+            .values
+            .insert("$value".to_owned(), value);
     }
 
     fn eval_member_expression(&mut self, member_expr: &MemberExpression) -> Value {
@@ -217,7 +221,13 @@ impl<'a> Interpreter<'a> {
                 name: ref_name.clone(),
                 node: member_expr.node.clone(),
             },
-            Value::Sequence(_) => todo!(),
+            Value::Sequence(_) => self.native_id("sequence", object, member_expr.node.clone()),
+            Value::None => self.native_id("none", object, member_expr.node.clone()),
+            Value::Number(_) => self.native_id("number", object, member_expr.node.clone()),
+            Value::Bool(_) => self.native_id("bool", object, member_expr.node.clone()),
+            Value::Str(_) => self.native_id("str", object, member_expr.node.clone()),
+            Value::Ast(_) => self.native_id("ast", object, member_expr.node.clone()),
+
             _ => {
                 self.report(
                     &format!("is not a scope"),
@@ -245,6 +255,14 @@ impl<'a> Interpreter<'a> {
         self.exit_named_scope();
 
         property
+    }
+
+    fn native_id(&mut self, name: &str, value: Value, node: Node) -> Identifier {
+        self.set_native_value(name, value);
+        Identifier {
+            name: format!("std$0.{name}$0").to_owned(),
+            node,
+        }
     }
 
     fn eval_call_expression(&mut self, call_expr: &CallExpression, member: bool) -> Value {
@@ -279,7 +297,7 @@ impl<'a> Interpreter<'a> {
         }
 
         let result = match var {
-            Value::NativeFunction(name) => native::run_function(self, &name, args),
+            Value::NativeFunction(name) => native::run_function(self, &call_expr, &name, &args),
             Value::Function(_) => todo!(),
 
             _ => {
@@ -382,6 +400,17 @@ impl<'a> Interpreter<'a> {
         unreachable!("Report ends proccess");
     }
 
+    fn get_cur_value(&mut self, id: &String) -> Value {
+        let (scope_name, _) = self.parse_current_scope();
+        self.vault
+            .get(&format!("{}$0", scope_name))
+            .unwrap()
+            .values
+            .get(id)
+            .unwrap()
+            .clone()
+    }
+
     fn get_variable_value_mut(&mut self, identifier: &Identifier) -> &mut Value {
         let id = identifier.name.clone();
 
@@ -415,23 +444,23 @@ impl<'a> Interpreter<'a> {
         }
     }
 
-    fn get_variable_scope(&self, identifier: &Identifier) -> String {
-        for scope in self.scope_stack.iter().rev() {
-            let var = self.vault.get(scope).unwrap().values.get(&identifier.name);
+    // fn get_variable_scope(&self, identifier: &Identifier) -> String {
+    //     for scope in self.scope_stack.iter().rev() {
+    //         let var = self.vault.get(scope).unwrap().values.get(&identifier.name);
 
-            match var {
-                Some(_) => return scope.clone(),
-                None => {}
-            }
-        }
+    //         match var {
+    //             Some(_) => return scope.clone(),
+    //             None => {}
+    //         }
+    //     }
 
-        self.report(
-            &format!("Variable `{identifier}` not found"),
-            identifier.node.start,
-            identifier.node.end,
-        );
-        unreachable!("Report ends proccess");
-    }
+    //     self.report(
+    //         &format!("Variable `{identifier}` not found"),
+    //         identifier.node.start,
+    //         identifier.node.end,
+    //     );
+    //     unreachable!("Report ends proccess");
+    // }
 
     fn set_variable_force(&mut self, identifier: &String, value: Value) {
         self.get_curr_scope_values_mut()

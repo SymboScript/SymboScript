@@ -1,0 +1,7 @@
+let a = 2;
+println["Initial value:", a];
+
+println["Stringified:", a.to_string[]];
+
+mut a = a.to_string[];
+println["Stringified and reassigned:", a];
