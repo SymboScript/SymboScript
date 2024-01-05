@@ -14,12 +14,13 @@ pub fn run_function(
     native_function: &NativeFunction,
     args: &Vec<Value>,
 ) -> Value {
+    interpreter.increment_scope();
     match native_function {
         NativeFunction::Println => io::println(&args),
         NativeFunction::Print => io::print(&args),
         NativeFunction::ToString => return conversions::to_string(interpreter, call_expr, args),
     }
-
+    interpreter.decrement_scope();
     Value::None
 }
 

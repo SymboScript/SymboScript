@@ -95,7 +95,9 @@ impl<'a> Interpreter<'a> {
 
                 self.declare_variable(&decl.id, value);
             }
-            Statement::FunctionDeclaration(_) => todo!(),
+            Statement::FunctionDeclaration(decl) => {
+                self.declare_variable(&decl.id, Value::Function(decl.clone()));
+            }
             Statement::ScopeDeclaration(decl) => {
                 let scope = self.start_declaration_of_named_scope(&decl.id);
                 self.eval_block(&decl.body);
@@ -260,7 +262,7 @@ impl<'a> Interpreter<'a> {
             Expression::BinaryExpression(binary_expr) => self.eval_binary_expression(binary_expr),
             Expression::UnaryExpression(unary_expr) => self.eval_unary_expression(unary_expr),
             Expression::ConditionalExpression(_) => todo!(),
-            Expression::CallExpression(call_expr) => self.eval_call_expression(call_expr, false),
+            Expression::CallExpression(call_expr) => self.eval_call_expression(call_expr),
             Expression::MemberExpression(member_expr) => self.eval_member_expression(member_expr),
             Expression::SequenceExpression(_) => todo!(),
             Expression::WordExpression(_) => todo!(),
@@ -316,7 +318,7 @@ impl<'a> Interpreter<'a> {
                     self.get_variable_value(id)
                 }
             }
-            Expression::CallExpression(call_expr) => self.eval_call_expression(call_expr, true),
+            Expression::CallExpression(call_expr) => self.eval_call_expression(call_expr),
             _ => self.eval_expression(&member_expr.property),
         };
 
@@ -333,9 +335,7 @@ impl<'a> Interpreter<'a> {
         }
     }
 
-    fn eval_call_expression(&mut self, call_expr: &CallExpression, member: bool) -> Value {
-        self.increment_scope();
-
+    fn eval_call_expression(&mut self, call_expr: &CallExpression) -> Value {
         let var = self.get_variable_value(&Identifier {
             name: call_expr.callee.clone(),
             node: call_expr.node.clone(),
@@ -346,27 +346,40 @@ impl<'a> Interpreter<'a> {
             _ => unreachable!("Arguments can only be sequence expressions"),
         };
 
-        let exited;
-
-        if member {
-            exited = self.exit_named_scope();
-        } else {
-            exited = String::new();
-        }
-
         let args = args
             .expressions
             .iter()
             .map(|expr| self.eval_expression(expr))
             .collect::<Vec<Value>>();
 
-        if member {
-            self.enter_named_scope(&exited);
-        }
-
+        self.increment_scope();
         let result = match var {
             Value::NativeFunction(name) => native::run_function(self, &call_expr, &name, &args),
-            Value::Function(_) => todo!(),
+            Value::Function(declarator) => {
+                if declarator.params.len() != args.len() {
+                    self.report(
+                        &format!(
+                            "Expected {} arguments, got {}",
+                            declarator.params.len(),
+                            args.len()
+                        ),
+                        call_expr.node.start,
+                        call_expr.node.end,
+                    );
+                    unreachable!("Report ends proccess");
+                }
+
+                for (i, variable) in declarator.params.iter().enumerate() {
+                    self.declare_variable(&variable, args[i].clone());
+                }
+
+                let control = self.eval_block(&declarator.body);
+
+                match control {
+                    ControlFlow::Return(val) => val,
+                    _ => Value::None,
+                }
+            }
 
             _ => {
                 self.report(
@@ -377,7 +390,6 @@ impl<'a> Interpreter<'a> {
                 unreachable!("Report ends proccess");
             }
         };
-
         self.decrement_scope();
 
         result
