@@ -177,14 +177,14 @@ impl Value {
 
     pub fn less(&self, other: &Value) -> Value {
         Value::Bool(match (self, other) {
-            (Value::Number(n1), Value::Number(n2)) => n1 > n2,
+            (Value::Number(n1), Value::Number(n2)) => n1 < n2,
             _ => false,
         })
     }
 
     pub fn less_equal(&self, other: &Value) -> Value {
         Value::Bool(match (self, other) {
-            (Value::Number(n1), Value::Number(n2)) => n1 >= n2,
+            (Value::Number(n1), Value::Number(n2)) => n1 <= n2,
             _ => false,
         })
     }

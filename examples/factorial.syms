@@ -6,6 +6,9 @@ fn factorial[n] {
   }
 }
 
-println["Factorial of 3 is", factorial[3,1]];
-println["Factorial of 5 is", factorial[5]];
-println["Factorial of 10 is", factorial[10]];
+let a = 0;
+
+while (a < 15) {
+  mut a += 1;
+  println["Factorial of "+a+" =", factorial[a]];
+}

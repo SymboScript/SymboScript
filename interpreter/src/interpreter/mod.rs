@@ -232,11 +232,7 @@ impl<'a> Interpreter<'a> {
     fn eval_while_statement(&mut self, while_stmt: &WhileStatement) -> ControlFlow {
         self.increment_scope();
 
-        loop {
-            if (self.eval_expression(&while_stmt.test)).as_bool() == true {
-                break;
-            }
-
+        while (self.eval_expression(&while_stmt.test)).as_bool() {
             loop_controls!(self, while_stmt.body);
         }
 
