@@ -19,7 +19,7 @@ symboscript-utils = { path = "../utils", version = "0.6.10" }
 symboscript-parser = { path = "../parser", version = "0.10.1" }
 symboscript-optimizer = { path = "../optimizer", version = "0.7.13" }
 
-clap = { version = "4.4.12", features = ["derive"] }
+clap = { version = "4.4.13", features = ["derive"] }
 colored = "2.1.0"
 
 [[bin]]

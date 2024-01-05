@@ -16,4 +16,4 @@ symboscript-lexer = { path = "../lexer", version = "0.7.8" }
 symboscript-types = { path = "../types", version = "0.15.1", features = [
   "lexer",
 ] }
-clap = { version = "4.4.12", features = ["derive"] }
+clap = { version = "4.4.13", features = ["derive"] }
