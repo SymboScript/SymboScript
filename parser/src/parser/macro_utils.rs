@@ -129,7 +129,7 @@ macro_rules! binary_right_associative {
 macro_rules! word_expr_build {
     ($self:ident, $operator: path, $start: ident, $argument: ident) => {
         Expression::WordExpression(Box::new(WordExpression {
-            node: Node::new($start, $self.cur_token.end),
+            node: Node::new($start, $self.prev_token_end),
             argument: $argument,
             operator: $self.kind_to_word_op($operator),
         }))
@@ -140,7 +140,7 @@ macro_rules! word_expr_build {
 macro_rules! word_stmt_build {
     ($self:ident, $operator: path, $start: ident, $argument: ident, $Statement: ident) => {
         Statement::$Statement($Statement {
-            node: Node::new($start, $self.cur_token.end),
+            node: Node::new($start, $self.prev_token_end),
             argument: $argument,
         })
     };
@@ -150,7 +150,7 @@ macro_rules! word_stmt_build {
 macro_rules! uni_builder {
     ($self:ident, $Expr: ident, $start: ident,[$($properties: ident),+]) => {
         $Expr {
-            node: Node::new($start, $self.cur_token.end),
+            node: Node::new($start, $self.prev_token_end),
             $(
                 $properties,
             )+

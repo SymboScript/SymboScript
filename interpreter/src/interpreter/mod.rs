@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fs, path::Path};
 
 use symboscript_types::{interpreter::*, lexer::*, parser::*};
 use symboscript_utils::report_error;
@@ -7,13 +7,14 @@ mod macro_utils;
 mod native;
 
 use crate::loop_controls;
+use symboscript_parser as parser;
 
 pub struct Interpreter<'a> {
     /// Path of the source file
-    path: &'a str,
+    paths: Vec<String>,
 
-    /// Source Text
-    source: &'a str,
+    /// Sources of programs
+    sources: Vec<String>,
 
     ast: &'a Ast,
 
@@ -29,8 +30,8 @@ impl<'a> Interpreter<'a> {
         let vault = Vault::new();
 
         Self {
-            path,
-            source,
+            paths: vec![path.to_owned()],
+            sources: vec![source.to_owned()],
             ast,
             scope_stack: vec![],
             current_scope: String::new(),
@@ -114,10 +115,58 @@ impl<'a> Interpreter<'a> {
                 self.eval_assign_statement(assign_stmt);
             }
 
-            Statement::ImportStatement(_) => todo!(),
+            Statement::ImportStatement(import_stmt) => {
+                self.eval_import_statement(import_stmt);
+            }
         }
 
         return ControlFlow::None;
+    }
+
+    fn eval_import_statement(&mut self, import_stmt: &ImportStatement) {
+        let source_name = if import_stmt.source.name.ends_with(".syms") {
+            import_stmt.source.name.clone()
+        } else {
+            format!("{}.syms", import_stmt.source.name.clone())
+        };
+
+        let current_path = Path::new(self.paths.last().unwrap());
+
+        let current_path = match current_path.parent() {
+            Some(path) => path,
+            None => Path::new("./"),
+        };
+
+        let file_path = current_path.join(source_name);
+        let file_path = file_path.display().to_string();
+
+        let file_contents = fs::read_to_string(&file_path);
+
+        match file_contents {
+            Ok(contents) => {
+                let ast = parser::Parser::new(&file_path, &contents).parse();
+
+                {
+                    self.sources.push(contents.clone());
+                    self.paths.push(file_path.clone());
+
+                    {
+                        let scope =
+                            self.start_declaration_of_named_scope(&import_stmt.as_name.name);
+                        self.eval_ast(ast);
+                        self.end_declaration_of_named_scope(&scope);
+                    }
+
+                    self.paths.pop();
+                    self.sources.pop();
+                }
+            }
+            Err(e) => self.report(
+                &format!("Failed to import module: `{}`\n{e}", import_stmt.source),
+                import_stmt.node.start,
+                import_stmt.node.end,
+            ),
+        }
     }
 
     fn eval_assign_statement(&mut self, assign_stmt: &AssignStatement) {
@@ -615,7 +664,13 @@ impl<'a> Interpreter<'a> {
 
     /// Reports an interpreter error
     fn report(&self, error: &str, start: usize, end: usize) {
-        report_error(self.path, self.source, error, start, end);
+        report_error(
+            self.paths.last().unwrap(),
+            self.sources.last().unwrap(),
+            error,
+            start,
+            end,
+        );
     }
 
     // fn report_str(&self, error: &str) {

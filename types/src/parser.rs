@@ -346,7 +346,7 @@ impl fmt::Display for Statement {
 
 impl fmt::Display for ImportStatement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "import {} as \"{}\";", self.source, self.as_name)
+        write!(f, "import {} as {};", self.source, self.as_name)
     }
 }
 

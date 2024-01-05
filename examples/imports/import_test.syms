@@ -1,0 +1,9 @@
+import "./numbers" as numbers;
+
+println["Real pi:",numbers.real.pi];
+println["Real square root of 2:",numbers.real.square_root_of_2, "\n"];
+
+println["Funny pi:",numbers.funny.pi];
+println["Funny square root of 2:",numbers.funny.square_root_of_2, "\n"];
+
+println["Interesting e:",numbers.interesting.e];

@@ -1,0 +1,6 @@
+import "./numbers/real.syms" as real;
+import "./numbers/funny.syms" as funny;
+
+scope interesting {
+  let e = 2.718;
+}

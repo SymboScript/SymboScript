@@ -69,7 +69,16 @@ pub fn report_error(path: &str, source: &str, error: &str, start: usize, end: us
     .red()
     .bold();
 
-    let error_pointer_text = error.red().bold();
+    let error_pointer_text = error
+        .replace(
+            "\n",
+            &format!(
+                "\n{} ",
+                " ".repeat(column_end - column_start) + &" ".repeat(column_start + line_n.len())
+            ),
+        )
+        .red()
+        .bold();
 
     let file_src = format!(
         "--> {}:{}:{}-{}:{} ({start} - {end})",

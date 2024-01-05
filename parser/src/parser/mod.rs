@@ -19,6 +19,8 @@ pub struct Parser<'a> {
     lexer: Lexer<'a>,
 
     cur_token: Token,
+
+    prev_token_end: usize,
 }
 
 impl<'a> Parser<'a> {
@@ -28,6 +30,7 @@ impl<'a> Parser<'a> {
             source,
             lexer: Lexer::new(path, source, false),
             cur_token: Token::default(),
+            prev_token_end: 0,
         }
     }
 
@@ -88,7 +91,7 @@ impl<'a> Parser<'a> {
             TokenKind::Return => self.return_stmt(),
             TokenKind::Yield => self.yield_stmt(),
 
-            TokenKind::Import => self.import_decl(),
+            TokenKind::Import => self.import_statement(),
 
             TokenKind::Block => self.block_decl(),
             TokenKind::LAngle => Statement::BlockStatement(self.block_stmt()),
@@ -119,24 +122,36 @@ impl<'a> Parser<'a> {
 
     // --------------- import statement ----------------
 
-    fn import_decl(&mut self) -> Statement {
+    fn import_statement(&mut self) -> Statement {
         let start = self.cur_token.start;
         self.advance();
 
         let source = Identifier {
             node: Node::new(self.cur_token.start, self.cur_token.end),
-            name: format!("{}", self.cur_token.clone().value),
+            name: match self.cur_token.value.clone() {
+                TokenValue::Str(s) => s,
+                TokenValue::Identifier(s) => s,
+                got => {
+                    self.report_expected(self.cur_token.start, "Identifier or String", got);
+                    unreachable!("Report ends proccess");
+                }
+            },
         };
 
-        self.eat(TokenKind::Identifier);
+        self.advance();
 
         let as_name = match self.cur_kind() {
             TokenKind::As => {
                 self.advance();
-                Identifier {
+
+                let id = Identifier {
                     node: Node::new(self.cur_token.start, self.cur_token.end),
                     name: format!("{}", self.cur_token.clone().value),
-                }
+                };
+
+                self.eat(TokenKind::Identifier);
+
+                id
             }
 
             _ => source.clone(),
@@ -991,6 +1006,7 @@ impl<'a> Parser<'a> {
 
     /// Move to the next token
     fn advance(&mut self) {
+        self.prev_token_end = self.cur_token.end;
         let token = self.lexer.next_token();
         self.cur_token = token;
     }
