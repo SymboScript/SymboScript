@@ -115,7 +115,6 @@ impl<'a> Interpreter<'a> {
             }
 
             Statement::ImportStatement(_) => todo!(),
-            Statement::ExportStatement(_) => todo!(),
         }
 
         return ControlFlow::None;

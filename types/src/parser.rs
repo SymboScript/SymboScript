@@ -56,14 +56,6 @@ pub enum Statement {
     BlockStatement(BlockStatement),
     AssignStatement(AssignStatement),
     ImportStatement(ImportStatement),
-    ExportStatement(ExportStatement),
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ExportStatement {
-    pub node: Node,
-    pub source: Identifier,
-    pub as_name: Identifier,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -348,7 +340,6 @@ impl fmt::Display for Statement {
             Statement::BlockStatement(expr) => write!(f, "{{\n{}\n}}", format_vec(expr, "\n")),
             Statement::AssignStatement(expr) => write!(f, "{}", expr),
             Statement::ImportStatement(expr) => write!(f, "{}", expr),
-            Statement::ExportStatement(expr) => write!(f, "{}", expr),
         }
     }
 }
@@ -356,12 +347,6 @@ impl fmt::Display for Statement {
 impl fmt::Display for ImportStatement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "import {} as \"{}\";", self.source, self.as_name)
-    }
-}
-
-impl fmt::Display for ExportStatement {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "export {} as \"{}\";", self.source, self.as_name)
     }
 }
 

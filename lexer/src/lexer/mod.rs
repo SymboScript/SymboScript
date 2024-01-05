@@ -198,7 +198,6 @@ impl<'a> Lexer<'a> {
             "throw" => TokenKind::Throw,
 
             "import" => TokenKind::Import,
-            "export" => TokenKind::Export,
             "as" => TokenKind::As,
 
             "async" => TokenKind::Async,

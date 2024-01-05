@@ -146,9 +146,8 @@ pub enum TokenKind {
 
     Mut,
 
-    // Import/Export
+    // Import
     Import,
-    Export,
     As,
 
     // Async/Await
@@ -251,7 +250,6 @@ impl fmt::Display for TokenKind {
             TokenKind::Finally => write!(f, "finally"),
 
             TokenKind::Import => write!(f, "import"),
-            TokenKind::Export => write!(f, "export"),
             TokenKind::As => write!(f, "as"),
 
             TokenKind::Await => write!(f, "await"),
