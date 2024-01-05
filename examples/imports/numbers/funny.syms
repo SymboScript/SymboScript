@@ -1,2 +1,5 @@
 let pi = 4.0;
 let square_root_of_2 = 1.5;
+
+if (__module__) println["I am imported as", __name__];
+else println["I am not module, i'm", __name__];

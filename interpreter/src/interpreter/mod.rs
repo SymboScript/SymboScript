@@ -25,12 +25,19 @@ pub struct Interpreter<'a> {
     vault: Vault,
 }
 
+fn get_full_path(path: &str) -> String {
+    fs::canonicalize(Path::new(path))
+        .unwrap()
+        .display()
+        .to_string()
+}
+
 impl<'a> Interpreter<'a> {
     pub fn new(path: &'a str, source: &'a str, ast: &'a Ast) -> Self {
         let vault = Vault::new();
 
         Self {
-            paths: vec![path.to_owned()],
+            paths: vec![get_full_path(path)],
             sources: vec![source.to_owned()],
             ast,
             scope_stack: vec![],
@@ -86,7 +93,7 @@ impl<'a> Interpreter<'a> {
                     self.eval_expression(&decl.init)
                 };
 
-                self.set_variable_force(&decl.id, value);
+                self.declare_variable(&decl.id, value);
             }
             Statement::FunctionDeclaration(_) => todo!(),
             Statement::ScopeDeclaration(decl) => {
@@ -153,6 +160,19 @@ impl<'a> Interpreter<'a> {
                     {
                         let scope =
                             self.start_declaration_of_named_scope(&import_stmt.as_name.name);
+
+                        // Declare standard variables
+                        self.declare_variable(
+                            &"__file__".to_owned(),
+                            Value::Str(file_path.clone()),
+                        );
+                        self.declare_variable(
+                            &"__name__".to_owned(),
+                            Value::Str(import_stmt.as_name.name.clone()),
+                        );
+                        self.declare_variable(&"__module__".to_owned(), Value::Bool(true));
+
+                        // Evaluate the AST
                         self.eval_ast(ast);
                         self.end_declaration_of_named_scope(&scope);
                     }
@@ -510,7 +530,7 @@ impl<'a> Interpreter<'a> {
     //     unreachable!("Report ends proccess");
     // }
 
-    fn set_variable_force(&mut self, identifier: &String, value: Value) {
+    fn declare_variable(&mut self, identifier: &String, value: Value) {
         self.get_curr_scope_values_mut()
             .insert(identifier.clone(), value);
     }
@@ -526,6 +546,11 @@ impl<'a> Interpreter<'a> {
         self.vault.insert("global$0".to_owned(), ScopeValue::new());
         self.scope_stack.push("global$0".to_owned());
         self.update_current_scope();
+
+        // Initialize standard variables
+        self.declare_variable(&"__file__".to_owned(), Value::Str(self.paths[0].clone()));
+        self.declare_variable(&"__name__".to_owned(), Value::Str("main".to_owned()));
+        self.declare_variable(&"__module__".to_owned(), Value::Bool(false));
 
         //Include std ref to global
         self.send_scope_ref("std$0");
