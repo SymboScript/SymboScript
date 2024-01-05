@@ -109,9 +109,46 @@ impl<'a> Interpreter<'a> {
                 self.eval_block(body);
                 self.decrement_scope();
             }
+
+            Statement::AssignStatement(assign_stmt) => {
+                self.eval_assign_statement(assign_stmt);
+            }
+
+            Statement::ImportStatement(_) => todo!(),
+            Statement::ExportStatement(_) => todo!(),
         }
 
         return ControlFlow::None;
+    }
+
+    fn eval_assign_statement(&mut self, assign_stmt: &AssignStatement) {
+        let right = self.eval_expression(&assign_stmt.right);
+
+        let var_val = self.get_variable_value_mut(&assign_stmt.left);
+
+        match assign_stmt.operator {
+            AssignOperator::Assign => {
+                *var_val = right;
+            }
+            AssignOperator::PlusAssign => {
+                *var_val += right;
+            }
+            AssignOperator::MinusAssign => {
+                *var_val -= right;
+            }
+            AssignOperator::MultiplyAssign => {
+                *var_val *= right;
+            }
+            AssignOperator::DivideAssign => {
+                *var_val /= right;
+            }
+            AssignOperator::PowerAssign => {
+                *var_val = (*var_val).pow(&right);
+            }
+            AssignOperator::ModuloAssign => {
+                *var_val %= right;
+            }
+        }
     }
 
     fn eval_if_statement(&mut self, if_stmt: &IfStatement) -> ControlFlow {
@@ -168,6 +205,10 @@ impl<'a> Interpreter<'a> {
         }
     }
 
+    fn enter_member_scope(&mut self, member_expr: &MemberExpression) -> String {
+        todo!()
+    }
+
     fn eval_member_expression(&mut self, member_expr: &MemberExpression) -> Value {
         let object = self.eval_expression(&member_expr.object);
 
@@ -189,7 +230,7 @@ impl<'a> Interpreter<'a> {
 
         self.enter_named_scope(&object.name);
 
-        let left = match &member_expr.property {
+        let property = match &member_expr.property {
             Expression::Identifier(id) => {
                 if member_expr.is_expr {
                     self.eval_expression(&member_expr.property)
@@ -203,10 +244,12 @@ impl<'a> Interpreter<'a> {
 
         self.exit_named_scope();
 
-        left
+        property
     }
 
     fn eval_call_expression(&mut self, call_expr: &CallExpression, member: bool) -> Value {
+        self.increment_scope();
+
         let var = self.get_variable_value(&Identifier {
             name: call_expr.callee.clone(),
             node: call_expr.node.clone(),
@@ -235,7 +278,7 @@ impl<'a> Interpreter<'a> {
             self.enter_named_scope(&exited);
         }
 
-        match var {
+        let result = match var {
             Value::NativeFunction(name) => native::run_function(self, &name, args),
             Value::Function(_) => todo!(),
 
@@ -245,9 +288,13 @@ impl<'a> Interpreter<'a> {
                     call_expr.node.start,
                     call_expr.node.end,
                 );
-                unreachable!("Report ends proccess")
+                unreachable!("Report ends proccess");
             }
-        }
+        };
+
+        self.decrement_scope();
+
+        result
     }
 
     fn eval_unary_expression(&mut self, expression: &UnaryExpression) -> Value {
@@ -292,14 +339,6 @@ impl<'a> Interpreter<'a> {
             BinaryOperator::BitLeftShift => left << right,
             BinaryOperator::BitRightShift => left >> right,
 
-            BinaryOperator::Assign => todo!(),
-            BinaryOperator::PlusAssign => todo!(),
-            BinaryOperator::MinusAssign => todo!(),
-            BinaryOperator::MultiplyAssign => todo!(),
-            BinaryOperator::DivideAssign => todo!(),
-            BinaryOperator::PowerAssign => todo!(),
-            BinaryOperator::ModuloAssign => todo!(),
-
             BinaryOperator::Equal => left.equal(&right),
             BinaryOperator::NotEqual => left.not_equal(&right),
             BinaryOperator::Less => left.less(&right),
@@ -343,12 +382,45 @@ impl<'a> Interpreter<'a> {
         unreachable!("Report ends proccess");
     }
 
-    fn get_variable_full_name(&self, identifier: &Identifier) -> String {
+    fn get_variable_value_mut(&mut self, identifier: &Identifier) -> &mut Value {
+        let id = identifier.name.clone();
+
+        let mut scope_index = None;
+
+        for (i, scope) in self.scope_stack.iter().enumerate().rev() {
+            if self.vault.get(scope).unwrap().values.contains_key(&id) {
+                scope_index = Some(i);
+                break;
+            }
+        }
+
+        match scope_index {
+            Some(index) => {
+                let scope = &self.scope_stack[index];
+                self.vault
+                    .get_mut(scope)
+                    .unwrap()
+                    .values
+                    .get_mut(&id)
+                    .unwrap()
+            }
+            None => {
+                self.report(
+                    &format!("Variable `{}` not found", id),
+                    identifier.node.start,
+                    identifier.node.end,
+                );
+                unreachable!("Report ends process");
+            }
+        }
+    }
+
+    fn get_variable_scope(&self, identifier: &Identifier) -> String {
         for scope in self.scope_stack.iter().rev() {
             let var = self.vault.get(scope).unwrap().values.get(&identifier.name);
 
             match var {
-                Some(_) => return format!("{}.{}", scope, identifier.name),
+                Some(_) => return scope.clone(),
                 None => {}
             }
         }

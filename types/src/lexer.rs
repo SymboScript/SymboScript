@@ -144,6 +144,8 @@ pub enum TokenKind {
     Finally,
     Throw,
 
+    Mut,
+
     // Import/Export
     Import,
     Export,
@@ -256,6 +258,8 @@ impl fmt::Display for TokenKind {
             TokenKind::Async => write!(f, "async"),
 
             TokenKind::Block => write!(f, "block"),
+
+            TokenKind::Mut => write!(f, "assign"),
         }
     }
 }

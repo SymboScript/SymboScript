@@ -1,0 +1,24 @@
+let a = 1;
+
+println["let a =",a];
+
+mut a = 4;
+println["a = 4; a =",a];
+
+mut a += 1;
+println["a += 1; a =",a];
+
+mut a -= 1;
+println["a -= 1; a =",a];
+
+mut a *= 2;
+println["a *= 2; a =",a];
+
+mut a /= 2;
+println["a /= 2; a =",a];
+
+mut a ^= 2;
+println["a ^= 2; a =",a];
+
+mut a %= 2;
+println["a %= 2; a =",a];

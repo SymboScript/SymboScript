@@ -54,6 +54,31 @@ pub enum Statement {
     LoopStatement(LoopStatement),
     TryStatement(TryStatement),
     BlockStatement(BlockStatement),
+    AssignStatement(AssignStatement),
+    ImportStatement(ImportStatement),
+    ExportStatement(ExportStatement),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ExportStatement {
+    pub node: Node,
+    pub source: Identifier,
+    pub as_name: Identifier,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ImportStatement {
+    pub node: Node,
+    pub source: Identifier,
+    pub as_name: Identifier,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AssignStatement {
+    pub node: Node,
+    pub left: Identifier,
+    pub right: Expression,
+    pub operator: AssignOperator,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -247,14 +272,6 @@ pub enum BinaryOperator {
     BitLeftShift,
     BitRightShift,
 
-    Assign,
-    PlusAssign,
-    MinusAssign,
-    MultiplyAssign,
-    DivideAssign,
-    PowerAssign,
-    ModuloAssign,
-
     Equal,
     NotEqual,
     Less,
@@ -273,6 +290,17 @@ pub enum UnaryOperator {
 
     Minus,
     Plus,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
+pub enum AssignOperator {
+    Assign,
+    PlusAssign,
+    MinusAssign,
+    MultiplyAssign,
+    DivideAssign,
+    PowerAssign,
+    ModuloAssign,
 }
 
 //----------Display------------
@@ -318,7 +346,28 @@ impl fmt::Display for Statement {
             Statement::LoopStatement(expr) => write!(f, "{}", expr),
             Statement::TryStatement(expr) => write!(f, "{}", expr),
             Statement::BlockStatement(expr) => write!(f, "{{\n{}\n}}", format_vec(expr, "\n")),
+            Statement::AssignStatement(expr) => write!(f, "{}", expr),
+            Statement::ImportStatement(expr) => write!(f, "{}", expr),
+            Statement::ExportStatement(expr) => write!(f, "{}", expr),
         }
+    }
+}
+
+impl fmt::Display for ImportStatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "import {} as \"{}\";", self.source, self.as_name)
+    }
+}
+
+impl fmt::Display for ExportStatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "export {} as \"{}\";", self.source, self.as_name)
+    }
+}
+
+impl fmt::Display for AssignStatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} = {}", self.left, self.right)
     }
 }
 
@@ -553,19 +602,26 @@ impl fmt::Display for BinaryOperator {
             BinaryOperator::BitXor => write!(f, "bxor"),
             BinaryOperator::BitLeftShift => write!(f, "<<"),
             BinaryOperator::BitRightShift => write!(f, ">>"),
-            BinaryOperator::Assign => write!(f, "="),
-            BinaryOperator::PlusAssign => write!(f, "+="),
-            BinaryOperator::MinusAssign => write!(f, "-="),
-            BinaryOperator::MultiplyAssign => write!(f, "*="),
-            BinaryOperator::DivideAssign => write!(f, "/="),
-            BinaryOperator::PowerAssign => write!(f, "^="),
-            BinaryOperator::ModuloAssign => write!(f, "%="),
             BinaryOperator::Equal => write!(f, "=="),
             BinaryOperator::NotEqual => write!(f, "!="),
             BinaryOperator::Less => write!(f, "<"),
             BinaryOperator::LessEqual => write!(f, "<="),
             BinaryOperator::Greater => write!(f, ">"),
             BinaryOperator::GreaterEqual => write!(f, ">="),
+        }
+    }
+}
+
+impl fmt::Display for AssignOperator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            AssignOperator::Assign => write!(f, "="),
+            AssignOperator::PlusAssign => write!(f, "+="),
+            AssignOperator::MinusAssign => write!(f, "-="),
+            AssignOperator::MultiplyAssign => write!(f, "*="),
+            AssignOperator::DivideAssign => write!(f, "/="),
+            AssignOperator::PowerAssign => write!(f, "^="),
+            AssignOperator::ModuloAssign => write!(f, "%="),
         }
     }
 }

@@ -107,7 +107,7 @@ macro_rules! word_stmt {
 macro_rules! binary_right_associative {
     ($self:ident,  $SubOp: ident, $Kinds: expr) => {{
         let start = $self.cur_token.start;
-        let mut node = $self.$SubOp();
+        let mut left = $self.$SubOp();
 
         while $Kinds.contains(&$self.cur_token.kind) {
             let current_token = $self.cur_token.clone();
@@ -115,10 +115,13 @@ macro_rules! binary_right_associative {
             $self.eat(current_token.kind);
 
             let right = $self.expr();
-            node = $self.binary_expression(start, node, right, current_token.kind);
+            let operator = $self.kind_to_assign_op(current_token.kind);
+
+            left = uni_builder!($self, AssignStatement, start, [left, right, operator]);
+            // node = $self.assign_statement(start, node, right, current_token.kind);
         }
 
-        node
+        left
     }};
 }
 

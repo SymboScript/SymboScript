@@ -91,6 +91,8 @@ impl<'a> Parser<'a> {
             TokenKind::Block => self.block_decl(),
             TokenKind::LAngle => Statement::BlockStatement(self.block_stmt()),
 
+            TokenKind::Mut => self.assign_statement(),
+
             _ => self.expr_stmt(),
         }
     }
@@ -399,6 +401,53 @@ impl<'a> Parser<'a> {
         ))
     }
 
+    // ---------------- assign statement -------------------
+
+    ///ternary (Assign | PlusAssign | MinusAssign | MultiplyAssign | DivideAssign | PowerAssign | ModuloAssign) ternary
+    fn assign_statement(&mut self) -> Statement {
+        let start = self.cur_token.start;
+
+        self.eat(TokenKind::Mut);
+
+        let left = self.cur_token.clone();
+        self.eat(TokenKind::Identifier);
+
+        let left = Identifier {
+            node: Node::new(start, self.cur_token.end),
+            name: format!("{}", left.value),
+        };
+
+        if [
+            TokenKind::Assign,
+            TokenKind::PlusAssign,
+            TokenKind::MinusAssign,
+            TokenKind::MultiplyAssign,
+            TokenKind::DivideAssign,
+            TokenKind::PowerAssign,
+            TokenKind::ModuloAssign,
+        ]
+        .contains(&self.cur_token.kind)
+        {
+            let current_token = self.cur_token.clone();
+
+            self.advance();
+
+            let right = self.expr();
+            let operator = self.kind_to_assign_op(current_token.kind);
+
+            self.eat(TokenKind::Semicolon);
+            Statement::AssignStatement(uni_builder!(
+                self,
+                AssignStatement,
+                start,
+                [left, right, operator]
+            ))
+        } else {
+            self.report_expected(start, "= | += | -= | *= | /= | ^= | %=", self.cur_kind());
+            unreachable!("Report ends proccess");
+        }
+    }
+
     // -------------------- expressions --------------------
 
     fn expr_stmt(&mut self) -> Statement {
@@ -418,10 +467,10 @@ impl<'a> Parser<'a> {
         let start = self.cur_token.start;
         let mut nodes = vec![];
 
-        nodes.push(self.assign());
+        nodes.push(self.ternary());
         while self.cur_kind() == TokenKind::Comma {
             self.advance();
-            nodes.push(self.assign());
+            nodes.push(self.ternary());
         }
 
         if !only_sequence && nodes.len() == 1 {
@@ -429,23 +478,6 @@ impl<'a> Parser<'a> {
         }
 
         self.sequence_expression(start, nodes)
-    }
-
-    ///ternary (Assign | PlusAssign | MinusAssign | MultiplyAssign | DivideAssign | PowerAssign | ModuloAssign) ternary
-    fn assign(&mut self) -> Expression {
-        binary_right_associative!(
-            self,
-            ternary,
-            [
-                TokenKind::Assign,
-                TokenKind::PlusAssign,
-                TokenKind::MinusAssign,
-                TokenKind::MultiplyAssign,
-                TokenKind::DivideAssign,
-                TokenKind::PowerAssign,
-                TokenKind::ModuloAssign
-            ]
-        )
     }
 
     /// range ? range : range | range
@@ -832,6 +864,20 @@ impl<'a> Parser<'a> {
         }
     }
 
+    fn kind_to_assign_op(&mut self, kind: TokenKind) -> AssignOperator {
+        match kind {
+            TokenKind::Assign => AssignOperator::Assign,
+            TokenKind::PlusAssign => AssignOperator::PlusAssign,
+            TokenKind::MinusAssign => AssignOperator::MinusAssign,
+            TokenKind::MultiplyAssign => AssignOperator::MultiplyAssign,
+            TokenKind::DivideAssign => AssignOperator::DivideAssign,
+            TokenKind::PowerAssign => AssignOperator::PowerAssign,
+            TokenKind::ModuloAssign => AssignOperator::ModuloAssign,
+
+            got => unreachable!("This function can't be called for other tokens: ({})", got),
+        }
+    }
+
     fn kind_to_bin_op(&mut self, kind: TokenKind) -> BinaryOperator {
         match kind {
             TokenKind::Plus => BinaryOperator::Add,
@@ -852,14 +898,6 @@ impl<'a> Parser<'a> {
 
             TokenKind::BitLeftShift => BinaryOperator::BitLeftShift,
             TokenKind::BitRightShift => BinaryOperator::BitRightShift,
-
-            TokenKind::Assign => BinaryOperator::Assign,
-            TokenKind::PlusAssign => BinaryOperator::PlusAssign,
-            TokenKind::MinusAssign => BinaryOperator::MinusAssign,
-            TokenKind::MultiplyAssign => BinaryOperator::MultiplyAssign,
-            TokenKind::DivideAssign => BinaryOperator::DivideAssign,
-            TokenKind::PowerAssign => BinaryOperator::PowerAssign,
-            TokenKind::ModuloAssign => BinaryOperator::ModuloAssign,
 
             TokenKind::Equal => BinaryOperator::Equal,
             TokenKind::NotEqual => BinaryOperator::NotEqual,

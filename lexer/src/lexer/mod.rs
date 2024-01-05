@@ -206,6 +206,8 @@ impl<'a> Lexer<'a> {
 
             "block" => TokenKind::Block,
 
+            "mut" => TokenKind::Mut,
+
             // ---Keyword2Operator---
             "band" => TokenKind::Ampersand,
             "bxor" => TokenKind::BitXor,
