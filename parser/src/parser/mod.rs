@@ -85,7 +85,6 @@ impl<'a> Parser<'a> {
             TokenKind::Continue => self.continue_stmt(),
             TokenKind::Break => self.break_stmt(),
 
-            TokenKind::Try => self.try_stmt(),
             TokenKind::Throw => self.throw_stmt(),
 
             TokenKind::Return => self.return_stmt(),
@@ -179,36 +178,6 @@ impl<'a> Parser<'a> {
         let body = self.block_stmt();
 
         Statement::ScopeDeclaration(uni_builder!(self, ScopeDeclarator, start, [id, body]))
-    }
-
-    // --------------- try statement -------------------
-
-    fn try_stmt(&mut self) -> Statement {
-        let start = self.cur_token.start;
-        self.eat(TokenKind::Try);
-
-        let body = self.block_stmt();
-
-        let mut handler = vec![];
-
-        if self.cur_kind() == TokenKind::Catch {
-            self.eat(TokenKind::Catch);
-            handler = self.block_stmt();
-        }
-
-        let mut finalizer = vec![];
-
-        if self.cur_kind() == TokenKind::Finally {
-            self.eat(TokenKind::Finally);
-            finalizer = self.block_stmt();
-        }
-
-        Statement::TryStatement(uni_builder!(
-            self,
-            TryStatement,
-            start,
-            [body, handler, finalizer]
-        ))
     }
 
     // --------------- loop statement ------------------
@@ -723,12 +692,7 @@ impl<'a> Parser<'a> {
 
     /// delete new_expr | new_expr
     fn delete_expr(&mut self) -> Expression {
-        word_right_associative_expr!(self, TokenKind::Delete, new_expr, delete_expr)
-    }
-
-    /// new dot | dot
-    fn new_expr(&mut self) -> Expression {
-        word_right_associative_expr!(self, TokenKind::New, dot, new_expr)
+        word_right_associative_expr!(self, TokenKind::Delete, dot, delete_expr)
     }
 
     /// call.call | call
@@ -895,7 +859,6 @@ impl<'a> Parser<'a> {
     fn kind_to_word_op(&mut self, kind: TokenKind) -> WordOperator {
         match kind {
             TokenKind::Await => WordOperator::Await,
-            TokenKind::New => WordOperator::New,
             TokenKind::Delete => WordOperator::Delete,
 
             got => unreachable!("This function can't be called for other tokens: ({})", got),

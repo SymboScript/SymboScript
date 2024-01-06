@@ -1,3 +1,15 @@
-try doSomething[];
-catch doSomethingAnother[];
-finally println["finally"];
+fn div[a,b] {
+  if (b == 0) {
+    throw "Division by zero";
+  }
+
+  return a / b;
+}
+
+let val = div[10, 0];
+
+if (val.is_err[]) {
+  println["I am error"];
+} else {
+  println["I am not error", val];
+}

@@ -14,13 +14,12 @@ pub fn run_function(
     native_function: &NativeFunction,
     args: &Vec<Value>,
 ) -> Value {
-    interpreter.increment_scope();
     match native_function {
         NativeFunction::Println => io::println(&args),
         NativeFunction::Print => io::print(&args),
         NativeFunction::ToString => return conversions::to_string(interpreter, call_expr, args),
+        NativeFunction::IsError => return conversions::is_err(interpreter, call_expr, args),
     }
-    interpreter.decrement_scope();
     Value::None
 }
 
@@ -31,7 +30,7 @@ pub fn inject(interpreter: &mut Interpreter) {
 
     // ----------------- Std conversions --------------------------------
 
-    for name in ["number", "bool", "str", "sequence", "ast"] {
+    for name in ["&number", "&bool", "&str", "&sequence", "&ast", "&err"] {
         let scope = interpreter.start_declaration_of_named_scope(name);
         conversions::inject_methods(interpreter.get_curr_scope_values_mut());
         interpreter.end_declaration_of_named_scope(&scope);

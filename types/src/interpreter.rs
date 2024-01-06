@@ -1,4 +1,5 @@
 use crate::parser::*;
+use core::fmt;
 use std::{collections::HashMap, ops};
 
 pub type Vault = HashMap<String, ScopeValue>;
@@ -17,6 +18,8 @@ pub enum Value {
 
     NativeFunction(NativeFunction),
     Function(FunctionDeclarator),
+
+    Err(String),
 }
 
 #[derive(Clone, Debug)]
@@ -25,6 +28,7 @@ pub enum ControlFlow {
     Break,
     Return(Value),
     Yield(Value),
+    Throw(Value),
     None,
 }
 
@@ -48,6 +52,26 @@ pub enum NativeFunction {
     Print,
     Println,
     ToString,
+    IsError,
+}
+
+// Display
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Value::None => write!(f, "None"),
+            Value::Number(n) => write!(f, "{}", n),
+            Value::Bool(b) => write!(f, "{}", b),
+            Value::Str(s) => write!(f, "{}", s),
+            Value::Sequence(_) => todo!(),
+            Value::Ast(_) => todo!(),
+            Value::ScopeRef(_) => todo!(),
+            Value::NativeFunction(_) => todo!(),
+            Value::Function(_) => todo!(),
+            Value::Err(e) => write!(f, "{}", e),
+        }
+    }
 }
 
 // ----------------- Math -----------------

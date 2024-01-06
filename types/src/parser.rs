@@ -52,7 +52,6 @@ pub enum Statement {
     ForStatement(Box<ForStatement>),
     WhileStatement(WhileStatement),
     LoopStatement(LoopStatement),
-    TryStatement(TryStatement),
     BlockStatement(BlockStatement),
     AssignStatement(AssignStatement),
     ImportStatement(ImportStatement),
@@ -71,14 +70,6 @@ pub struct AssignStatement {
     pub left: Identifier,
     pub right: Expression,
     pub operator: AssignOperator,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct TryStatement {
-    pub node: Node,
-    pub body: BlockStatement,
-    pub handler: BlockStatement,
-    pub finalizer: BlockStatement,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -336,7 +327,6 @@ impl fmt::Display for Statement {
             Statement::ForStatement(expr) => write!(f, "{}", expr),
             Statement::WhileStatement(expr) => write!(f, "{}", expr),
             Statement::LoopStatement(expr) => write!(f, "{}", expr),
-            Statement::TryStatement(expr) => write!(f, "{}", expr),
             Statement::BlockStatement(expr) => write!(f, "{{\n{}\n}}", format_vec(expr, "\n")),
             Statement::AssignStatement(expr) => write!(f, "{}", expr),
             Statement::ImportStatement(expr) => write!(f, "{}", expr),
@@ -353,18 +343,6 @@ impl fmt::Display for ImportStatement {
 impl fmt::Display for AssignStatement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} = {}", self.left, self.right)
-    }
-}
-
-impl fmt::Display for TryStatement {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "try {{\n{}\n}} catch {{\n{}\n}} finally {{\n{}\n}}",
-            format_vec(&self.body, "\n"),
-            format_vec(&self.handler, "\n"),
-            format_vec(&self.finalizer, "\n")
-        )
     }
 }
 

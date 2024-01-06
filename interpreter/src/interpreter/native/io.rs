@@ -18,6 +18,7 @@ pub fn print(s: &Vec<Value>) {
             Value::ScopeRef(v) => print!("{}", v),
             Value::NativeFunction(_) => todo!(),
             Value::Function(v) => print!("{}", v),
+            Value::Err(e) => print!("{}", e),
         }
 
         print!(" ")

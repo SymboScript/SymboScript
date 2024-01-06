@@ -78,7 +78,9 @@ impl<'a> Interpreter<'a> {
             Statement::ReturnStatement(v) => {
                 return ControlFlow::Return(self.eval_expression(&v.argument));
             }
-            Statement::ThrowStatement(_) => todo!(),
+            Statement::ThrowStatement(v) => {
+                return ControlFlow::Throw(self.eval_expression(&v.argument));
+            }
             Statement::ContinueStatement(_) => {
                 return ControlFlow::Continue;
             }
@@ -113,7 +115,6 @@ impl<'a> Interpreter<'a> {
             Statement::LoopStatement(loop_stmt) => {
                 self.eval_loop_statement(loop_stmt);
             }
-            Statement::TryStatement(_) => todo!(),
             Statement::BlockStatement(body) => {
                 self.increment_scope();
                 self.eval_block(body);
@@ -121,7 +122,7 @@ impl<'a> Interpreter<'a> {
             }
 
             Statement::AssignStatement(assign_stmt) => {
-                self.eval_assign_statement(assign_stmt);
+                return self.eval_assign_statement(assign_stmt);
             }
 
             Statement::ImportStatement(import_stmt) => {
@@ -191,7 +192,7 @@ impl<'a> Interpreter<'a> {
         }
     }
 
-    fn eval_assign_statement(&mut self, assign_stmt: &AssignStatement) {
+    fn eval_assign_statement(&mut self, assign_stmt: &AssignStatement) -> ControlFlow {
         let right = self.eval_expression(&assign_stmt.right);
 
         let var_val = self.get_variable_value_mut(&assign_stmt.left);
@@ -219,6 +220,8 @@ impl<'a> Interpreter<'a> {
                 *var_val %= right;
             }
         }
+
+        ControlFlow::None
     }
 
     fn eval_if_statement(&mut self, if_stmt: &IfStatement) -> ControlFlow {
@@ -273,7 +276,7 @@ impl<'a> Interpreter<'a> {
 
     fn set_native_value(&mut self, name: &str, value: Value) {
         self.vault
-            .get_mut(&format!("std$0.{name}$0"))
+            .get_mut(&format!("std$0.&{name}$0"))
             .unwrap()
             .values
             .insert("$value".to_owned(), value);
@@ -293,7 +296,7 @@ impl<'a> Interpreter<'a> {
             Value::Bool(_) => self.native_id("bool", object, member_expr.node.clone()),
             Value::Str(_) => self.native_id("str", object, member_expr.node.clone()),
             Value::Ast(_) => self.native_id("ast", object, member_expr.node.clone()),
-
+            Value::Err(_) => self.native_id("err", object, member_expr.node.clone()),
             _ => {
                 self.report(
                     &format!("is not a scope"),
@@ -326,7 +329,7 @@ impl<'a> Interpreter<'a> {
     fn native_id(&mut self, name: &str, value: Value, node: Node) -> Identifier {
         self.set_native_value(name, value);
         Identifier {
-            name: format!("std$0.{name}$0").to_owned(),
+            name: format!("std$0.&{name}$0").to_owned(),
             node,
         }
     }
@@ -373,6 +376,7 @@ impl<'a> Interpreter<'a> {
 
                 match control {
                     ControlFlow::Return(val) => val,
+                    ControlFlow::Throw(val) => Value::Err(format!("{}", val)),
                     _ => Value::None,
                 }
             }
@@ -398,7 +402,7 @@ impl<'a> Interpreter<'a> {
             UnaryOperator::Plus => right,
             UnaryOperator::Minus => -right,
             UnaryOperator::Not => !right,
-            UnaryOperator::BitNot => todo!(),
+            UnaryOperator::BitNot => !right,
             UnaryOperator::PlusPlus => right + Value::Number(1.0),
             UnaryOperator::MinusMinus => right - Value::Number(1.0),
         }
