@@ -1,6 +1,6 @@
 [package]
 name = "symboscript-interpreter"
-version = "0.13.1"
+version = "0.14.1"
 edition = "2021"
 authors = ["artegoser"]
 license = "MIT"
@@ -12,12 +12,12 @@ keywords = ["programming-language", "interpreter", "symbolic", "symboscript"]
 categories = ["compilers"]
 
 [dependencies]
-symboscript-types = { path = "../types", version = "0.15.2", features = [
+symboscript-types = { path = "../types", version = "0.16.0", features = [
   "interpreter",
 ] }
-symboscript-utils = { path = "../utils", version = "0.6.12" }
-symboscript-parser = { path = "../parser", version = "0.10.3" }
-symboscript-optimizer = { path = "../optimizer", version = "0.7.15" }
+symboscript-utils = { path = "../utils", version = "0.6.13" }
+symboscript-parser = { path = "../parser", version = "0.10.4" }
+symboscript-optimizer = { path = "../optimizer", version = "0.7.16" }
 
 clap = { version = "4.4.13", features = ["derive"] }
 colored = "2.1.0"
