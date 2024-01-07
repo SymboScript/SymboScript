@@ -8,7 +8,7 @@ cargo install symboscript-interpreter
 
 ## Usage
 
-Check the [examples](./examples/) folder.
+Check the [examples](../examples/) folder.
 
 ## Example
 
