@@ -105,6 +105,12 @@ impl<'a> Interpreter<'a> {
                 self.eval_block(&decl.body);
                 self.end_declaration_of_named_scope(&scope);
             }
+            Statement::ContextDeclaration(decl) => {
+                let scope = self.start_declaration_of_named_scope(&decl.id);
+                self.declare_variable(&"this".to_owned(), Value::ScopeRef(scope.clone()));
+                self.eval_block(&decl.body);
+                self.end_declaration_of_named_scope(&scope);
+            }
             Statement::IfStatement(if_stmt) => {
                 return self.eval_if_statement(if_stmt);
             }

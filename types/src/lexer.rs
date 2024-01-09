@@ -129,7 +129,8 @@ pub enum TokenKind {
     For,
     Loop,
     Let,
-    Scope, // Scope declaration
+    Scope,   // Scope declaration
+    Context, // Context scope declaration
     Return,
     Yield,
     Break,
@@ -231,6 +232,7 @@ impl fmt::Display for TokenKind {
             TokenKind::Loop => write!(f, "loop"),
             TokenKind::Let => write!(f, "let"),
             TokenKind::Scope => write!(f, "scope"),
+            TokenKind::Context => write!(f, "context"),
             TokenKind::Return => write!(f, "return"),
             TokenKind::Yield => write!(f, "yield"),
             TokenKind::Break => write!(f, "break"),

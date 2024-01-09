@@ -48,6 +48,7 @@ pub enum Statement {
     VariableDeclaration(VariableDeclarator),
     FunctionDeclaration(FunctionDeclarator),
     ScopeDeclaration(ScopeDeclarator),
+    ContextDeclaration(ContextDeclarator),
     IfStatement(IfStatement),
     ForStatement(Box<ForStatement>),
     WhileStatement(WhileStatement),
@@ -131,6 +132,13 @@ pub struct FunctionDeclarator {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ScopeDeclarator {
+    pub node: Node,
+    pub id: String,
+    pub body: BlockStatement,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ContextDeclarator {
     pub node: Node,
     pub id: String,
     pub body: BlockStatement,
@@ -330,6 +338,7 @@ impl fmt::Display for Statement {
             Statement::BlockStatement(expr) => write!(f, "{{\n{}\n}}", format_vec(expr, "\n")),
             Statement::AssignStatement(expr) => write!(f, "{}", expr),
             Statement::ImportStatement(expr) => write!(f, "{}", expr),
+            Statement::ContextDeclaration(expr) => write!(f, "{}", expr),
         }
     }
 }
@@ -424,6 +433,17 @@ impl fmt::Display for ScopeDeclarator {
         write!(
             f,
             "scope {} {{\n{}\n}}",
+            self.id,
+            format_vec(&self.body, "\n")
+        )
+    }
+}
+
+impl fmt::Display for ContextDeclarator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "context {} {{\n{}\n}}",
             self.id,
             format_vec(&self.body, "\n")
         )

@@ -195,6 +195,7 @@ impl<'a> Lexer<'a> {
 
             "import" => TokenKind::Import,
             "as" => TokenKind::As,
+            "context" => TokenKind::Context,
 
             "async" => TokenKind::Async,
             "await" => TokenKind::Await,

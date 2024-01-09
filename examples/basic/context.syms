@@ -1,0 +1,10 @@
+context my_ctx {
+  fn fun[b] {
+    let a = 2;
+    return this.a #/Now you can acces variables before declaration and use high level scope of context/# + a + b;
+  }
+
+  let a = 4;
+}
+
+println[my_ctx.fun[2]];

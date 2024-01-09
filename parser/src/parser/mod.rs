@@ -75,6 +75,7 @@ impl<'a> Parser<'a> {
             TokenKind::Let => self.var_decl(false),
             TokenKind::Function | TokenKind::Async => self.fn_decl(),
             TokenKind::Scope => self.scope_decl(),
+            TokenKind::Context => self.context_decl(),
 
             TokenKind::If => self.if_stmt(),
 
@@ -178,6 +179,18 @@ impl<'a> Parser<'a> {
         let body = self.block_stmt();
 
         Statement::ScopeDeclaration(uni_builder!(self, ScopeDeclarator, start, [id, body]))
+    }
+
+    fn context_decl(&mut self) -> Statement {
+        let start = self.cur_token.start;
+        self.eat(TokenKind::Context);
+
+        let id = format!("{}", self.cur_token.clone().value);
+        self.eat(TokenKind::Identifier);
+
+        let body = self.block_stmt();
+
+        Statement::ContextDeclaration(uni_builder!(self, ContextDeclarator, start, [id, body]))
     }
 
     // --------------- loop statement ------------------
@@ -342,13 +355,7 @@ impl<'a> Parser<'a> {
             params
         };
 
-        let body = {
-            let start = self.cur_token.start;
-            self.eat(TokenKind::LAngle);
-            let body = self.body();
-            self.eat_with_start(TokenKind::RAngle, start);
-            body
-        };
+        let body = self.block_stmt();
 
         Statement::FunctionDeclaration(uni_builder!(
             self,
