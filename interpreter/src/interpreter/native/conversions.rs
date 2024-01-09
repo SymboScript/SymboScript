@@ -3,6 +3,8 @@ use symboscript_types::{
     parser::CallExpression,
 };
 
+use crate::expect_args;
+
 use super::Interpreter;
 
 pub fn to_string(
@@ -10,13 +12,7 @@ pub fn to_string(
     call_expr: &CallExpression,
     args: &Vec<Value>,
 ) -> Value {
-    if args.len() != 0 {
-        interpreter.report(
-            "Wrong number of arguments (expected 0)",
-            call_expr.node.start,
-            call_expr.node.end,
-        );
-    }
+    expect_args!(0, interpreter, call_expr, args);
 
     let value = interpreter.get_cur_value(&"$value".to_owned());
 
@@ -39,13 +35,7 @@ pub fn is_err(
     call_expr: &CallExpression,
     args: &Vec<Value>,
 ) -> Value {
-    if args.len() != 0 {
-        interpreter.report(
-            "Wrong number of arguments (expected 0)",
-            call_expr.node.start,
-            call_expr.node.end,
-        );
-    }
+    expect_args!(0, interpreter, call_expr, args);
 
     let value = interpreter.get_cur_value(&"$value".to_owned());
 

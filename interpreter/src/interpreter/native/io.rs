@@ -28,11 +28,11 @@ pub fn print(s: &Vec<Value>) {
 pub fn inject(scope: &mut Scope) {
     scope.insert(
         "print".to_owned(),
-        Value::NativeFunction(NativeFunction::Print),
+        Value::NativeFunction(NativeFunction::IOPrint),
     );
 
     scope.insert(
         "println".to_owned(),
-        Value::NativeFunction(NativeFunction::Println),
+        Value::NativeFunction(NativeFunction::IOPrintln),
     );
 }

@@ -1,3 +1,4 @@
+
 context my_ctx {
   fn fun[b] {
     let a = 2;

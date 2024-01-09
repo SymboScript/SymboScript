@@ -49,8 +49,21 @@ impl ScopeValue {
 
 #[derive(Clone, Debug)]
 pub enum NativeFunction {
-    Print,
-    Println,
+    // io
+    IOPrint,
+    IOPrintln,
+
+    //context
+    HMSet,
+    HMGet,
+    HMDelete,
+    HMHas,
+    HMLen,
+    HMKeys,
+    HMValues,
+    HMClear,
+
+    // conversion methods
     ToString,
     IsError,
 }

@@ -102,6 +102,7 @@ impl<'a> Interpreter<'a> {
             }
             Statement::ScopeDeclaration(decl) => {
                 let scope = self.start_declaration_of_named_scope(&decl.id);
+
                 self.eval_block(&decl.body);
                 self.end_declaration_of_named_scope(&scope);
             }
@@ -318,13 +319,25 @@ impl<'a> Interpreter<'a> {
         let property = match &member_expr.property {
             Expression::Identifier(id) => {
                 if member_expr.is_expr {
-                    self.eval_expression(&member_expr.property)
+                    let property = self.eval_expression(&member_expr.property);
+
+                    self.get_variable_value(&Identifier {
+                        name: property.to_string(),
+                        node: member_expr.node.clone(),
+                    })
                 } else {
                     self.get_variable_value(id)
                 }
             }
             Expression::CallExpression(call_expr) => self.eval_call_expression(call_expr),
-            _ => self.eval_expression(&member_expr.property),
+            _ => {
+                let property = self.eval_expression(&member_expr.property);
+
+                self.get_variable_value(&Identifier {
+                    name: property.to_string(),
+                    node: member_expr.node.clone(),
+                })
+            }
         };
 
         self.exit_named_scope();
