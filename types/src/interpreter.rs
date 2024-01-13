@@ -1,6 +1,6 @@
 use crate::parser::*;
 use core::fmt;
-use std::{collections::HashMap, fmt::write, ops};
+use std::{collections::HashMap, ops};
 
 pub type Vault = HashMap<String, ScopeValue>;
 
