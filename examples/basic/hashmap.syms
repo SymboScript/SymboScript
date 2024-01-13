@@ -1,12 +1,9 @@
-context hashmap {
-  let a = 2;
+let hm = hashmap.new[];
 
-  fn set[key, value] {
-    std.hashmap.set[this,key, value];
-  }
-}
+hm.set["a", 1];
+hm.set["b", 2];
+hm.set["c", 3];
 
-println[hashmap.a];
-
-hashmap.set["Real string", "String value"];
-println[`hashmap.["Real string"] =`,hashmap.["Real string"]];
+println[`hm["a"] =`, hem.a];
+println[`hm["b"] =`, hem.b];
+println[`hm["c"] =`, hem.c];

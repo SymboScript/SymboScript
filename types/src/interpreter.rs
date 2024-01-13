@@ -53,7 +53,8 @@ pub enum NativeFunction {
     IOPrint,
     IOPrintln,
 
-    //context
+    //HashMap
+    HMNew,
     HMSet,
     HMGet,
     HMDelete,

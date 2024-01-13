@@ -1,6 +1,6 @@
 use symboscript_types::{
     interpreter::{NativeFunction, Scope, Value},
-    parser::CallExpression,
+    parser::{CallExpression, FunctionDeclarator},
 };
 
 use crate::expect_args;
@@ -34,9 +34,25 @@ pub fn set(interpreter: &mut Interpreter, call_expr: &CallExpression, args: &Vec
         .insert(key.to_string(), value);
 }
 
+pub fn new(interpreter: &mut Interpreter, call_expr: &CallExpression, args: &Vec<Value>) -> Value {
+    expect_args!(0, interpreter, call_expr, args);
+
+    let scope = interpreter.start_declaration_of_id_scope();
+    interpreter.declare_variable(&"this".to_owned(), Value::ScopeRef(scope.clone()));
+    interpreter.eval_ast(interpreter.std_lang.hashmap.clone());
+    interpreter.end_declaration_of_named_scope(&scope);
+
+    Value::ScopeRef(scope)
+}
+
 pub fn inject(scope: &mut Scope) {
     scope.insert(
         "set".to_owned(),
         Value::NativeFunction(NativeFunction::HMSet),
+    );
+
+    scope.insert(
+        "new".to_owned(),
+        Value::NativeFunction(NativeFunction::HMNew),
     );
 }

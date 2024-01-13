@@ -1,6 +1,6 @@
 use symboscript_types::{
     interpreter::{NativeFunction, Value},
-    parser::CallExpression,
+    parser::{Ast, CallExpression},
 };
 
 use super::Interpreter;
@@ -9,7 +9,19 @@ pub mod conversions;
 pub mod hashmap;
 pub mod io;
 
+mod lang;
+
 mod macro_utils;
+
+pub struct StdLang {
+    pub hashmap: Ast,
+}
+
+pub fn get_values() -> StdLang {
+    StdLang {
+        hashmap: lang::hashmap::value(),
+    }
+}
 
 pub fn run_function(
     interpreter: &mut Interpreter,
@@ -24,6 +36,7 @@ pub fn run_function(
         NativeFunction::ToString => return conversions::to_string(interpreter, call_expr, args),
         NativeFunction::IsError => return conversions::is_err(interpreter, call_expr, args),
 
+        NativeFunction::HMNew => return hashmap::new(interpreter, call_expr, args),
         NativeFunction::HMSet => hashmap::set(interpreter, call_expr, args),
         NativeFunction::HMGet => todo!(),
         NativeFunction::HMDelete => todo!(),
@@ -49,7 +62,7 @@ pub fn inject(interpreter: &mut Interpreter) {
         interpreter.end_declaration_of_named_scope(&scope);
     }
 
-    // ----------------- Context ----------------------------------------
+    // ----------------- Hashmap ----------------------------------------
 
     let scope = interpreter.start_declaration_of_named_scope("hashmap");
     hashmap::inject(interpreter.get_curr_scope_values_mut());

@@ -52,12 +52,11 @@ pub fn report_error(path: &str, source: &str, error: &str, start: usize, end: us
     let line_start = max(source[..start].lines().count(), 1);
     let line_end = max(source[..end].lines().count(), 1);
 
-    let mut column_start = start - source[..start].rfind('\n').unwrap_or(0);
+    let column_start = start - source[..start].rfind('\n').unwrap_or(0);
     let mut column_end = end - source[..end].rfind('\n').unwrap_or(0);
 
-    if line_start == 1 || line_end == 1 {
-        column_end += 1;
-        column_start += 1;
+    if column_end < column_start {
+        column_end = source[..end].rfind('\n').unwrap_or(0);
     }
 
     let near_text = source.lines().nth(line_end - 1).unwrap_or("").trim_end();

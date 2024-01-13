@@ -1,5 +1,6 @@
 use std::{collections::HashMap, fs, path::Path};
 
+use rand::{distributions::Alphanumeric, Rng};
 use symboscript_types::{interpreter::*, lexer::*, parser::*};
 use symboscript_utils::report_error;
 
@@ -8,6 +9,8 @@ mod native;
 
 use crate::loop_controls;
 use symboscript_parser as parser;
+
+use self::native::{get_values, StdLang};
 
 pub struct Interpreter<'a> {
     /// Path of the source file
@@ -23,6 +26,8 @@ pub struct Interpreter<'a> {
     current_scope: String,
 
     vault: Vault,
+
+    std_lang: StdLang,
 }
 
 fn get_full_path(path: &str) -> String {
@@ -43,6 +48,7 @@ impl<'a> Interpreter<'a> {
             scope_stack: vec![],
             current_scope: String::new(),
             vault,
+            std_lang: get_values(),
         }
     }
 
@@ -197,6 +203,13 @@ impl<'a> Interpreter<'a> {
                 import_stmt.node.end,
             ),
         }
+    }
+
+    /// Only for std library usage
+    fn eval_file(&mut self, file_path: &str) {
+        let contents = fs::read_to_string(&file_path).unwrap();
+        let ast = parser::Parser::new(&file_path, &contents).parse();
+        self.eval_ast(ast);
     }
 
     fn eval_assign_statement(&mut self, assign_stmt: &AssignStatement) -> ControlFlow {
@@ -370,7 +383,6 @@ impl<'a> Interpreter<'a> {
             .map(|expr| self.eval_expression(expr))
             .collect::<Vec<Value>>();
 
-        self.increment_scope();
         let result = match var {
             Value::NativeFunction(name) => native::run_function(self, &call_expr, &name, &args),
             Value::Function(declarator) => {
@@ -386,6 +398,7 @@ impl<'a> Interpreter<'a> {
                     );
                     unreachable!("Report ends proccess");
                 }
+                self.increment_scope();
 
                 for (i, variable) in declarator.params.iter().enumerate() {
                     self.declare_variable(&variable, args[i].clone());
@@ -393,6 +406,7 @@ impl<'a> Interpreter<'a> {
 
                 let control = self.eval_block(&declarator.body);
 
+                self.decrement_scope();
                 match control {
                     ControlFlow::Return(val) => val,
                     ControlFlow::Throw(val) => Value::Err(format!("{}", val)),
@@ -409,7 +423,6 @@ impl<'a> Interpreter<'a> {
                 unreachable!("Report ends proccess");
             }
         };
-        self.decrement_scope();
 
         result
     }
@@ -591,6 +604,20 @@ impl<'a> Interpreter<'a> {
 
     fn add_std_lib(&mut self) {
         native::inject(self);
+    }
+
+    fn gen_id(&mut self) -> String {
+        rand::thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(16)
+            .map(char::from)
+            .collect()
+    }
+
+    fn start_declaration_of_id_scope(&mut self) -> String {
+        let new_scope = self.gen_id();
+
+        self.start_declaration_of_named_scope(&new_scope)
     }
 
     /// Initializes a new named scope
