@@ -37,14 +37,15 @@ pub fn run_function(
         NativeFunction::IsError => return conversions::is_err(interpreter, call_expr, args),
 
         NativeFunction::HMNew => return hashmap::new(interpreter, call_expr, args),
+
         NativeFunction::HMSet => hashmap::set(interpreter, call_expr, args),
-        NativeFunction::HMGet => todo!(),
-        NativeFunction::HMDelete => todo!(),
-        NativeFunction::HMHas => todo!(),
-        NativeFunction::HMLen => todo!(),
-        NativeFunction::HMKeys => todo!(),
-        NativeFunction::HMValues => todo!(),
-        NativeFunction::HMClear => todo!(),
+        NativeFunction::HMGet => return hashmap::get(interpreter, call_expr, args),
+        NativeFunction::HMDelete => hashmap::del(interpreter, call_expr, args),
+        NativeFunction::HMHas => return hashmap::has(interpreter, call_expr, args),
+        NativeFunction::HMLen => return hashmap::len(interpreter, call_expr, args),
+        NativeFunction::HMKeys => return hashmap::keys(interpreter, call_expr, args),
+        NativeFunction::HMValues => return hashmap::values(interpreter, call_expr, args),
+        NativeFunction::HMClear => hashmap::clear(interpreter, call_expr, args),
     }
     Value::None
 }

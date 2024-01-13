@@ -13,7 +13,13 @@ pub fn print(s: &Vec<Value>) {
             Value::Number(n) => print!("{}", n.to_string().green()),
             Value::Bool(b) => print!("{}", b.to_string().blue().bold()),
             Value::Str(str) => print!("{}", str),
-            Value::Sequence(_) => todo!(),
+            Value::Sequence(seq) => {
+                print!("[");
+                for val in seq {
+                    print!("{}, ", val);
+                }
+                print!("]");
+            }
             Value::Ast(v) => print!("{}", v),
             Value::ScopeRef(v) => print!("{}", v),
             Value::NativeFunction(_) => todo!(),

@@ -205,13 +205,6 @@ impl<'a> Interpreter<'a> {
         }
     }
 
-    /// Only for std library usage
-    fn eval_file(&mut self, file_path: &str) {
-        let contents = fs::read_to_string(&file_path).unwrap();
-        let ast = parser::Parser::new(&file_path, &contents).parse();
-        self.eval_ast(ast);
-    }
-
     fn eval_assign_statement(&mut self, assign_stmt: &AssignStatement) -> ControlFlow {
         let right = self.eval_expression(&assign_stmt.right);
 

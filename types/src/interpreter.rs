@@ -1,6 +1,6 @@
 use crate::parser::*;
 use core::fmt;
-use std::{collections::HashMap, ops};
+use std::{collections::HashMap, fmt::write, ops};
 
 pub type Vault = HashMap<String, ScopeValue>;
 
@@ -80,7 +80,7 @@ impl fmt::Display for Value {
             Value::Str(s) => write!(f, "{}", s),
             Value::Sequence(_) => todo!(),
             Value::Ast(_) => todo!(),
-            Value::ScopeRef(_) => todo!(),
+            Value::ScopeRef(r) => write!(f, "{}", r),
             Value::NativeFunction(_) => todo!(),
             Value::Function(_) => todo!(),
             Value::Err(e) => write!(f, "{}", e),

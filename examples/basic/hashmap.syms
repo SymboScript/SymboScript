@@ -4,6 +4,41 @@ hm.set["a", 1];
 hm.set["b", 2];
 hm.set["c", 3];
 
-println[`hm["a"] =`, hem.a];
-println[`hm["b"] =`, hem.b];
-println[`hm["c"] =`, hem.c];
+println[`hm.a =`, hm.a];
+println[`hm.b =`, hm.b];
+println[`hm.c =`, hm.c];
+
+println[`\nor with .get\n`];
+
+println[`hm.get["a"] =`, hm.get["a"]];
+println[`hm.get["b"] =`, hm.get["b"]];
+println[`hm.get["c"] =`, hm.get["c"]];
+println[`and None values hm.get["d"] =`, hm.get["d"]];
+
+println["\nnow delete\n"];
+
+hm.del["a"];
+println[`hm.get["a"] =`, hm.get["a"]];
+println[`hm.get["b"] =`, hm.get["b"]];
+println[`hm.get["c"] =`, hm.get["c"]];
+
+println["\nnow has\n"];
+
+println[`hm.has["a"] =`, hm.has["a"]];
+println[`hm.has["b"] =`, hm.has["b"]];
+println[`hm.has["c"] =`, hm.has["c"]];
+println[`hm.has["d"] =`, hm.has["d"]];
+
+println[`\nhm.len[] =`, hm.len[]];
+
+println["\nnow keys\n"];
+println[`hm.keys[] =`, hm.keys[]];
+
+println["\nnow values\n"];
+println[`hm.values[] =`, hm.values[]];
+
+println["\nnow clear\n"];
+hm.clear[];
+println[`hm.len[] =`, hm.len[]];
+println[`hm.keys[] =`, hm.keys[]];
+println[`hm.values[] =`, hm.values[]];

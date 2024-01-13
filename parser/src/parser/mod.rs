@@ -343,6 +343,7 @@ impl<'a> Parser<'a> {
 
         let params = {
             let start = self.cur_token.start;
+
             self.eat(TokenKind::LSquare);
 
             let params = self
@@ -369,7 +370,7 @@ impl<'a> Parser<'a> {
         let mut params = vec![];
 
         if self.cur_kind() == TokenKind::RSquare {
-            self.advance();
+            // self.advance();
             return params;
         }
 
