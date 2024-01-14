@@ -44,7 +44,7 @@ println["Hello, World!"];
 - [x] [Parser](./parser/readme.md) (started)
 - [ ] [Optimizer](./optimizer/readme.md) (started, not really)
 - [ ] [Interpreter](./interpreter/readme.md) (started)
-- [ ] REPL
+- [x] REPL in [Interpreter](./interpreter/readme.md)
 - [ ] Analyzer
 - [ ] [Format](./formatter/readme.md) (started, not really)
 - [ ] Package manager

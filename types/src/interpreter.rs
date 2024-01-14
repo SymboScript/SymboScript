@@ -29,7 +29,7 @@ pub enum ControlFlow {
     Return(Value),
     Yield(Value),
     Throw(Value),
-    None,
+    None(Value),
 }
 
 #[derive(Clone, Debug)]

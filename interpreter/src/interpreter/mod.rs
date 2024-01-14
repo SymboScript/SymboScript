@@ -4,6 +4,8 @@ use rand::{distributions::Alphanumeric, Rng};
 use symboscript_types::{interpreter::*, lexer::*, parser::*};
 use symboscript_utils::report_error;
 
+use colored::Colorize;
+
 mod macro_utils;
 mod native;
 
@@ -12,14 +14,12 @@ use symboscript_parser as parser;
 
 use self::native::{get_values, StdLang};
 
-pub struct Interpreter<'a> {
+pub struct Interpreter {
     /// Path of the source file
     paths: Vec<String>,
 
     /// Sources of programs
     sources: Vec<String>,
-
-    ast: &'a Ast,
 
     scope_stack: Vec<String>,
 
@@ -28,38 +28,40 @@ pub struct Interpreter<'a> {
     vault: Vault,
 
     std_lang: StdLang,
+
+    repl: bool,
 }
 
 fn get_full_path(path: &str) -> String {
     fs::canonicalize(Path::new(path))
-        .unwrap()
+        .unwrap_or(Path::new(path).to_path_buf())
         .display()
         .to_string()
 }
 
-impl<'a> Interpreter<'a> {
-    pub fn new(path: &'a str, source: &'a str, ast: &'a Ast) -> Self {
+impl Interpreter {
+    pub fn new(path: &str, source: &str, print_expr: bool) -> Self {
         let vault = Vault::new();
 
         Self {
             paths: vec![get_full_path(path)],
             sources: vec![source.to_owned()],
-            ast,
             scope_stack: vec![],
             current_scope: String::new(),
             vault,
             std_lang: get_values(),
+            repl: print_expr,
         }
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self, ast: Ast) {
         self.initialize();
 
-        self.eval_ast(self.ast.clone());
+        self.eval_ast(ast);
     }
 
-    fn eval_ast(&mut self, ast: Ast) {
-        self.eval_block(&ast.program.body);
+    pub fn eval_ast(&mut self, ast: Ast) -> ControlFlow {
+        self.eval_block(&ast.program.body)
     }
 
     fn eval_block(&mut self, body: &BlockStatement) -> ControlFlow {
@@ -67,18 +69,22 @@ impl<'a> Interpreter<'a> {
             let control = self.eval_statement(&statement);
 
             match control {
-                ControlFlow::None => {}
+                ControlFlow::None(v) => {
+                    if self.repl {
+                        println!("{}", format!("> {} <", v).green());
+                    }
+                }
                 _ => return control,
             }
         }
 
-        return ControlFlow::None;
+        return ControlFlow::None(Value::None);
     }
 
     fn eval_statement(&mut self, statement: &Statement) -> ControlFlow {
         match statement {
             Statement::ExpressionStatement(expr) => {
-                self.eval_expression(&expr);
+                return ControlFlow::None(self.eval_expression(&expr));
             }
 
             Statement::ReturnStatement(v) => {
@@ -143,7 +149,16 @@ impl<'a> Interpreter<'a> {
             }
         }
 
-        return ControlFlow::None;
+        return ControlFlow::None(Value::None);
+    }
+
+    pub fn push_file(&mut self, path: String, source: String) {
+        self.sources.push(source);
+        self.paths.push(path);
+    }
+
+    pub fn append_to_current_source(&mut self, source: String) {
+        self.sources.last_mut().unwrap().push_str(&source);
     }
 
     fn eval_import_statement(&mut self, import_stmt: &ImportStatement) {
@@ -170,8 +185,7 @@ impl<'a> Interpreter<'a> {
                 let ast = parser::Parser::new(&file_path, &contents).parse();
 
                 {
-                    self.sources.push(contents.clone());
-                    self.paths.push(file_path.clone());
+                    self.push_file(file_path.clone(), contents.clone());
 
                     {
                         let scope =
@@ -234,7 +248,7 @@ impl<'a> Interpreter<'a> {
             }
         }
 
-        ControlFlow::None
+        ControlFlow::None(Value::None)
     }
 
     fn eval_if_statement(&mut self, if_stmt: &IfStatement) -> ControlFlow {
@@ -254,7 +268,7 @@ impl<'a> Interpreter<'a> {
 
         self.decrement_scope();
 
-        return ControlFlow::None;
+        return ControlFlow::None(Value::None);
     }
 
     fn eval_loop_statement(&mut self, loop_stmt: &LoopStatement) -> ControlFlow {
@@ -266,7 +280,7 @@ impl<'a> Interpreter<'a> {
 
         self.decrement_scope();
 
-        return ControlFlow::None;
+        return ControlFlow::None(Value::None);
     }
 
     fn eval_expression(&mut self, expression: &Expression) -> Value {
@@ -572,7 +586,7 @@ impl<'a> Interpreter<'a> {
             .insert(identifier.clone(), value);
     }
 
-    fn initialize(&mut self) {
+    pub fn initialize(&mut self) {
         // Add std library
         self.vault.insert("std$0".to_owned(), ScopeValue::new());
         self.scope_stack.push("std$0".to_owned());

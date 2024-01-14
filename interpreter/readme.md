@@ -19,3 +19,9 @@ symboscript ./examples/basic/hello_world.syms
 ```syms
 println["Hello, World!"];
 ```
+
+You can also use REPL
+
+```bash
+symboscript #Without path starts REPL
+```

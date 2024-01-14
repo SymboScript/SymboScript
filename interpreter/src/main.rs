@@ -5,14 +5,18 @@ use std::fs::OpenOptions;
 use symboscript_parser as parser;
 
 mod interpreter;
+mod repl;
+
+use interpreter::Interpreter;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
     /// Path to the file
-    path: String,
+    path: Option<String>,
 
-    /// Enable debug mode (prints idk what it does)
+    /// Enable debug mode
+    /// TODO: implement
     #[clap(short, long)]
     debug: bool,
 }
@@ -20,15 +24,23 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let text = OpenOptions::new().read(true).open(&args.path).unwrap();
-    let text = &std::io::read_to_string(text).unwrap();
+    match args.path {
+        Some(path) => {
+            let text = OpenOptions::new().read(true).open(&path).unwrap();
+            let text = &std::io::read_to_string(text).unwrap();
 
-    let mut parser = parser::Parser::new(&args.path, text);
+            let mut parser = parser::Parser::new(&path, text);
 
-    let ast = parser.parse();
-    // let ast = optimizer::optimize(&ast);
+            let ast = parser.parse();
+            // let ast = optimizer::optimize(&ast);
 
-    let mut interpreter = interpreter::Interpreter::new(&args.path, text, &ast);
+            let mut interpreter = Interpreter::new(&path, text, false);
 
-    interpreter.run();
+            interpreter.run(ast);
+        }
+
+        None => {
+            let _ = repl::start();
+        }
+    }
 }
