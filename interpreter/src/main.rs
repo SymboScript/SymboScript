@@ -34,11 +34,13 @@ fn main() {
             let ast = parser.parse();
             // let ast = optimizer::optimize(&ast);
 
-            let mut interpreter = Interpreter::new(&path, text);
+            let mut interpreter = Interpreter::new(&path, text, false);
 
             interpreter.run(ast);
         }
 
-        None => repl::start(),
+        None => {
+            let _ = repl::start();
+        }
     }
 }

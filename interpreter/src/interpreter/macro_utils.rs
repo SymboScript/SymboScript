@@ -4,7 +4,7 @@ macro_rules! loop_controls {
         let control = $self.eval_block(&$block);
         match control {
             ControlFlow::Break => break,
-            ControlFlow::None | ControlFlow::Continue => {}
+            ControlFlow::None(_) | ControlFlow::Continue => {}
 
             _ => {
                 $self.decrement_scope();

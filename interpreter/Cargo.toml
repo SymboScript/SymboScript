@@ -1,6 +1,6 @@
 [package]
 name = "symboscript-interpreter"
-version = "0.16.2"
+version = "0.17.0"
 edition = "2021"
 authors = ["artegoser"]
 license = "MIT"
@@ -23,6 +23,7 @@ clap = { version = "4.4.13", features = ["derive"] }
 colored = "2.1.0"
 rand = "0.8.5"
 rustyline = "13.0.0"
+rustyline-derive = "0.10.0"
 
 [[bin]]
 name = "symboscript"
