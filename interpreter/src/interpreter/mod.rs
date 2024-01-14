@@ -12,14 +12,12 @@ use symboscript_parser as parser;
 
 use self::native::{get_values, StdLang};
 
-pub struct Interpreter<'a> {
+pub struct Interpreter {
     /// Path of the source file
     paths: Vec<String>,
 
     /// Sources of programs
     sources: Vec<String>,
-
-    ast: &'a Ast,
 
     scope_stack: Vec<String>,
 
@@ -37,14 +35,13 @@ fn get_full_path(path: &str) -> String {
         .to_string()
 }
 
-impl<'a> Interpreter<'a> {
-    pub fn new(path: &'a str, source: &'a str, ast: &'a Ast) -> Self {
+impl Interpreter {
+    pub fn new(path: &str, source: &str) -> Self {
         let vault = Vault::new();
 
         Self {
             paths: vec![get_full_path(path)],
             sources: vec![source.to_owned()],
-            ast,
             scope_stack: vec![],
             current_scope: String::new(),
             vault,
@@ -52,14 +49,14 @@ impl<'a> Interpreter<'a> {
         }
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self, ast: Ast) {
         self.initialize();
 
-        self.eval_ast(self.ast.clone());
+        self.eval_ast(ast);
     }
 
-    fn eval_ast(&mut self, ast: Ast) {
-        self.eval_block(&ast.program.body);
+    fn eval_ast(&mut self, ast: Ast) -> ControlFlow {
+        self.eval_block(&ast.program.body)
     }
 
     fn eval_block(&mut self, body: &BlockStatement) -> ControlFlow {
@@ -146,6 +143,11 @@ impl<'a> Interpreter<'a> {
         return ControlFlow::None;
     }
 
+    fn push_file(&mut self, path: String, source: String) {
+        self.sources.push(source);
+        self.paths.push(path);
+    }
+
     fn eval_import_statement(&mut self, import_stmt: &ImportStatement) {
         let source_name = if import_stmt.source.name.ends_with(".syms") {
             import_stmt.source.name.clone()
@@ -170,8 +172,7 @@ impl<'a> Interpreter<'a> {
                 let ast = parser::Parser::new(&file_path, &contents).parse();
 
                 {
-                    self.sources.push(contents.clone());
-                    self.paths.push(file_path.clone());
+                    self.push_file(file_path.clone(), contents.clone());
 
                     {
                         let scope =

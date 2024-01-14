@@ -22,6 +22,7 @@ symboscript-optimizer = { path = "../optimizer", version = "0.7.20" }
 clap = { version = "4.4.13", features = ["derive"] }
 colored = "2.1.0"
 rand = "0.8.5"
+rustyline = "13.0.0"
 
 [[bin]]
 name = "symboscript"
