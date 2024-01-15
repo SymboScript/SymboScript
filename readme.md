@@ -28,6 +28,9 @@
 
 Take JavaScript, Rust, and WolframLanguage and make a great language out of them without any restrictions.
 
+![image](https://github.com/SymboScript/SymboScript/assets/59178854/05d85d41-9e10-48e5-a35c-13aa0892de0b)
+
+
 ## Hello, World!
 
 Check the interpreter crate - [Interpreter](./interpreter/readme.md)
