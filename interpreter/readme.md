@@ -10,6 +10,10 @@ cargo install symboscript-interpreter
 
 Check the [examples](../examples/) folder.
 
+## REPL
+![image](https://github.com/SymboScript/SymboScript/assets/59178854/8e13c99e-7cd2-4fde-bfbd-bd5670c65a38)
+
+
 ## Example
 
 ```bash
